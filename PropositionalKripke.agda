@@ -2,6 +2,7 @@
 
 module PropositionalKripke (PV : Set) where
 
+  open import ListUtil
   open import PropUtil
   open import PropositionalLogic PV
 
@@ -37,7 +38,7 @@ module PropositionalKripke (PV : Set) where
     _⊩ᶠ_ : Worlds → Form → Prop
     w ⊩ᶠ Var x = w ⊩ x
     w ⊩ᶠ (fp ⇒ fq) = {w' : Worlds} → w ≤ w' → w' ⊩ᶠ fp → w' ⊩ᶠ fq
-
+    
     _⊩ᶜ_ : Worlds → Con → Prop
     w ⊩ᶜ [] = ⊤
     w ⊩ᶜ (p ∷ c) = (w ⊩ᶠ p) ∧ (w ⊩ᶜ c)
@@ -66,43 +67,56 @@ module PropositionalKripke (PV : Set) where
 
 
   
-  {- Universal Kripke -}
-
-  module UniversalKripke where
-    Worlds = Con
-    _≤_ : Con → Con → Prop
-    Γ ≤ Η = Η ⊢⁺ Γ
-    _⊩_ : Con → PV → Prop
-    Γ ⊩ x = Γ ⊢ Var x
-
-    refl≤ = refl⊢⁺
-
-    -- Proving transitivity
-    halftran≤ : {Γ Γ' : Con} → {F : Form} → Γ ⊢⁺ Γ' → Γ' ⊢ F → Γ ⊢ F
-    halftran≤ h⁺ zero = proj₁ h⁺
-    halftran≤ h⁺ (next h) = halftran≤ (proj₂ h⁺) h
-    halftran≤ h⁺ (lam h) = lam (halftran≤ ⟨ zero , addhyp⊢⁺ h⁺ ⟩ h)
-    halftran≤ h⁺ (app h h') = app (halftran≤ h⁺ h) (halftran≤ h⁺ h')
-    tran≤ : {Γ Γ' Γ'' : Con} → Γ ≤ Γ' → Γ' ≤ Γ'' → Γ ≤ Γ''
-    tran≤ {[]} h h' = tt
-    tran≤ {x ∷ Γ} h h' = ⟨ halftran≤ h' (proj₁ h) , tran≤ (proj₂ h) h' ⟩
-
-    mon⊩ : {w w' : Con} → w ≤ w' → {x : PV} → w ⊩ x → w' ⊩ x
-    mon⊩ h h' = halftran≤ h h' 
-
-  UK : Kripke
-  UK = record {UniversalKripke}
 
   module CompletenessProof where
+  
+    -- First, we define the Universal Kripke Model with (⊢⁺)⁻¹ as world order
+    UK : Kripke
+    UK = record {
+      Worlds = Con;
+      _≤_ = λ x y → y ⊢⁺ x;
+      refl≤ = refl⊢⁺;
+      tran≤ = λ ΓΓ' Γ'Γ'' → tran⊢⁺ Γ'Γ'' ΓΓ';
+      _⊩_ = λ Γ x → Γ ⊢ Var x;
+      mon⊩ = λ ba bx → halftran⊢⁺ ba bx
+      }
     open Kripke UK
-    open UniversalKripke using (halftran≤)
 
+    -- Now we can prove that ⊩ᶠ and ⊢ act in the same way
     ⊩ᶠ→⊢ : {F : Form} → {Γ : Con} → Γ ⊩ᶠ F → Γ ⊢ F
     ⊢→⊩ᶠ : {F : Form} → {Γ : Con} → Γ ⊢ F → Γ ⊩ᶠ F
     ⊢→⊩ᶠ {Var x} h = h
-    ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (lam (app (halftran≤ (addhyp⊢⁺ iq) h) zero)) (⊩ᶠ→⊢ hF))
+    ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (lam (app (halftran⊢⁺ (addhyp⊢⁺ iq) h) zero)) (⊩ᶠ→⊢ hF))
     ⊩ᶠ→⊢ {Var x} h = h
     ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁺ refl⊢⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} zero)))
 
+    -- Finally, we can deduce completeness of the Kripke model
     completeness : {F : Form} → [] ⊫ F → [] ⊢ F
     completeness {F} ⊫F = ⊩ᶠ→⊢ (⊫F tt)
+
+  module NormalizationProof where
+
+    -- First we define the Universal model with (⊢⁰⁺)⁻¹ as world order
+    -- It is slightly different from the last Model, but proofs are the same
+    UK⁰ : Kripke
+    UK⁰ = record {
+      Worlds = Con;
+      _≤_ = λ x y → y ⊢⁰⁺ x;
+      refl≤ = refl⊢⁰⁺;
+      tran≤ = λ ΓΓ' Γ'Γ'' → tran⊢⁰⁺ Γ'Γ'' ΓΓ';
+      _⊩_ = λ Γ x → Γ ⊢⁰ Var x;
+      mon⊩ = λ ba bx → halftran⊢⁰⁺⁰ ba bx
+      }
+    open Kripke UK⁰
+
+    -- We can now prove the normalization, i.e. the quote and function exists
+    -- The mutual proofs are exactly the same as the ones used in completeness
+    -- quote
+    ⊩ᶠ→⊢ : {F : Form} → {Γ : Con} → Γ ⊩ᶠ F → Γ ⊢* F
+    -- unquote
+    ⊢→⊩ᶠ : {F : Form} → {Γ : Con} → Γ ⊢⁰ F → Γ ⊩ᶠ F
+  
+    ⊢→⊩ᶠ {Var x} h = h
+    ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (halftran⊢⁰⁺⁰ iq h) (⊩ᶠ→⊢ hF))
+    ⊩ᶠ→⊢ {Var x} h = neu⁰ h
+    ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁰⁺ refl⊢⁰⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} zero)))

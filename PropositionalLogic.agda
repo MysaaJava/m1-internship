@@ -3,16 +3,13 @@
 module PropositionalLogic (PV : Set) where
 
   open import PropUtil
-  open import Data.List using (List; _∷_; []) public
-
+  open import ListUtil
+  
   data Form : Set where
     Var : PV → Form
     _⇒_ : Form → Form → Form
   
   infixr 8 _⇒_
-
-  data _≡_ : {A : Set} → A → A → Prop where
-    refl : {A : Set} → {x : A} → x ≡ x
 
   {- Contexts -}
   Con = List Form
@@ -24,20 +21,15 @@ module PropositionalLogic (PV : Set) where
       B   : Form
       B'  : Form
       C   : Form
+      F   : Form
+      G   : Form
       Γ   : Con
       Γ'  : Con
+      x   : PV
 
-  -- Definition of subcontexts (directly included)
-  -- Similar definition : {Γ' : Con} → Γ ⊆ Γ' ++ Γ
-  private
-    data _⊆_ : Con → Con → Prop where
-       zero⊆ : Γ ⊆ Γ
-       next⊆ : Γ ⊆ Γ' → Γ ⊆ (A ∷ Γ')
-    retro⊆ : {Γ Γ' : Con} → {A : Form} → (A ∷ Γ) ⊆ Γ' → Γ ⊆ Γ'
-    retro⊆ {Γ' = []} () -- Impossible to have «A∷Γ ⊆ []»
-    retro⊆ {Γ' = x ∷ Γ'} zero⊆ = next⊆ zero⊆
-    retro⊆ {Γ' = x ∷ Γ'} (next⊆ h) = next⊆ (retro⊆ h)
 
+
+  {--- DEFINITION OF ⊢ ---}
   
   data _⊢_ : Con → Form → Prop where
     zero : (A ∷ Γ) ⊢ A
@@ -52,23 +44,101 @@ module PropositionalLogic (PV : Set) where
   Γ ⊢⁺ [] = ⊤
   Γ ⊢⁺ (F ∷ Γ') = (Γ ⊢ F) ∧ (Γ ⊢⁺ Γ')
   infix 5 _⊢⁺_
-  
-  -- This relation is reflexive
-  private -- Lemma showing that the relation respects ⊆
-    mon⊆≤ : Γ' ⊆ Γ → Γ ⊢⁺ Γ'
-    mon⊆≤ {[]} sub = tt
-    mon⊆≤ {x ∷ Γ} zero⊆ = ⟨ zero , mon⊆≤ (next⊆ zero⊆) ⟩
-    mon⊆≤ {x ∷ Γ} (next⊆ sub) = ⟨ (next (proj₁ (mon⊆≤ sub)) ) , mon⊆≤ (next⊆ (retro⊆ sub)) ⟩
 
+  -- The relation respects ⊆
+  mon⊆⊢⁺ : Γ' ⊆ Γ → Γ ⊢⁺ Γ'
+  mon⊆⊢⁺ {[]} sub = tt
+  mon⊆⊢⁺ {x ∷ Γ} zero⊆ = ⟨ zero , mon⊆⊢⁺ (next⊆ zero⊆) ⟩
+  mon⊆⊢⁺ {x ∷ Γ} (next⊆ sub) = ⟨ (next (proj₁ (mon⊆⊢⁺ sub)) ) , mon⊆⊢⁺ (next⊆ (retro⊆ sub)) ⟩
+
+  -- The relation is reflexive
   refl⊢⁺ : Γ ⊢⁺ Γ
   refl⊢⁺ {[]} = tt
-  refl⊢⁺ {x ∷ Γ} = ⟨ zero , mon⊆≤ (next⊆ zero⊆) ⟩
+  refl⊢⁺ {x ∷ Γ} = ⟨ zero , mon⊆⊢⁺ (next⊆ zero⊆) ⟩
 
-  -- A useful lemma, that we can add hypotheses 
+  -- We can add hypotheses to the left 
   addhyp⊢⁺ : Γ ⊢⁺ Γ' → (A ∷ Γ) ⊢⁺ Γ'
   addhyp⊢⁺ {Γ' = []} h = tt
   addhyp⊢⁺ {Γ' = A ∷ Γ'} h = ⟨ next (proj₁ h) , addhyp⊢⁺ (proj₂ h) ⟩
-    
+
+  -- The relation respects ⊢
+  halftran⊢⁺ : {Γ Γ' : Con} → {F : Form} → Γ ⊢⁺ Γ' → Γ' ⊢ F → Γ ⊢ F
+  halftran⊢⁺ h⁺ zero = proj₁ h⁺
+  halftran⊢⁺ h⁺ (next h) = halftran⊢⁺ (proj₂ h⁺) h
+  halftran⊢⁺ h⁺ (lam h) = lam (halftran⊢⁺ ⟨ zero , addhyp⊢⁺ h⁺ ⟩ h)
+  halftran⊢⁺ h⁺ (app h h') = app (halftran⊢⁺ h⁺ h) (halftran⊢⁺ h⁺ h')
+
+  -- The relation is transitive
+  tran⊢⁺ : {Γ Γ' Γ'' : Con} → Γ ⊢⁺ Γ' → Γ' ⊢⁺ Γ'' → Γ ⊢⁺ Γ''
+  tran⊢⁺ {Γ'' = []} h h' = tt
+  tran⊢⁺ {Γ'' = x ∷ Γ*} h h' = ⟨ halftran⊢⁺ h (proj₁ h') , tran⊢⁺ h (proj₂ h') ⟩
+
+  
+
+  {--- DEFINITIONS OF ⊢⁰ and ⊢* ---}
+
+  -- ⊢⁰ are neutral forms
+  -- ⊢* are normal forms
+  mutual
+    data _⊢⁰_ : Con → Form → Prop where
+      zero : (A ∷ Γ) ⊢⁰ A
+      next : Γ ⊢⁰ A → (B ∷ Γ) ⊢⁰ A
+      app : Γ ⊢⁰ (A ⇒ B) → Γ ⊢* A → Γ ⊢⁰ B
+    data _⊢*_ : Con → Form → Prop where
+      neu⁰ : Γ ⊢⁰ Var x → Γ ⊢* Var x
+      lam : (A ∷ Γ) ⊢* B → Γ ⊢* (A ⇒ B)
+  infix 5 _⊢⁰_
+  infix 5 _⊢*_
+
+  -- Both are tighter than ⊢
+  ⊢⁰→⊢ : Γ ⊢⁰ F → Γ ⊢ F
+  ⊢*→⊢ : Γ ⊢* F → Γ ⊢ F
+  ⊢⁰→⊢ zero = zero
+  ⊢⁰→⊢ (next h) = next (⊢⁰→⊢ h)
+  ⊢⁰→⊢ (app h x) = app (⊢⁰→⊢ h) (⊢*→⊢ x)
+  ⊢*→⊢ (neu⁰ x) = ⊢⁰→⊢ x
+  ⊢*→⊢ (lam h) = lam (⊢*→⊢ h)
+
+  -- Extension of ⊢⁰ to contexts
+  -- i.e. there is a neutral proof for any element
+  _⊢⁰⁺_ : Con → Con → Prop
+  Γ ⊢⁰⁺ [] = ⊤
+  Γ ⊢⁰⁺ (F ∷ Γ') = (Γ ⊢⁰ F) ∧ (Γ ⊢⁰⁺ Γ')
+  infix 5 _⊢⁰⁺_
+  
+  -- The relation respects ⊆
+  mon⊆⊢⁰⁺ : Γ' ⊆ Γ → Γ ⊢⁰⁺ Γ'
+  mon⊆⊢⁰⁺ {[]} sub = tt
+  mon⊆⊢⁰⁺ {x ∷ Γ} zero⊆ = ⟨ zero , mon⊆⊢⁰⁺ (next⊆ zero⊆) ⟩
+  mon⊆⊢⁰⁺ {x ∷ Γ} (next⊆ sub) = ⟨ (next (proj₁ (mon⊆⊢⁰⁺ sub)) ) , mon⊆⊢⁰⁺ (next⊆ (retro⊆ sub)) ⟩
+
+  -- This relation is reflexive
+  refl⊢⁰⁺ : Γ ⊢⁰⁺ Γ
+  refl⊢⁰⁺ {[]} = tt
+  refl⊢⁰⁺ {x ∷ Γ} = ⟨ zero , mon⊆⊢⁰⁺ (next⊆ zero⊆) ⟩
+
+  -- A useful lemma, that we can add hypotheses 
+  addhyp⊢⁰⁺ : Γ ⊢⁰⁺ Γ' → (A ∷ Γ) ⊢⁰⁺ Γ'
+  addhyp⊢⁰⁺ {Γ' = []} h = tt
+  addhyp⊢⁰⁺ {Γ' = A ∷ Γ'} h = ⟨ next (proj₁ h) , addhyp⊢⁰⁺ (proj₂ h) ⟩
+
+  -- The relation preserves ⊢⁰ and ⊢*
+  halftran⊢⁰⁺* : {Γ Γ' : Con} → {F : Form} → Γ ⊢⁰⁺ Γ' → Γ' ⊢* F → Γ ⊢* F
+  halftran⊢⁰⁺⁰ : {Γ Γ' : Con} → {F : Form} → Γ ⊢⁰⁺ Γ' → Γ' ⊢⁰ F → Γ ⊢⁰ F
+  halftran⊢⁰⁺* h⁺ (neu⁰ x) = neu⁰ (halftran⊢⁰⁺⁰ h⁺ x)
+  halftran⊢⁰⁺* h⁺ (lam h) = lam (halftran⊢⁰⁺* ⟨ zero , addhyp⊢⁰⁺ h⁺ ⟩ h)
+  halftran⊢⁰⁺⁰ h⁺ zero = proj₁ h⁺
+  halftran⊢⁰⁺⁰ h⁺ (next h) = halftran⊢⁰⁺⁰ (proj₂ h⁺) h
+  halftran⊢⁰⁺⁰ h⁺ (app h h') = app (halftran⊢⁰⁺⁰ h⁺ h) (halftran⊢⁰⁺* h⁺ h')
+
+  -- The relation is transitive
+  tran⊢⁰⁺ : {Γ Γ' Γ'' : Con} → Γ ⊢⁰⁺ Γ' → Γ' ⊢⁰⁺ Γ'' → Γ ⊢⁰⁺ Γ''
+  tran⊢⁰⁺ {Γ'' = []} h h' = tt
+  tran⊢⁰⁺ {Γ'' = x ∷ Γ} h h' = ⟨ halftran⊢⁰⁺⁰ h (proj₁ h') , tran⊢⁰⁺ h (proj₂ h') ⟩
+
+
+
+
   {--- Simple translation with in an Environment ---}
 
   Env = PV → Prop
@@ -86,6 +156,9 @@ module PropositionalLogic (PV : Set) where
   ⟦ next th ⟧ᵈ p = ⟦ th ⟧ᵈ (proj₂ p)
   ⟦ lam th ⟧ᵈ = λ pₐ p₀ → ⟦ th ⟧ᵈ ⟨ p₀ , pₐ ⟩
   ⟦ app th₁ th₂ ⟧ᵈ = λ p → ⟦ th₁ ⟧ᵈ p (⟦ th₂ ⟧ᵈ p)
+
+
+
 
 
   {--- Combinatory Logic ---}
