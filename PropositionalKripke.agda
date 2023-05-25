@@ -106,15 +106,3 @@ module PropositionalKripke (PV : Set) where
 
     completeness : {F : Form} → [] ⊫ F → [] ⊢ F
     completeness {F} ⊫F = ⊩ᶠ→⊢ (⊫F tt)
-
-    {- Normalization -}
-    norm : [] ⊢ F → [] ⊢ F
-    norm x = completeness (⟦ x ⟧)
-    -- norm is identity ?!
-    idnorm : norm x ≡ x
-    idnorm = ?
-    -- autonorm : (P₁ P₂ : Prop) → (x₁ : P₁) → (norm x₁ : P₂) → P₁ ≡⊢ P₂
-    -- βηnorm : (P₁ P₂ : Prop) → (x₁ : P₁) → (norm x₁ : P₂) → (x₂ : P₂) → norm x₁ ≡ x₂ → P₁ ≡⊢ P₂
-
-    -- autonorm P = {!!}
-    --βηnorm P₁ P₂ = ?

@@ -47,29 +47,6 @@ module PropositionalLogic (PV : Set) where
 
   infix 5 _⊢_
 
-  -- Equality of derivation
-  infix 2 _≡⊢_
-  data _≡⊢_ : Prop → Prop → Prop where
-    refl : Γ ⊢ A ≡⊢ Γ ⊢ A
-  {-zero≡⊢ : (A ∷ Γ) ⊢ A ≡⊢ (A' ∷ Γ') ⊢ A'
-    next≡⊢ : Γ ⊢ A ≡⊢ Γ' ⊢ A' → (B ∷ Γ) ⊢ A ≡⊢ (B ∷ Γ') ⊢ A'
-    lam≡⊢ : (A ∷ Γ) ⊢ B ≡⊢ (A' ∷ Γ') ⊢ B' →  Γ ⊢ (A ⇒ B) ≡⊢  Γ' ⊢ (A' ⇒ B')
-    app≡⊢ :  Γ ⊢ (A ⇒ B) ≡⊢  Γ' ⊢ (A' ⇒ B') →  Γ ⊢ A ≡⊢ Γ' ⊢ A' → Γ ⊢ B ≡⊢ Γ' ⊢ B'
-  -}
-  {-
-  -- Reflexivity of equality
-  refl≡⊢ : {Γ : Con} → {A : Form} → Γ ⊢ A ≡⊢ Γ ⊢ A
-  refl≡⊢ = {!!}
-
-  -- Symmetry of equality
-  sym≡⊢ : {Γ Γ' : Con} → {A A' : Form} → Γ ⊢ A ≡⊢ Γ' ⊢ A' → Γ' ⊢ A' ≡⊢ Γ ⊢ A
-  sym≡⊢ = {!!}
-
-  -- Transitivity of equality
-  tran≡⊢ : {Γ Γ' Γ'' : Con} → {A A' A'' : Form} → Γ ⊢ A ≡⊢ Γ' ⊢ A' → Γ' ⊢ A' ≡⊢ Γ'' ⊢ A'' → Γ ⊢ A ≡⊢ Γ'' ⊢ A''
-  tran≡⊢ = {!!}
-  -}
-
   -- Extension of ⊢ to contexts
   _⊢⁺_ : Con → Con → Prop
   Γ ⊢⁺ [] = ⊤
