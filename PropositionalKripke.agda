@@ -38,6 +38,7 @@ module PropositionalKripke (PV : Set) where
     _⊩ᶠ_ : Worlds → Form → Prop
     w ⊩ᶠ Var x = w ⊩ x
     w ⊩ᶠ (fp ⇒ fq) = {w' : Worlds} → w ≤ w' → w' ⊩ᶠ fp → w' ⊩ᶠ fq
+    w ⊩ᶠ (fp ∧∧ fq) = w ⊩ᶠ fp ∧ w ⊩ᶠ fq
     
     _⊩ᶜ_ : Worlds → Con → Prop
     w ⊩ᶜ [] = ⊤
@@ -47,6 +48,7 @@ module PropositionalKripke (PV : Set) where
     mon⊩ᶠ : w ≤ w' → w ⊩ᶠ F → w' ⊩ᶠ F
     mon⊩ᶠ {F = Var x} ww' wF = mon⊩ ww' wF
     mon⊩ᶠ {F = F ⇒ G} ww' wF w'w'' w''F = wF (tran≤ ww' w'w'') w''F
+    mon⊩ᶠ {F = F ∧∧ G} ww' ⟨ wF , wG ⟩ = ⟨ mon⊩ᶠ {F = F} ww' wF , mon⊩ᶠ {F = G} ww' wG ⟩
 
     mon⊩ᶜ : w ≤ w' → w ⊩ᶜ Γ → w' ⊩ᶜ Γ
     mon⊩ᶜ {Γ = []} ww' wΓ = wΓ
@@ -87,8 +89,10 @@ module PropositionalKripke (PV : Set) where
     ⊢→⊩ᶠ : {F : Form} → {Γ : Con} → Γ ⊢ F → Γ ⊩ᶠ F
     ⊢→⊩ᶠ {Var x} h = h
     ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (lam (app (halftran⊢⁺ (addhyp⊢⁺ iq) h) zero)) (⊩ᶠ→⊢ hF))
+    ⊢→⊩ᶠ {F ∧∧ G} h = {!!}
     ⊩ᶠ→⊢ {Var x} h = h
     ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁺ refl⊢⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} zero)))
+    ⊩ᶠ→⊢ {F ∧∧ G} ⟨ hF , hG ⟩ = {!!}
 
     -- Finally, we can deduce completeness of the Kripke model
     completeness : {F : Form} → [] ⊫ F → [] ⊢ F

@@ -8,7 +8,9 @@ module PropositionalLogic (PV : Set) where
   data Form : Set where
     Var : PV → Form
     _⇒_ : Form → Form → Form
-  
+    _∧∧_ : Form → Form → Form
+
+  infixr 10 _∧∧_
   infixr 8 _⇒_
 
   {- Contexts -}
@@ -36,6 +38,9 @@ module PropositionalLogic (PV : Set) where
     next : Γ ⊢ A → (B ∷ Γ) ⊢ A
     lam : (A ∷ Γ) ⊢ B → Γ ⊢ (A ⇒ B)
     app : Γ ⊢ (A ⇒ B) → Γ ⊢ A → Γ ⊢ B
+    andi : Γ ⊢ A → Γ ⊢ B → Γ ⊢ A ∧∧ B
+    ande₁ : Γ ⊢ A ∧∧ B → Γ ⊢ A
+    ande₂ : Γ ⊢ A ∧∧ B → Γ ⊢ B
 
   infix 5 _⊢_
 
@@ -67,6 +72,9 @@ module PropositionalLogic (PV : Set) where
   halftran⊢⁺ h⁺ (next h) = halftran⊢⁺ (proj₂ h⁺) h
   halftran⊢⁺ h⁺ (lam h) = lam (halftran⊢⁺ ⟨ zero , addhyp⊢⁺ h⁺ ⟩ h)
   halftran⊢⁺ h⁺ (app h h') = app (halftran⊢⁺ h⁺ h) (halftran⊢⁺ h⁺ h')
+  halftran⊢⁺ h⁺ (andi hf hg) = andi (halftran⊢⁺ h⁺ hf) (halftran⊢⁺ h⁺ hg)
+  halftran⊢⁺ h⁺ (ande₁ hfg) = ande₁ (halftran⊢⁺ h⁺ hfg)
+  halftran⊢⁺ h⁺ (ande₂ hfg) = ande₂ (halftran⊢⁺ h⁺ hfg)
 
   -- The relation is transitive
   tran⊢⁺ : {Γ Γ' Γ'' : Con} → Γ ⊢⁺ Γ' → Γ' ⊢⁺ Γ'' → Γ ⊢⁺ Γ''
@@ -146,6 +154,7 @@ module PropositionalLogic (PV : Set) where
   ⟦_⟧ᶠ : Form → Env → Prop
   ⟦ Var x ⟧ᶠ ρ = ρ x
   ⟦ A ⇒ B ⟧ᶠ ρ = (⟦ A ⟧ᶠ ρ) → (⟦ B ⟧ᶠ ρ)
+  ⟦ A ∧∧ B ⟧ᶠ ρ = (⟦ A ⟧ᶠ ρ) ∧ (⟦ B ⟧ᶠ ρ)
 
   ⟦_⟧ᶜ : Con → Env → Prop
   ⟦ [] ⟧ᶜ ρ = ⊤
@@ -156,6 +165,9 @@ module PropositionalLogic (PV : Set) where
   ⟦ next th ⟧ᵈ p = ⟦ th ⟧ᵈ (proj₂ p)
   ⟦ lam th ⟧ᵈ = λ pₐ p₀ → ⟦ th ⟧ᵈ ⟨ p₀ , pₐ ⟩
   ⟦ app th₁ th₂ ⟧ᵈ = λ p → ⟦ th₁ ⟧ᵈ p (⟦ th₂ ⟧ᵈ p)
+  ⟦ andi hf hg ⟧ᵈ = λ p → ⟨ ⟦ hf ⟧ᵈ p , ⟦ hg ⟧ᵈ p ⟩
+  ⟦ ande₁ hfg ⟧ᵈ = λ p → proj₁ (⟦ hfg ⟧ᵈ p)
+  ⟦ ande₂ hfg ⟧ᵈ = λ p → proj₂ (⟦ hfg ⟧ᵈ p)
 
 
 
@@ -166,6 +178,9 @@ module PropositionalLogic (PV : Set) where
   data ⊢sk : Form → Prop where
     SS : ⊢sk ((A ⇒ B ⇒ C) ⇒ (A ⇒ B) ⇒ A ⇒ C)
     KK : ⊢sk (A ⇒ B ⇒ A)
+    ANDi : ⊢sk (A ⇒ B ⇒ (A ∧∧ B))
+    ANDe₁ : ⊢sk ((A ∧∧ B) ⇒ A)
+    ANDe₂ : ⊢sk ((A ∧∧ B) ⇒ B)
     app : ⊢sk (A ⇒ B) → ⊢sk A → ⊢sk B
 
   data _⊢skC_ : Con → Form → Prop where
@@ -173,8 +188,10 @@ module PropositionalLogic (PV : Set) where
     next : Γ ⊢skC A → (B ∷ Γ) ⊢skC A
     SS : Γ ⊢skC ((A ⇒ B ⇒ C) ⇒ (A ⇒ B) ⇒ A ⇒ C)
     KK : Γ ⊢skC (A ⇒ B ⇒ A)
+    ANDi : Γ ⊢skC (A ⇒ B ⇒ (A ∧∧ B))
+    ANDe₁ : Γ ⊢skC ((A ∧∧ B) ⇒ A)
+    ANDe₂ : Γ ⊢skC ((A ∧∧ B) ⇒ B)
     app : Γ ⊢skC (A ⇒ B) → Γ ⊢skC A → Γ ⊢skC B
-
 
   -- combinatory gives the same proofs as classic
   ⊢⇔⊢sk : ([] ⊢ A) ⇔ ⊢sk A
@@ -182,11 +199,17 @@ module PropositionalLogic (PV : Set) where
   ⊢sk→⊢ :  ⊢sk A → ([] ⊢ A)
   ⊢sk→⊢ SS = lam (lam (lam ( app (app (next (next zero)) zero) (app (next zero) zero))))
   ⊢sk→⊢ KK = lam (lam (next zero))
+  ⊢sk→⊢ ANDi = lam (lam (andi (next zero) zero))
+  ⊢sk→⊢ ANDe₁ = lam (ande₁ zero)
+  ⊢sk→⊢ ANDe₂ = lam (ande₂ zero)
   ⊢sk→⊢ (app x x₁) = app (⊢sk→⊢ x) (⊢sk→⊢ x₁)
 
   skC→sk : [] ⊢skC A → ⊢sk A
   skC→sk SS = SS
   skC→sk KK = KK
+  skC→sk ANDi = ANDi
+  skC→sk ANDe₁ = ANDe₁
+  skC→sk ANDe₂ = ANDe₂
   skC→sk (app d e) = app (skC→sk d) (skC→sk e)
 
 
@@ -197,12 +220,19 @@ module PropositionalLogic (PV : Set) where
   lam-sk (next x) = app KK x
   lam-sk SS = app KK SS
   lam-sk KK = app KK KK
+  lam-sk ANDi = app KK (app (app SS (app (app SS (app KK SS)) (app (app SS (app KK KK)) (app (app SS (app KK ANDi)) (lam-sk-zero))))) (app KK lam-sk-zero))
+  lam-sk ANDe₁ = app KK (app (app SS (app KK ANDe₁)) lam-sk-zero)
+  lam-sk ANDe₂ = app KK (app (app SS (app KK ANDe₂)) lam-sk-zero)
   lam-sk (app x₁ x₂) = app (app SS (lam-sk x₁)) (lam-sk x₂)
 
+  
   ⊢→⊢skC : Γ ⊢ A → Γ ⊢skC A
   ⊢→⊢skC zero = zero
   ⊢→⊢skC (next x) = next (⊢→⊢skC x)
   ⊢→⊢skC (lam x) = lam-sk (⊢→⊢skC x)
   ⊢→⊢skC (app x x₁) = app (⊢→⊢skC x) (⊢→⊢skC x₁)
+  ⊢→⊢skC (andi x y) = app (app ANDi (⊢→⊢skC x)) (⊢→⊢skC y)
+  ⊢→⊢skC (ande₁ x) = app ANDe₁ (⊢→⊢skC x)
+  ⊢→⊢skC (ande₂ x) = app ANDe₂ (⊢→⊢skC x)
 
   ⊢⇔⊢sk = ⟨ (λ x → skC→sk (⊢→⊢skC x)) , ⊢sk→⊢ ⟩
