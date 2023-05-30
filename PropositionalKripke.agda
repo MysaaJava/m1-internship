@@ -120,3 +120,28 @@ module PropositionalKripke (PV : Set) where
     ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (halftran⊢⁰⁺⁰ iq h) (⊩ᶠ→⊢ hF))
     ⊩ᶠ→⊢ {Var x} h = neu⁰ h
     ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁰⁺ refl⊢⁰⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} zero)))
+
+  module OtherProofs where
+
+    -- We will try to define the Kripke models using the following embeddings
+
+    -- Strongest is using the ⊢⁺ relation directly
+
+    -- -> See module CompletenessProof
+
+    -- We can also use the relation ⊢⁰⁺, which is compatible with ⊢⁰ and ⊢*
+
+    -- -> See module NormalizationProof
+
+    
+  
+    {- Renamings -}
+
+    {- Weakening anywhere, order preserving, duplication authorized -}
+
+    {- Weakening anywhere, no duplication, order preserving -}
+    
+
+    {- Weakening at the end -}
+
+    -- This is exactly our relation ⊆ 
