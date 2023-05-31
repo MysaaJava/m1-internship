@@ -44,3 +44,9 @@ module PropUtil where
   -- ⇔ shorthand
   _⇔_ : Prop → Prop → Prop
   P ⇔ Q = (P → Q) ∧ (Q → P)
+
+
+  -- Syntactic sugar for writing applications
+  infixr 200 _$_
+  _$_ : {T U : Prop} → (T → U) → T → U
+  h $ t = h t

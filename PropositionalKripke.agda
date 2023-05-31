@@ -58,8 +58,8 @@ module PropositionalKripke (PV : Set) where
 
     {- Soundness -}
     ⟦_⟧ : Γ ⊢ F → Γ ⊫ F
-    ⟦ zero ⟧ = proj₁
-    ⟦ next p ⟧ = λ x → ⟦ p ⟧ (proj₂ x)
+    ⟦ zero zero∈ ⟧ wΓ = proj₁ wΓ
+    ⟦ zero (next∈ h) ⟧ wΓ = ⟦ zero h ⟧ (proj₂ wΓ)
     ⟦ lam p ⟧ = λ wΓ w≤ w'A → ⟦ p ⟧ ⟨ w'A , mon⊩ᶜ w≤ wΓ ⟩
     ⟦ app p p₁ ⟧ wΓ = ⟦ p ⟧ wΓ refl≤ (⟦ p₁ ⟧ wΓ)
 
@@ -81,21 +81,21 @@ module PropositionalKripke (PV : Set) where
       mon⊩ = λ ba bx → halftran⊢⁺ ba bx
       }
     open Kripke UK
-
+  
     -- Now we can prove that ⊩ᶠ and ⊢ act in the same way
     ⊩ᶠ→⊢ : {F : Form} → {Γ : Con} → Γ ⊩ᶠ F → Γ ⊢ F
     ⊢→⊩ᶠ : {F : Form} → {Γ : Con} → Γ ⊢ F → Γ ⊩ᶠ F
     ⊢→⊩ᶠ {Var x} h = h
-    ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (lam (app (halftran⊢⁺ (addhyp⊢⁺ iq) h) zero)) (⊩ᶠ→⊢ hF))
+    ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (lam (app (halftran⊢⁺ (addhyp⊢⁺ (right∈* refl∈*) iq) h) (zero zero∈))) (⊩ᶠ→⊢ hF))
     ⊩ᶠ→⊢ {Var x} h = h
-    ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁺ refl⊢⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} zero)))
+    ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁺ (right∈* refl∈*) refl⊢⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} (zero zero∈))))
 
     -- Finally, we can deduce completeness of the Kripke model
     completeness : {F : Form} → [] ⊫ F → [] ⊢ F
     completeness {F} ⊫F = ⊩ᶠ→⊢ (⊫F tt)
 
   module NormalizationProof where
-
+    
     -- First we define the Universal model with (⊢⁰⁺)⁻¹ as world order
     -- It is slightly different from the last Model, but proofs are the same
     UK⁰ : Kripke
@@ -119,7 +119,7 @@ module PropositionalKripke (PV : Set) where
     ⊢→⊩ᶠ {Var x} h = h
     ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (halftran⊢⁰⁺⁰ iq h) (⊩ᶠ→⊢ hF))
     ⊩ᶠ→⊢ {Var x} h = neu⁰ h
-    ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁰⁺ refl⊢⁰⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} zero)))
+    ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁰⁺ (right∈* refl∈*) refl⊢⁰⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} (zero zero∈)))) 
 
   module OtherProofs where
 
@@ -132,16 +132,34 @@ module PropositionalKripke (PV : Set) where
     -- We can also use the relation ⊢⁰⁺, which is compatible with ⊢⁰ and ⊢*
 
     -- -> See module NormalizationProof
-
+  
     
   
-    {- Renamings -}
-
-    {- Weakening anywhere, order preserving, duplication authorized -}
-
-    {- Weakening anywhere, no duplication, order preserving -}
+    {- Renamings : ∈* -}
+    UK∈* : Kripke
+    UK∈* = record {
+      Worlds = Con;
+      _≤_ = _∈*_;
+      refl≤ = refl∈*;
+      tran≤ = tran∈*;
+      _⊩_ = λ Γ x → Γ ⊢ Var x;
+      mon⊩ = λ x x₁ → addhyp⊢ x x₁
+      }
+    {-
+    {- Weakening anywhere, order preserving, duplication authorized : ⊂⁺ -}
+    UK⊂⁺ : Kripke
+    UK⊂⁺ = record {
+      Worlds = Con;
+      _≤_ = _⊂⁺_;
+      refl≤ = refl⊂⁺;
+      tran≤ = tran⊂⁺;
+      _⊩_ = λ Γ x → Γ ⊢ Var x;
+      mon⊩ = λ x x₁ → addhyp⊢ x x₁
+      }
+    -}
+    {- Weakening anywhere, no duplication, order preserving : ⊂ -}
     
 
-    {- Weakening at the end -}
+    {- Weakening at the end : ⊆-}
 
     -- This is exactly our relation ⊆ 

@@ -9,6 +9,7 @@ module ListUtil where
       T : Set₀
       L : List T
       L' : List T
+      L'' : List T
       A : T
       B : T
 
@@ -38,12 +39,33 @@ module ListUtil where
   retro⊆ {L' = B ∷ L'} zero⊆ = next⊆ zero⊆
   retro⊆ {L' = B ∷ L'} (next⊆ h) = next⊆ (retro⊆ h)
 
+  refl⊆ : L ⊆ L
+  refl⊆ = zero⊆
+
+  tran⊆ : L ⊆ L' → L' ⊆ L'' → L ⊆ L''
+  tran⊆ zero⊆ h2 = h2
+  tran⊆ (next⊆ h1) h2 = tran⊆ h1 (retro⊆ h2)
+  
   {- ⊂ : We can remove elements anywhere on the list, no duplicates, no reordering -}
   data _⊂_ : List T → List T → Prop where
     zero⊂ : [] ⊂ L
     both⊂ : L ⊂ L' → (A ∷ L) ⊂ (A ∷ L')
     next⊂ : L ⊂ L' → L ⊂ (A ∷ L')
-    
+
+  ⊆→⊂ : L ⊆ L' → L ⊂ L'
+  refl⊂ : L ⊂ L
+  ⊆→⊂ {L = []} h = zero⊂
+  ⊆→⊂ {L = x ∷ L} zero⊆ = both⊂ (refl⊂)
+  ⊆→⊂ {L = x ∷ L} (next⊆ h) = next⊂ (⊆→⊂ h)
+  refl⊂ = ⊆→⊂ refl⊆
+
+  tran⊂ : L ⊂ L' → L' ⊂ L'' → L ⊂ L''
+  tran⊂ zero⊂ h2 = zero⊂
+  tran⊂ (both⊂ h1) (both⊂ h2) = both⊂ (tran⊂ h1 h2)
+  tran⊂ (both⊂ h1) (next⊂ h2) = next⊂ (tran⊂ (both⊂ h1) h2)
+  tran⊂ (next⊂ h1) (both⊂ h2) = next⊂ (tran⊂ h1 h2)
+  tran⊂ (next⊂ h1) (next⊂ h2) = next⊂ (tran⊂ (next⊂ h1) h2)
+  
   {- ⊂⁰ : We can remove elements and reorder the list, as long as we don't duplicate the elements -}
   -----> We do not have unicity of derivation ([A,A] ⊂⁰ [A,A] can be prove by identity or by swapping its two elements
   --> We could do with some counting function, but ... it would not be nice, would it ?
@@ -58,7 +80,27 @@ module ListUtil where
   data _⊂⁺_ : List T → List T → Prop where
     zero⊂⁺ : _⊂⁺_ {T} [] []
     next⊂⁺ : L ⊂⁺ L' → L ⊂⁺ A ∷ L'
-    dup⊂⁺ : A ∷ L ⊂⁺ L' → A ∷ L ⊂⁺ A ∷ L'
+    dup⊂⁺ : L ⊂⁺ A ∷ L' → A ∷ L ⊂⁺ A ∷ L'
+
+  ⊂→⊂⁺ : L ⊂ L' → L ⊂⁺ L'
+  ⊂→⊂⁺ {L' = []} zero⊂ = zero⊂⁺
+  ⊂→⊂⁺ {L' = x ∷ L'} zero⊂ = next⊂⁺ (⊂→⊂⁺ zero⊂)
+  ⊂→⊂⁺ (both⊂ h) = dup⊂⁺ (next⊂⁺ (⊂→⊂⁺ h))
+  ⊂→⊂⁺ (next⊂ h) = next⊂⁺ (⊂→⊂⁺ h)
+  refl⊂⁺ : L ⊂⁺ L
+  refl⊂⁺ = ⊂→⊂⁺ refl⊂
+  tran⊂⁺ : L ⊂⁺ L' → L' ⊂⁺ L'' → L ⊂⁺ L''
+  tran⊂⁺ zero⊂⁺ zero⊂⁺ = zero⊂⁺
+  tran⊂⁺ zero⊂⁺ (next⊂⁺ h2) = next⊂⁺ h2
+  tran⊂⁺ (next⊂⁺ h1) (next⊂⁺ h2) = next⊂⁺ (tran⊂⁺ (next⊂⁺ h1) h2)
+  tran⊂⁺ (next⊂⁺ h1) (dup⊂⁺ h2) = tran⊂⁺ h1 h2
+  tran⊂⁺ (dup⊂⁺ h1) (next⊂⁺ h2) = next⊂⁺ (tran⊂⁺ (dup⊂⁺ h1) h2)
+  tran⊂⁺ (dup⊂⁺ h1) (dup⊂⁺ h2) = dup⊂⁺ (tran⊂⁺ h1 (dup⊂⁺ h2))
+
+  retro⊂⁺ : A ∷ L ⊂⁺ L' → L ⊂⁺ L'
+  retro⊂⁺ (next⊂⁺ h) = next⊂⁺ (retro⊂⁺ h)
+  retro⊂⁺ (dup⊂⁺ h) = h
+  
   {- ∈* : We can remove or duplicate elements and we can change their order -}
   -- The weakest of all relations on lists
   -- L ∈* L' if all elements of L exists in L' (no consideration for order nor duplication)
@@ -73,19 +115,26 @@ module ListUtil where
 
   -- We show that the relation is reflexive and is implied by ⊆
   refl∈* : L ∈* L
-  ⊆→∈* : L ⊆ L' → L ∈* L'
+  ⊂⁺→∈* : L ⊂⁺ L' → L ∈* L'
   refl∈* {L = []} = zero∈*
-  refl∈* {L = x ∷ L} = next∈* zero∈ (⊆→∈* (next⊆ zero⊆))
-  ⊆→∈* zero⊆ = refl∈*
-  ⊆→∈* {L = []} (next⊆ h) = zero∈*
-  ⊆→∈* {L = x ∷ L} (next⊆ h) = next∈* (next∈ (mon∈∈* zero∈ (⊆→∈* h))) (⊆→∈* (retro⊆ (next⊆ h)))
+  refl∈* {L = x ∷ L} = next∈* zero∈ (⊂⁺→∈* (next⊂⁺ refl⊂⁺))
+  ⊂⁺→∈* zero⊂⁺ = refl∈*
+  ⊂⁺→∈* {L = []} (next⊂⁺ h) = zero∈*
+  ⊂⁺→∈* {L = x ∷ L} (next⊂⁺ h) = next∈* (next∈ (mon∈∈* zero∈ (⊂⁺→∈* h))) (⊂⁺→∈* (retro⊂⁺ (next⊂⁺ h)))
+  ⊂⁺→∈* (dup⊂⁺ h) = next∈* zero∈ (⊂⁺→∈* h)
 
   -- Allows to grow ∈* to the right
   right∈* : L ∈* L' → L ∈* (A ∷ L')
   right∈* zero∈* = zero∈*
   right∈* (next∈* x h) = next∈* (next∈ x) (right∈* h)
 
-  -- Allows to grow ∈* from both sides
   both∈* : L ∈* L' → (A ∷ L) ∈* (A ∷ L')
   both∈* zero∈* = next∈* zero∈ zero∈*
   both∈* (next∈* x h) = next∈* zero∈ (next∈* (next∈ x) (right∈* h))
+
+  tran∈* : L ∈* L' → L' ∈* L'' → L ∈* L''
+  tran∈* {L = []} = λ x x₁ → zero∈*
+  tran∈* {L = x ∷ L} (next∈* x₁ h1) h2 = next∈* (mon∈∈* x₁ h2) (tran∈* h1 h2)
+
+  ⊆→∈* : L ⊆ L' → L ∈* L'
+  ⊆→∈* h = ⊂⁺→∈* (⊂→⊂⁺ (⊆→⊂ h))
