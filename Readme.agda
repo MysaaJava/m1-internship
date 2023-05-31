@@ -12,7 +12,7 @@ open import PropositionalLogic String
 -- Here is an example of a propositional formula and its proof
 -- The formula is (Q → R) → (P → Q) → P → R
 d-C : [] ⊢ ((Var "Q") ⇒ (Var "R")) ⇒ ((Var "P") ⇒ (Var "Q")) ⇒ (Var "P") ⇒ (Var "R")
-d-C = lam (lam (lam (app (next (next zero)) (app (next zero) zero))))
+d-C = lam (lam (lam (app (zero $ next∈ $ next∈ zero∈) (app (zero $ next∈ zero∈) (zero zero∈)))))
 
 -- We can with the basic interpretation ⟦_⟧ prove that some formulæ are not provable
 -- For example, we can disprove (P → Q) → P 's provability as we can construct an
@@ -115,15 +115,39 @@ module PierceDisproof where
   PierceNotProvable h = Pierce⊥w₁ (⟦ h ⟧ {w₁} tt)
   
   
+module CompletenessAndNormalization where
+  -- With Kripke models, we can even prove completeness
+  -- Using the Universal Kripke Model
 
+  completenessQuote = CompletenessProof.⊩ᶠ→⊢
+  completenessUnquote = CompletenessProof.⊢→⊩ᶠ
 
+  -- With a slightly different universal model (using normal and neutral forms),
+  -- we can make a normalization proof
+  normalizationQuote = NormalizationProof.⊩ᶠ→⊢
+  normalizationUnquote = NormalizationProof.⊢→⊩ᶠ
 
+  -- This normalization proof has been made in the biggest Kripke model possible
+  -- that is, the one using the relation ⊢⁰⁺
+  -- But we can also prove it with tighter relations: ∈*, ⊂⁺, ⊂, ⊆
 
+  -- As all those proofs are really similar, we created a NormalizationFrame structure
+  -- that computes most of the proof with only a few lemmas
+  open import PropositionalKripkeGeneral String
 
-
-
-
-
+  -- We now have access to quote and unquote functions with this
+  u1 = NormalizationFrame.u NormalizationTests.Frame⊢
+  q1 = NormalizationFrame.q NormalizationTests.Frame⊢
+  u2 = NormalizationFrame.u NormalizationTests.Frame⊢⁰
+  q2 = NormalizationFrame.q NormalizationTests.Frame⊢⁰
+  u3 = NormalizationFrame.u NormalizationTests.Frame∈*
+  q3 = NormalizationFrame.q NormalizationTests.Frame∈*
+  u4 = NormalizationFrame.u NormalizationTests.Frame⊂⁺
+  q4 = NormalizationFrame.q NormalizationTests.Frame⊂⁺
+  u5 = NormalizationFrame.u NormalizationTests.Frame⊂
+  q5 = NormalizationFrame.q NormalizationTests.Frame⊂
+  u6 = NormalizationFrame.u NormalizationTests.Frame⊆
+  q6 = NormalizationFrame.q NormalizationTests.Frame⊆
 
 
 
