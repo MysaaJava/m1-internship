@@ -4,7 +4,7 @@ module PropositionalKripkeGeneral (PV : Set) where
 
   open import ListUtil
   open import PropUtil
-  open import PropositionalLogic PV using (Form; Var; _⇒_; _∧∧_; Con)
+  open import PropositionalLogic PV using (Form; Var; _⇒_; _∧∧_; ⊤⊤; Con)
 
   open import PropositionalKripke PV using (Kripke)
 
@@ -29,6 +29,7 @@ module PropositionalKripkeGeneral (PV : Set) where
       neu⁰ : {Γ : Con} → {x : PV} → Γ ⊢⁰ Var x → Γ ⊢* Var x
       lam : {Γ : Con} → {F G : Form} → (F ∷ Γ) ⊢* G → Γ ⊢* (F ⇒ G)
       andi : {Γ : Con} → {F G : Form} → Γ ⊢* F → Γ ⊢* G → Γ ⊢* (F ∧∧ G)
+      true : {Γ : Con} → Γ ⊢* ⊤⊤
 
   record NormalizationFrame : Set₁ where
     field
@@ -62,11 +63,12 @@ module PropositionalKripkeGeneral (PV : Set) where
     u {Var x} h = h
     u {F ⇒ F₁} h {Γ'} iq hF = u {F₁} (app {Γ'} {F} {F₁} (⊢tran iq h) (q hF))
     u {F ∧∧ G} h = ⟨ (u {F} (ande₁ h)) , (u {G} (ande₂ h)) ⟩
+    u {⊤⊤} h = tt
     
     q {Var x} h = neu⁰ h
     q {F ⇒ F₁} {Γ} h = lam (q (h (retro (Preorder.refl≤ o)) (u {F} {F ∷ Γ} zero)))
     q {F ∧∧ G} ⟨ hF , hG ⟩ = andi (q {F} hF) (q {G} hG)
-
+    q {⊤⊤} h = true
 
 
 
@@ -87,7 +89,8 @@ module PropositionalKripkeGeneral (PV : Set) where
       ande₂ = ande₂ ;
       neu⁰ = neu⁰ ;
       lam = lam;
-      andi = andi
+      andi = andi;
+      true = true
       }
 
     BiggestNN : NormalAndNeutral
@@ -101,7 +104,8 @@ module PropositionalKripkeGeneral (PV : Set) where
       ande₂ = ande₂ ;
       neu⁰ = λ x → x ;
       lam = lam ;
-      andi = andi
+      andi = andi ;
+      true = true
       }
 
     PO⊢⁺  = [ order {Con} _⊢⁺_  refl⊢⁺  tran⊢⁺  ]ᵒᵖ
