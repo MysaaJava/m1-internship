@@ -39,6 +39,7 @@ module PropositionalKripke (PV : Set) where
     w ⊩ᶠ Var x = w ⊩ x
     w ⊩ᶠ (fp ⇒ fq) = {w' : Worlds} → w ≤ w' → w' ⊩ᶠ fp → w' ⊩ᶠ fq
     w ⊩ᶠ (fp ∧∧ fq) = w ⊩ᶠ fp ∧ w ⊩ᶠ fq
+    w ⊩ᶠ ⊤⊤ = ⊤
     
     _⊩ᶜ_ : Worlds → Con → Prop
     w ⊩ᶜ [] = ⊤
@@ -49,7 +50,8 @@ module PropositionalKripke (PV : Set) where
     mon⊩ᶠ {F = Var x} ww' wF = mon⊩ ww' wF
     mon⊩ᶠ {F = F ⇒ G} ww' wF w'w'' w''F = wF (tran≤ ww' w'w'') w''F
     mon⊩ᶠ {F = F ∧∧ G} ww' ⟨ wF , wG ⟩ = ⟨ mon⊩ᶠ {F = F} ww' wF , mon⊩ᶠ {F = G} ww' wG ⟩
-
+    mon⊩ᶠ {F = ⊤⊤} ww' wF = tt
+  
     mon⊩ᶜ : w ≤ w' → w ⊩ᶜ Γ → w' ⊩ᶜ Γ
     mon⊩ᶜ {Γ = []} ww' wΓ = wΓ
     mon⊩ᶜ {Γ = F ∷ Γ} ww' wΓ = ⟨ mon⊩ᶠ {F = F}  ww' (proj₁ wΓ) , mon⊩ᶜ ww' (proj₂ wΓ) ⟩
@@ -67,3 +69,4 @@ module PropositionalKripke (PV : Set) where
     ⟦ andi p₁ p₂ ⟧ wΓ = ⟨ (⟦ p₁ ⟧ wΓ) , (⟦ p₂ ⟧ wΓ) ⟩
     ⟦ ande₁ p ⟧ wΓ = proj₁ $ ⟦ p ⟧ wΓ
     ⟦ ande₂ p ⟧ wΓ = proj₂ $ ⟦ p ⟧ wΓ
+    ⟦ true ⟧ wΓ = tt
