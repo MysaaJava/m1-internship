@@ -3,7 +3,7 @@
 module ListUtil where
 
   open import Data.List using (List; _∷_; []) public
-
+  
   private
     variable
       T : Set₀
@@ -138,3 +138,4 @@ module ListUtil where
 
   ⊆→∈* : L ⊆ L' → L ∈* L'
   ⊆→∈* h = ⊂⁺→∈* (⊂→⊂⁺ (⊆→⊂ h))
+  
