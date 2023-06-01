@@ -116,23 +116,19 @@ module PierceDisproof where
   
   
 module CompletenessAndNormalization where
+
   -- With Kripke models, we can even prove completeness
   -- Using the Universal Kripke Model
-
-  completenessQuote = CompletenessProof.⊩ᶠ→⊢
-  completenessUnquote = CompletenessProof.⊢→⊩ᶠ
-
+  
   -- With a slightly different universal model (using normal and neutral forms),
   -- we can make a normalization proof
-  normalizationQuote = NormalizationProof.⊩ᶠ→⊢
-  normalizationUnquote = NormalizationProof.⊢→⊩ᶠ
-
-  -- This normalization proof has been made in the biggest Kripke model possible
+  
+  -- This normalization proof has first been made in the biggest Kripke model possible
   -- that is, the one using the relation ⊢⁰⁺
   -- But we can also prove it with tighter relations: ∈*, ⊂⁺, ⊂, ⊆
 
   -- As all those proofs are really similar, we created a NormalizationFrame structure
-  -- that computes most of the proof with only a few lemmas
+  -- that computes most of the proofs with only a few lemmas
   open import PropositionalKripkeGeneral String
 
   -- We now have access to quote and unquote functions with this
