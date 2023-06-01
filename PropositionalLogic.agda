@@ -109,9 +109,12 @@ module PropositionalLogic (PV : Set) where
     data _⊢⁰_ : Con → Form → Prop where
       zero :  A ∈ Γ → Γ ⊢⁰ A
       app : Γ ⊢⁰ (A ⇒ B) → Γ ⊢* A → Γ ⊢⁰ B
+      ande₁ : Γ ⊢⁰ A ∧∧ B → Γ ⊢⁰ A
+      ande₂ : Γ ⊢⁰ A ∧∧ B → Γ ⊢⁰ B
     data _⊢*_ : Con → Form → Prop where
       neu⁰ : Γ ⊢⁰ Var x → Γ ⊢* Var x
       lam : (A ∷ Γ) ⊢* B → Γ ⊢* (A ⇒ B)
+      andi : Γ ⊢* A → Γ ⊢* B → Γ ⊢* (A ∧∧ B)
   infix 5 _⊢⁰_
   infix 5 _⊢*_
 
@@ -120,16 +123,22 @@ module PropositionalLogic (PV : Set) where
   ⊢*→⊢ : Γ ⊢* F → Γ ⊢ F
   ⊢⁰→⊢ (zero h) = zero h
   ⊢⁰→⊢ (app h x) = app (⊢⁰→⊢ h) (⊢*→⊢ x)
+  ⊢⁰→⊢ (ande₁ h) = ande₁ (⊢⁰→⊢ h)
+  ⊢⁰→⊢ (ande₂ h) = ande₂ (⊢⁰→⊢ h)
   ⊢*→⊢ (neu⁰ x) = ⊢⁰→⊢ x
   ⊢*→⊢ (lam h) = lam (⊢*→⊢ h)
+  ⊢*→⊢ (andi h₁ h₂) = andi (⊢*→⊢ h₁) (⊢*→⊢ h₂)
 
   -- We can add hypotheses to a proof
   addhyp⊢⁰ : Γ ∈* Γ' → Γ ⊢⁰ A → Γ' ⊢⁰ A
   addhyp⊢* : Γ ∈* Γ' → Γ ⊢* A → Γ' ⊢* A
   addhyp⊢⁰ s (zero x) = zero (mon∈∈* x s)
   addhyp⊢⁰ s (app h h₁) = app (addhyp⊢⁰ s h) (addhyp⊢* s h₁)
+  addhyp⊢⁰ s (ande₁ h) = ande₁ (addhyp⊢⁰ s h)
+  addhyp⊢⁰ s (ande₂ h) = ande₂ (addhyp⊢⁰ s h)
   addhyp⊢* s (neu⁰ x) = neu⁰ (addhyp⊢⁰ s x)
   addhyp⊢* s (lam h) = lam (addhyp⊢* (both∈* s) h)
+  addhyp⊢* s (andi h₁ h₂) = andi (addhyp⊢* s h₁) (addhyp⊢* s h₂)
 
   -- Extension of ⊢⁰ to contexts
   -- i.e. there is a neutral proof for any element
@@ -163,9 +172,12 @@ module PropositionalLogic (PV : Set) where
   halftran⊢⁰⁺⁰ : {Γ Γ' : Con} → {F : Form} → Γ ⊢⁰⁺ Γ' → Γ' ⊢⁰ F → Γ ⊢⁰ F
   halftran⊢⁰⁺* h⁺ (neu⁰ x) = neu⁰ (halftran⊢⁰⁺⁰ h⁺ x)
   halftran⊢⁰⁺* h⁺ (lam h) = lam (halftran⊢⁰⁺* ⟨ zero zero∈ , addhyp⊢⁰⁺ (right∈* refl∈*) h⁺ ⟩ h)
+  halftran⊢⁰⁺* h⁺ (andi h₁ h₂) = andi (halftran⊢⁰⁺* h⁺ h₁) (halftran⊢⁰⁺* h⁺ h₂)
   halftran⊢⁰⁺⁰ {Γ' = x ∷ Γ'} h⁺ (zero zero∈) = proj₁ h⁺
   halftran⊢⁰⁺⁰ {Γ' = x ∷ Γ'} h⁺ (zero (next∈ h)) = halftran⊢⁰⁺⁰ (proj₂ h⁺) (zero h)
   halftran⊢⁰⁺⁰ h⁺ (app h h') = app (halftran⊢⁰⁺⁰ h⁺ h) (halftran⊢⁰⁺* h⁺ h')
+  halftran⊢⁰⁺⁰ h⁺ (ande₁ h) = ande₁ (halftran⊢⁰⁺⁰ h⁺ h)
+  halftran⊢⁰⁺⁰ h⁺ (ande₂ h) = ande₂ (halftran⊢⁰⁺⁰ h⁺ h)
 
   -- The relation is transitive
   tran⊢⁰⁺ : {Γ Γ' Γ'' : Con} → Γ ⊢⁰⁺ Γ' → Γ' ⊢⁰⁺ Γ'' → Γ ⊢⁰⁺ Γ''

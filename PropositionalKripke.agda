@@ -64,9 +64,9 @@ module PropositionalKripke (PV : Set) where
     ⟦ zero (next∈ h) ⟧ wΓ = ⟦ zero h ⟧ (proj₂ wΓ)
     ⟦ lam p ⟧ = λ wΓ w≤ w'A → ⟦ p ⟧ ⟨ w'A , mon⊩ᶜ w≤ wΓ ⟩
     ⟦ app p p₁ ⟧ wΓ = ⟦ p ⟧ wΓ refl≤ (⟦ p₁ ⟧ wΓ)
-    ⟦ andi p₁ p₂ ⟧ = {!!}
-    ⟦ ande₁ p ⟧ = {!!}
-    ⟦ ande₂ p ⟧ = {!!}
+    ⟦ andi p₁ p₂ ⟧ wΓ = ⟨ (⟦ p₁ ⟧ wΓ) , (⟦ p₂ ⟧ wΓ) ⟩
+    ⟦ ande₁ p ⟧ wΓ = proj₁ $ ⟦ p ⟧ wΓ
+    ⟦ ande₂ p ⟧ wΓ = proj₂ $ ⟦ p ⟧ wΓ
 
 
 
@@ -91,10 +91,10 @@ module PropositionalKripke (PV : Set) where
     ⊢→⊩ᶠ : {F : Form} → {Γ : Con} → Γ ⊢ F → Γ ⊩ᶠ F
     ⊢→⊩ᶠ {Var x} h = h
     ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (lam (app (halftran⊢⁺ (addhyp⊢⁺ (right∈* refl∈*) iq) h) (zero zero∈))) (⊩ᶠ→⊢ hF))
-    ⊢→⊩ᶠ {F ∧∧ G} h = {!!}
+    ⊢→⊩ᶠ {F ∧∧ G} h = ⟨ (⊢→⊩ᶠ {F} (ande₁ h)) , (⊢→⊩ᶠ {G} (ande₂ h)) ⟩
     ⊩ᶠ→⊢ {Var x} h = h
     ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁺ (right∈* refl∈*) refl⊢⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} (zero zero∈))))
-    ⊩ᶠ→⊢ {F ∧∧ G} ⟨ hF , hG ⟩ = {!!}
+    ⊩ᶠ→⊢ {F ∧∧ G} ⟨ hF , hG ⟩ = andi (⊩ᶠ→⊢ {F} hF) (⊩ᶠ→⊢ {G} hG)
 
     -- Finally, we can deduce completeness of the Kripke model
     completeness : {F : Form} → [] ⊫ F → [] ⊢ F
@@ -124,10 +124,10 @@ module PropositionalKripke (PV : Set) where
   
     ⊢→⊩ᶠ {Var x} h = h
     ⊢→⊩ᶠ {F ⇒ F₁} h {Γ'} iq hF = ⊢→⊩ᶠ {F₁} (app {Γ'} {F} {F₁} (halftran⊢⁰⁺⁰ iq h) (⊩ᶠ→⊢ hF))
-    ⊢→⊩ᶠ {F ∧∧ G} h = ?
+    ⊢→⊩ᶠ {F ∧∧ G} h = ⟨ (⊢→⊩ᶠ {F} (ande₁ h)) , (⊢→⊩ᶠ {G} (ande₂ h)) ⟩
     ⊩ᶠ→⊢ {Var x} h = neu⁰ h
     ⊩ᶠ→⊢ {F ⇒ F₁} {Γ} h = lam (⊩ᶠ→⊢ (h (addhyp⊢⁰⁺ (right∈* refl∈*) refl⊢⁰⁺) (⊢→⊩ᶠ {F} {F ∷ Γ} (zero zero∈))))
-    ⊩ᶠ→⊢ {F ∧∧ G} h = {!!}
+    ⊩ᶠ→⊢ {F ∧∧ G} ⟨ hF , hG ⟩ =  andi (⊩ᶠ→⊢ {F} hF) (⊩ᶠ→⊢ {G} hG)
 
   module OtherProofs where
 
