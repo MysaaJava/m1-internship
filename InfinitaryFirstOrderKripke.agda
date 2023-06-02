@@ -2,11 +2,11 @@
 
 open import Agda.Builtin.Nat
 
-module PropositionalKripke (Term : Set) (R : Nat → Set) where
+module InfinitaryFirstOrderKripke (Term : Set) (R : Nat → Set) where
 
   open import ListUtil
   open import PropUtil
-  open import FirstOrderLogic Term R
+  open import InfinitaryFirstOrderLogic Term R
 
   private
     variable

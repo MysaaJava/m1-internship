@@ -2,13 +2,13 @@
 
 open import Agda.Builtin.Nat hiding (zero)
 
-module PropositionalKripkeGeneral (Term : Set) (R : Nat → Set) where
+module InfinitaryFirstOrderKripkeGeneral (Term : Set) (R : Nat → Set) where
 
   open import ListUtil
   open import PropUtil
-  open import FirstOrderLogic Term R using (Form; Args; Rel; _⇒_; _∧∧_; ⊤⊤; ∀∀; Con)
+  open import InfinitaryFirstOrderLogic Term R using (Form; Args; Rel; _⇒_; _∧∧_; ⊤⊤; ∀∀; Con)
 
-  open import PropositionalKripke Term R using (Kripke)
+  open import InfinitaryFirstOrderKripke Term R using (Kripke)
 
   record Preorder (T : Set₀) : Set₁ where
     constructor order
@@ -78,7 +78,7 @@ module PropositionalKripkeGeneral (Term : Set) (R : Nat → Set) where
   module NormalizationTests where
 
     {- Now using our records -}
-    open import FirstOrderLogic Term R hiding (Form; _⇒_; Con)
+    open import InfinitaryFirstOrderLogic Term R hiding (Form; _⇒_; Con)
 
 
     ClassicNN : NormalAndNeutral

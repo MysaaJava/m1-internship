@@ -1,4 +1,5 @@
 {-# OPTIONS --prop #-}
+
 module Readme where
 
 -- We will use String as propositional variables
@@ -115,7 +116,7 @@ module PierceDisproof where
   PierceNotProvable h = Pierce⊥w₁ (⟦ h ⟧ {w₁} tt)
   
   
-module CompletenessAndNormalization where
+module GeneralizationInPropositionalLogic where
 
   -- With Kripke models, we can even prove completeness
   -- Using the Universal Kripke Model
@@ -132,6 +133,27 @@ module CompletenessAndNormalization where
   open import PropositionalKripkeGeneral String
 
   -- We now have access to quote and unquote functions with this
+  u1 = NormalizationFrame.u NormalizationTests.Frame⊢
+  q1 = NormalizationFrame.q NormalizationTests.Frame⊢
+  u2 = NormalizationFrame.u NormalizationTests.Frame⊢⁰
+  q2 = NormalizationFrame.q NormalizationTests.Frame⊢⁰
+  u3 = NormalizationFrame.u NormalizationTests.Frame∈*
+  q3 = NormalizationFrame.q NormalizationTests.Frame∈*
+  u4 = NormalizationFrame.u NormalizationTests.Frame⊂⁺
+  q4 = NormalizationFrame.q NormalizationTests.Frame⊂⁺
+  u5 = NormalizationFrame.u NormalizationTests.Frame⊂
+  q5 = NormalizationFrame.q NormalizationTests.Frame⊂
+  u6 = NormalizationFrame.u NormalizationTests.Frame⊆
+  q6 = NormalizationFrame.q NormalizationTests.Frame⊆
+
+module GeneralizationInInfinitaryFirstOrderLogic where
+
+  -- We also did implement infinitary first order logic
+  -- (i.e. ∀ is like an infinitary ∧)
+  -- The proofs works the same with only little modifications
+
+  open import InfinitaryFirstOrderKripkeGeneral String (λ n → String)
+
   u1 = NormalizationFrame.u NormalizationTests.Frame⊢
   q1 = NormalizationFrame.q NormalizationTests.Frame⊢
   u2 = NormalizationFrame.u NormalizationTests.Frame⊢⁰

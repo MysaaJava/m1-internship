@@ -2,7 +2,7 @@
 
 open import Agda.Builtin.Nat
 
-module FirstOrderLogic (Term : Set) (R : Nat → Set) where
+module InfinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
 
   open import PropUtil
   open import ListUtil
