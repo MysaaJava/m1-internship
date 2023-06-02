@@ -1,20 +1,17 @@
-{-# OPTIONS --prop --no-termination-check #-}
+{-# OPTIONS --prop #-}
 
 open import Agda.Builtin.Nat
-open import Agda.Builtin.Bool
 
-module FirstOrderKripke (PV : Set) (TV : Set) (TV= : TV → TV → Bool) (Fu : Nat → Set) (R : Nat → Set) where
+module PropositionalKripke (Term : Set) (R : Nat → Set) where
 
   open import ListUtil
   open import PropUtil
-  open import FirstOrderLogic TV TV= Fu R
+  open import FirstOrderLogic Term R
 
   private
     variable
-      n : Nat
-      t : Term
-      x : TV
-      y : TV
+      x : Term
+      y : Term
       F : Form
       G : Form
       Γ : Con
@@ -28,8 +25,8 @@ module FirstOrderKripke (PV : Set) (TV : Set) (TV= : TV → TV → Bool) (Fu : N
       _≤_ : Worlds → Worlds → Prop
       refl≤ : {w : Worlds} → w ≤ w
       tran≤ : {a b c : Worlds} → a ≤ b → b ≤ c → a ≤ c
-      _⊩_[_] : Worlds → R n → Args n → Prop
-      mon⊩ : {a b : Worlds} → a ≤ b → {r : R n} {A : Args n} → a ⊩ r [ A ] → b ⊩ r [ A ]
+      _⊩_[_] : Worlds → {n : Nat} → R n → Args n → Prop
+      mon⊩ : {a b : Worlds} → a ≤ b → {n : Nat} → {r : R n} → {A : Args n} → a ⊩ r [ A ] → b ⊩ r [ A ]
 
     private
       variable
@@ -40,13 +37,12 @@ module FirstOrderKripke (PV : Set) (TV : Set) (TV= : TV → TV → Bool) (Fu : N
         w₃ : Worlds
     
     {- Extending ⊩ to Formulas and Contexts -}
-    -- It is in fact
     _⊩ᶠ_ : Worlds → Form → Prop
-    w ⊩ᶠ (Rel {n = n} r A) = {B : Args n} → A ⊂sub B → w ⊩ r [ B ]
+    w ⊩ᶠ (Rel r A) = w ⊩ r [ A ]
     w ⊩ᶠ (fp ⇒ fq) = {w' : Worlds} → w ≤ w' → w' ⊩ᶠ fp → w' ⊩ᶠ fq
     w ⊩ᶠ (fp ∧∧ fq) = w ⊩ᶠ fp ∧ w ⊩ᶠ fq
     w ⊩ᶠ ⊤⊤ = ⊤
-    w ⊩ᶠ (∀∀ x F) = (t : Term) → w ⊩ᶠ ([ t / x ] F)
+    w ⊩ᶠ ∀∀ F = { t : Term } → w ⊩ᶠ F t
     
     _⊩ᶜ_ : Worlds → Con → Prop
     w ⊩ᶜ [] = ⊤
@@ -54,11 +50,11 @@ module FirstOrderKripke (PV : Set) (TV : Set) (TV= : TV → TV → Bool) (Fu : N
     
     -- The extensions are monotonous
     mon⊩ᶠ : w ≤ w' → w ⊩ᶠ F → w' ⊩ᶠ F
-    mon⊩ᶠ {F = Rel r A} ww' wF s = mon⊩ ww' (wF s)
+    mon⊩ᶠ {F = Rel r A} ww' wF = mon⊩ ww' wF
     mon⊩ᶠ {F = F ⇒ G} ww' wF w'w'' w''F = wF (tran≤ ww' w'w'') w''F
     mon⊩ᶠ {F = F ∧∧ G} ww' ⟨ wF , wG ⟩ = ⟨ mon⊩ᶠ {F = F} ww' wF , mon⊩ᶠ {F = G} ww' wG ⟩
     mon⊩ᶠ {F = ⊤⊤} ww' wF = tt
-    mon⊩ᶠ {F = ∀∀ x F} ww' wF t = mon⊩ᶠ {F = [ t / x ] F} ww' (wF t)
+    mon⊩ᶠ {F = ∀∀ F} ww' wF {t} = mon⊩ᶠ {F = F t} ww' (wF {t})
   
     mon⊩ᶜ : w ≤ w' → w ⊩ᶜ Γ → w' ⊩ᶜ Γ
     mon⊩ᶜ {Γ = []} ww' wΓ = wΓ
@@ -69,15 +65,6 @@ module FirstOrderKripke (PV : Set) (TV : Set) (TV= : TV → TV → Bool) (Fu : N
     Γ ⊫ F = {w : Worlds} → w ⊩ᶜ Γ → w ⊩ᶠ F
 
     {- Soundness -}
-    th' : w ⊩ᶠ F → w ⊩ᶠ [ t / x ] F
-    th' {F = Rel r A} h {B} s = h {B} (tran⊂sub (next zero) s)
-    th' {F = F ⇒ F₁} h o hF = {!h o ?!}
-    th' {F = F ∧∧ F₁} h = {!!}
-    th' {F = ⊤⊤} h = {!!}
-    th' {F = ∀∀ x F} h = {!!}
-    th : Γ ⊫ F → Γ ⊫ [ t / x ] F
-    th {[]} h _ = {!!}
-    th {x ∷ Γ} h = {!!}
     ⟦_⟧ : Γ ⊢ F → Γ ⊫ F
     ⟦ zero zero∈ ⟧ wΓ = proj₁ wΓ
     ⟦ zero (next∈ h) ⟧ wΓ = ⟦ zero h ⟧ (proj₂ wΓ)
@@ -87,5 +74,5 @@ module FirstOrderKripke (PV : Set) (TV : Set) (TV= : TV → TV → Bool) (Fu : N
     ⟦ ande₁ p ⟧ wΓ = proj₁ $ ⟦ p ⟧ wΓ
     ⟦ ande₂ p ⟧ wΓ = proj₂ $ ⟦ p ⟧ wΓ
     ⟦ true ⟧ wΓ = tt
-    ⟦ ∀-i i p ⟧ wΓ t = {!⟦ p ⟧!}
-    ⟦ ∀-e {t = t} p ⟧ wΓ = ⟦ p ⟧ wΓ t
+    ⟦ ∀i p ⟧ wΓ {t} = ⟦ p {t} ⟧ wΓ
+    ⟦ ∀e p {t} ⟧ wΓ = ⟦ p ⟧ wΓ {t}
