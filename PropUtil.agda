@@ -50,3 +50,52 @@ module PropUtil where
   infixr 200 _$_
   _$_ : {T U : Prop} → (T → U) → T → U
   h $ t = h t
+
+
+  infix 3 _≡_
+  data _≡_ {ℓ}{A : Set ℓ}(a : A) : A → Prop ℓ where
+    refl : a ≡ a
+
+  {-# BUILTIN EQUALITY _≡_ #-}
+
+  data Nat : Set where
+    zero : Nat
+    succ : Nat → Nat
+
+  {-# BUILTIN NATURAL Nat #-}
+
+
+  record _×_ (A : Set) (B : Set) : Set where
+    constructor _,×_
+    field
+      a : A
+      b : B
+
+  record _×'_ (A : Set) (B : Prop) : Set where
+    constructor _,×'_
+    field
+      a : A
+      b : B
+
+  record _×''_ (A : Set) (B : A → Prop) : Set where
+    constructor _,×''_
+    field
+      a : A
+      b : B a
+
+  proj×₁ : {A B : Set} → (A × B) → A
+  proj×₁ p = _×_.a p
+  proj×₂ : {A B : Set} → (A × B) → B
+  proj×₂ p = _×_.b p
+
+  proj×'₁ : {A : Set} → {B : Prop} → (A ×' B) → A
+  proj×'₁ p = _×'_.a p
+  proj×'₂ : {A : Set} → {B : Prop} → (A ×' B) → B
+  proj×'₂ p = _×'_.b p
+
+  proj×''₁ : {A : Set} → {B : A → Prop} → (A ×'' B) → A
+  proj×''₁ p = _×''_.a p
+  proj×''₂ : {A : Set} → {B : A → Prop} → (p : A ×'' B) → B (proj×''₁ p)
+  proj×''₂ p = _×''_.b p
+
+  

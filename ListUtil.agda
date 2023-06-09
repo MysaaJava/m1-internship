@@ -2,7 +2,13 @@
 
 module ListUtil where
 
-  open import Data.List using (List; _∷_; []) public
+
+  infixr 5 _∷_
+  data List : (T : Set₀) → Set where
+    [] : {T : Set₀} → List T
+    _∷_ : {T : Set₀} → T → List T → List T
+
+  {-# BUILTIN LIST List #-}
   
   private
     variable
