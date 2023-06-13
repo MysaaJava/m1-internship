@@ -2,7 +2,7 @@
 
 open import PropUtil
 
-module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
+module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
 
   open import Agda.Primitive
   open import ListUtil
@@ -10,7 +10,7 @@ module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
   variable
     ℓ¹ ℓ² ℓ³ : Level
     
-  record FFOL : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³)) where
+  record FFOL (F : Nat → Set) (R : Nat → Set) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³)) where
     infixr 10 _∘_
     field
       Con : Set ℓ¹
@@ -26,6 +26,10 @@ module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
       []t-id : {Γ : Con} → {x : Tm Γ} → x [ id {Γ} ]t ≡ x
       []t-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {t : Tm Γ} → t [ β ∘ α ]t ≡ (t [ β ]t) [ α ]t
 
+      -- Term extension with functions
+      fun : {Γ : Con} → {n : Nat} → F n → Array (Tm Γ) n → Tm Γ
+      fun[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {f : F n} → {tz : Array (Tm Γ) n} → (fun f tz) [ σ ]t ≡ fun f (map (λ t → t [ σ ]t) tz)
+
       -- Tm⁺
       _▹ₜ : Con → Con
       πₜ¹ : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Sub Δ Γ
@@ -40,6 +44,10 @@ module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
       _[_]f : {Γ Δ : Con} → For Γ → Sub Δ Γ → For Δ -- The functor's action on morphisms
       []f-id : {Γ : Con} → {F : For Γ} → F [ id {Γ} ]f ≡ F
       []f-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {F : For Γ} → F [ β ∘ α ]f ≡ (F [ β ]f) [ α ]f
+
+      -- Formulas with relation on terms
+      rel : {Γ : Con} → {n : Nat} → R n → Array (Tm Γ) n → For Γ
+      rel[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {r : R n} → {tz : Array (Tm Γ) n} → (rel r tz) [ σ ]f ≡ rel r (map (λ t → t [ σ ]t) tz)
 
       -- Proofs
       _⊢_ : (Γ : Con) → For Γ → Prop
@@ -76,7 +84,7 @@ module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
       ∀i : {Γ : Con} → {F : For (Γ ▹ₜ)} → (Γ ▹ₜ) ⊢ F → Γ ⊢ (∀∀ F)
       ∀e : {Γ : Con} → {F : For (Γ ▹ₜ)} → Γ ⊢ (∀∀ F) → {t : Tm Γ} → Γ ⊢ ( F [(id {Γ}) ,ₜ t ]f)
 
-  module Tarski (TM : Set) where
+  module Tarski (TM : Set) (REL : (n : Nat) → R n → (Array TM n → Prop)) (FUN : (n : Nat) → F n → (Array TM n → TM)) where
     infixr 10 _∘_
     Con = Set
     Sub : Con → Con → Set
@@ -93,12 +101,30 @@ module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
     Tm : Con → Set
     Tm Γ = Γ → TM
     _[_]t : {Γ Δ : Con} → Tm Γ → Sub Δ Γ → Tm Δ -- The functor's action on morphisms
-    t [ σ ]t = λ x → t (σ x)
+    t [ σ ]t = λ γ → t (σ γ)
     []t-id : {Γ : Con} → {x : Tm Γ} → x [ id {Γ} ]t ≡ x
     []t-id = refl
     []t-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {t : Tm Γ} → t [ β ∘ α ]t ≡ (t [ β ]t) [ α ]t
     []t-∘ {α = α} {β} {t} = refl {_} {_} {λ z → t (β (α z))}
-                                                                                                       
+
+    _[_]tz : {Γ Δ : Con} → {n : Nat} → Array (Tm Γ) n → Sub Δ Γ → Array (Tm Δ) n
+    tz [ σ ]tz = map (λ s → s [ σ ]t) tz
+    []tz-∘  : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {n : Nat} → {tz : Array (Tm Γ) n} → tz [ β ∘ α ]tz ≡ tz [ β ]tz [ α ]tz
+    []tz-∘ {tz = zero} = refl
+    []tz-∘ {α = α} {β = β} {tz = next x tz} = substP (λ tz' → (next ((x [ β ]t) [ α ]t) tz') ≡ (((next x tz) [ β ]tz) [ α ]tz)) (≡sym ([]tz-∘ {α = α} {β = β} {tz = tz})) refl
+    []tz-id : {Γ : Con} → {n : Nat} → {tz : Array (Tm Γ) n} → tz [ id ]tz ≡ tz
+    []tz-id {tz = zero} = refl
+    []tz-id {tz = next x tz} = substP (λ tz' → next x tz' ≡ next x tz) (≡sym ([]tz-id {tz = tz})) refl
+    thm : {Γ Δ : Con} → {n : Nat} → {tz : Array (Tm Γ) n} → {σ : Sub Δ Γ} → {δ : Δ} → map (λ t → t δ) (tz [ σ ]tz) ≡ map (λ t → t (σ δ)) tz
+    thm {tz = zero} = refl
+    thm {tz = next x tz} {σ} {δ} = substP (λ tz' → (next (x (σ δ)) (map (λ t → t δ) (map (λ s γ → s (σ γ)) tz))) ≡ (next (x (σ δ)) tz')) (thm {tz = tz}) refl
+
+    -- Term extension with functions
+    fun : {Γ : Con} → {n : Nat} → F n → Array (Tm Γ) n → Tm Γ
+    fun {n = n} f tz = λ γ → FUN n f (map (λ t → t γ) tz)
+    fun[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {f : F n} → {tz : Array (Tm Γ) n} → (fun f tz) [ σ ]t ≡ fun f (tz [ σ ]tz)
+    fun[] {σ = σ} {n = n} {f = f} {tz = tz} = ≡fun (λ γ → (substP (λ x → (FUN n f) x ≡ (FUN n f) (map (λ t → t γ) (tz [ σ ]tz))) thm refl))
+    
     -- Tm⁺
     _▹ₜ : Con → Con
     Γ ▹ₜ = Γ × TM
@@ -124,7 +150,13 @@ module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
     []f-id = refl
     []f-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {F : For Γ} → F [ β ∘ α ]f ≡ (F [ β ]f) [ α ]f
     []f-∘ = refl
-                                                                                                        
+
+    -- Formulas with relation on terms
+    rel : {Γ : Con} → {n : Nat} → R n → Array (Tm Γ) n → For Γ
+    rel {n = n} r tz = λ γ → REL n r (map (λ t → t γ) tz)
+    rel[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {r : R n} → {tz : Array (Tm Γ) n} → (rel r tz) [ σ ]f ≡ rel r (tz [ σ ]tz)
+    rel[] {σ = σ} {n = n} {r = r} {tz = tz} = ≡fun (λ γ → (substP (λ x → (REL n r) x ≡ (REL n r) (map (λ t → t γ) (tz [ σ ]tz))) thm refl))
+                                                                                                     
     -- Proofs
     _⊢_ : (Γ : Con) → For Γ → Prop
     Γ ⊢ F = ∀ (γ : Γ) → F γ
@@ -171,7 +203,7 @@ module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
     ∀e : {Γ : Con} → {F : For (Γ ▹ₜ)} → Γ ⊢ (∀∀ F) → {t : Tm Γ} → Γ ⊢ ( F [(id {Γ}) ,ₜ t ]f)
     ∀e p {t} γ = p γ (t γ)
 
-    tod : FFOL
+    tod : FFOL F R
     tod = record
             { Con = Con
             ; Sub = Sub
@@ -209,6 +241,10 @@ module FinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
             ; app = app
             ; ∀i = ∀i
             ; ∀e = ∀e
+            ; fun = fun
+            ; fun[] = fun[]
+            ; rel = rel
+            ; rel[] = rel[]
             }
   {-
   module M where

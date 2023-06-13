@@ -1,4 +1,4 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
 module PropUtil where
 
@@ -51,10 +51,18 @@ module PropUtil where
   _$_ : {T U : Prop} → (T → U) → T → U
   h $ t = h t
 
-
+  open import Agda.Primitive
   infix 3 _≡_
   data _≡_ {ℓ}{A : Set ℓ}(a : A) : A → Prop ℓ where
     refl : a ≡ a
+
+  ≡sym : {ℓ : Level} → {A : Set ℓ}→ {a a' : A} → a ≡ a' → a' ≡ a
+  ≡sym refl = refl
+
+  postulate ≡fun : {ℓ ℓ' : Level} → {A : Set ℓ} → {B : Set ℓ'} → {f g : A → B} → ((x : A) → (f x ≡ g x)) → f ≡ g
+
+  postulate subst       : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Set ℓ'){a a' : A} → a ≡ a' → P a → P a'
+  postulate substP      : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Prop ℓ'){a a' : A} → a ≡ a' → P a → P a'
 
   {-# BUILTIN EQUALITY _≡_ #-}
 
