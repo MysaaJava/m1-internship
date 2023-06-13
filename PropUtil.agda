@@ -60,6 +60,7 @@ module PropUtil where
   ≡sym refl = refl
 
   postulate ≡fun : {ℓ ℓ' : Level} → {A : Set ℓ} → {B : Set ℓ'} → {f g : A → B} → ((x : A) → (f x ≡ g x)) → f ≡ g
+  postulate ≡fun' : {ℓ ℓ' : Level} → {A : Set ℓ} → {B : A → Set ℓ'} → {f g : (a : A) → B a} → ((x : A) → (f x ≡ g x)) → f ≡ g
 
   postulate subst       : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Set ℓ'){a a' : A} → a ≡ a' → P a → P a'
   postulate substP      : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Prop ℓ'){a a' : A} → a ≡ a' → P a → P a'
