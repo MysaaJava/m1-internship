@@ -72,21 +72,22 @@ module PropUtil where
     succ : Nat → Nat
 
   {-# BUILTIN NATURAL Nat #-}
+  variable
+    ℓ ℓ' : Level
 
-
-  record _×_ (A : Set) (B : Set) : Set where
+  record _×_ (A : Set ℓ) (B : Set ℓ) : Set ℓ where
     constructor _,×_
     field
       a : A
       b : B
 
-  record _×'_ (A : Set) (B : Prop) : Set where
+  record _×'_ (A : Set ℓ) (B : Prop ℓ) : Set ℓ where
     constructor _,×'_
     field
       a : A
       b : B
 
-  record _×''_ (A : Set) (B : A → Prop) : Set where
+  record _×''_ (A : Set ℓ) (B : A → Prop ℓ') : Set (ℓ ⊔ ℓ') where
     constructor _,×''_
     field
       a : A

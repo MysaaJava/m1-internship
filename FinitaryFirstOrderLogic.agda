@@ -84,7 +84,100 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       ∀i : {Γ : Con} → {F : For (Γ ▹ₜ)} → (Γ ▹ₜ) ⊢ F → Γ ⊢ (∀∀ F)
       ∀e : {Γ : Con} → {F : For (Γ ▹ₜ)} → Γ ⊢ (∀∀ F) → {t : Tm Γ} → Γ ⊢ ( F [(id {Γ}) ,ₜ t ]f)
 
-  module Tarski (TM : Set) (REL : (n : Nat) → R n → (Array TM n → Prop)) (FUN : (n : Nat) → F n → (Array TM n → TM)) where
+  module Initial where
+
+    data TmCon : Set₁ where -- isom integer ≡ number of terms in the context
+      ◇t : TmCon
+      _▹t : TmCon → TmCon
+    variable
+      Γ : TmCon
+      n : Nat
+    
+    data TmVar : TmCon → Set₁ where -- if Γ ≡ k, then TmVar Γ ≡ ⟦ 0 , k-1 ⟧
+      tvzero : TmVar (Γ ▹t)
+      tvnext : TmVar Γ → TmVar (Γ ▹t)
+
+    data Tm : TmCon → Set₁ where
+      tvar : TmVar Γ → Tm Γ
+      tfun : F n → Array (Tm Γ) n → Tm Γ
+
+    data For : TmCon → Set₁ where
+      rel : R n → Array (Tm Γ) n → For Γ
+      _⇒_ : For Γ → For Γ → For Γ
+      ∀∀  : For (Γ ▹t) → For Γ
+
+    data PfCon : TmCon → Set₁ where
+      ◇p : PfCon Γ
+      _▹p_ : PfCon Γ → For Γ → PfCon Γ
+      
+    variable
+      Ψ : PfCon Γ
+
+    data PfVar : PfCon Γ → For Γ → Set₁ where
+      pfzero : {A : For Γ} → PfVar (Ψ ▹p A) A
+      pfnext : {A B : For Γ} → PfVar Ψ A → PfVar (Ψ ▹p B) A
+
+    data Pf : PfCon Γ → For Γ → Set₁ where
+      pvar : {A : For Γ} → PfVar Ψ A → Pf Ψ A
+      papp : {A B : For Γ} → Pf Ψ (A ⇒ B) → Pf Ψ A → Pf Ψ B
+      plam : {A B : For Γ} → Pf (Ψ ▹p A) B → Pf Ψ (A ⇒ B)
+      --p∀∀e : {A : For Γ} → Pf Ψ (∀∀ A) → Pf Ψ (A [ t , id ])
+      --p∀∀i : {A : For (Γ ▹t)} → Pf (Ψ [?]) A → Pf Ψ (∀∀ A)
+
+    record Con : Set₁ where
+      constructor _,_
+      field
+        tc : TmCon
+        pc : PfCon tc
+
+    imod : FFOL {lsuc lzero} {lzero} {lzero} F R
+    imod = record
+      { Con = Con
+      ; Sub = {!!}
+      ; _∘_ = {!!}
+      ; id = {!!}
+      ; ◇ = {!!}
+      ; ε = {!!}
+      ; Tm = {!!}
+      ; _[_]t = {!!}
+      ; []t-id = {!!}
+      ; []t-∘ = {!!}
+      ; fun = {!!}
+      ; fun[] = {!!}
+      ; _▹ₜ = {!!}
+      ; πₜ¹ = {!!}
+      ; πₜ² = {!!}
+      ; _,ₜ_ = {!!}
+      ; πₜ²∘,ₜ = {!!}
+      ; πₜ¹∘,ₜ = {!!}
+      ; ,ₜ∘πₜ = {!!}
+      ; For = {!!}
+      ; _[_]f = {!!}
+      ; []f-id = {!!}
+      ; []f-∘ = {!!}
+      ; rel = {!!}
+      ; rel[] = {!!}
+      ; _⊢_ = {!!}
+      ; _▹ₚ_ = {!!}
+      ; πₚ¹ = {!!}
+      ; πₚ² = {!!}
+      ; _,ₚ_ = {!!}
+      ; ,ₚ∘πₚ = {!!}
+      ; πₚ¹∘,ₚ = {!!}
+      ; _⇒_ = {!!}
+      ; []f-⇒ = {!!}
+      ; ∀∀ = {!!}
+      ; []f-∀∀ = {!!}
+      ; lam = {!!}
+      ; app = {!!}
+      ; ∀i = {!!}
+      ; ∀e = {!!}
+      }
+  record Tarski : Set₁ where
+    field
+      TM : Set
+      REL : (n : Nat) → R n → (Array TM n → Prop)
+      FUN : (n : Nat) → F n → (Array TM n → TM)
     infixr 10 _∘_
     Con = Set
     Sub : Con → Con → Set
@@ -247,16 +340,16 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
             ; rel[] = rel[]
             }
 
-  module Kripke
-    (World : Set)
-    (_≤_ : World → World → Prop)
-    (≤refl : {w : World} → w ≤ w )
-    (≤tran : {w w' w'' : World} → w ≤ w' → w' ≤ w'' → w ≤ w'')
-    (TM : Set)
-    (REL : (n : Nat) → R n → Array TM n → World → Prop)
-    (RELmon : {n : Nat} → {r : R n} → {x : Array TM n} → {w w' : World} → REL n r x w → REL n r x w')
-    (FUN : (n : Nat) → F n → Array TM n → TM)
-    where
+  record Kripke : Set₁ where
+    field
+      World : Set
+      _≤_ : World → World → Prop
+      ≤refl : {w : World} → w ≤ w
+      ≤tran : {w w' w'' : World} → w ≤ w' → w' ≤ w'' → w ≤ w'
+      TM : Set
+      REL : (n : Nat) → R n → Array TM n → World → Prop
+      RELmon : {n : Nat} → {r : R n} → {x : Array TM n} → {w w' : World} → REL n r x w → REL n r x w'
+      FUN : (n : Nat) → F n → Array TM n → TM
     infixr 10 _∘_
     Con = World → Set
     Sub : Con → Con → Set
@@ -386,44 +479,51 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
 
     tod : FFOL F R
     tod = record
-            { Con = Con
-            ; Sub = Sub
-            ; _∘_ = _∘_
-            ; id = id
-            ; ◇ = ◇
-            ; ε = ε
-            ; Tm = Tm
-            ; _[_]t = _[_]t
-            ; []t-id = []t-id
-            ; []t-∘ = λ {Γ} {Δ} {Ξ} {α} {β} {t} → []t-∘ {Γ} {Δ} {Ξ} {α} {β} {t}
-            ; _▹ₜ = _▹ₜ
-            ; πₜ¹ = πₜ¹
-            ; πₜ² = πₜ²
-            ; _,ₜ_ = _,ₜ_
-            ; πₜ²∘,ₜ = λ {Γ} {Δ} {σ} → πₜ²∘,ₜ {Γ} {Δ} {σ}
-            ; πₜ¹∘,ₜ = λ {Γ} {Δ} {σ} {t} → πₜ¹∘,ₜ {Γ} {Δ} {σ} {t}
-            ; ,ₜ∘πₜ = ,ₜ∘πₜ
-            ; For = For
-            ; _[_]f = _[_]f
-            ; []f-id = []f-id
-            ; []f-∘ = λ {Γ} {Δ} {Ξ} {α} {β} {F} → []f-∘ {Γ} {Δ} {Ξ} {α} {β} {F}
-            ; _⊢_ = _⊢_
-            ; _▹ₚ_ = _▹ₚ_
-            ; πₚ¹ = πₚ¹
-            ; πₚ² = πₚ²
-            ; _,ₚ_ = _,ₚ_
-            ; ,ₚ∘πₚ = ,ₚ∘πₚ
-            ; πₚ¹∘,ₚ = λ {Γ} {Δ} {F} {σ} {p} → πₚ¹∘,ₚ {Γ} {Δ} {F} {σ} {p}
-            ; _⇒_ = _⇒_
-            ; []f-⇒ = λ {Γ} {F} {G} {σ} → []f-⇒ {Γ} {F} {G} {σ}
-            ; ∀∀ = ∀∀
-            ; []f-∀∀ = λ {Γ} {Δ} {F} {σ} {t} → []f-∀∀ {Γ} {Δ} {F} {σ} {t}
-            ; lam = lam
-            ; app = app
-            ; ∀i = ∀i
-            ; ∀e = ∀e
-            ; fun = fun
-            ; fun[] = fun[]
-            ; rel = rel
-            ; rel[] = rel[]
-            }
+      { Con = Con
+      ; Sub = Sub
+      ; _∘_ = _∘_
+      ; id = id
+      ; ◇ = ◇
+      ; ε = ε
+      ; Tm = Tm
+      ; _[_]t = _[_]t
+      ; []t-id = []t-id
+      ; []t-∘ = λ {Γ} {Δ} {Ξ} {α} {β} {t} → []t-∘ {Γ} {Δ} {Ξ} {α} {β} {t}
+      ; _▹ₜ = _▹ₜ
+      ; πₜ¹ = πₜ¹
+      ; πₜ² = πₜ²
+      ; _,ₜ_ = _,ₜ_
+      ; πₜ²∘,ₜ = λ {Γ} {Δ} {σ} → πₜ²∘,ₜ {Γ} {Δ} {σ}
+      ; πₜ¹∘,ₜ = λ {Γ} {Δ} {σ} {t} → πₜ¹∘,ₜ {Γ} {Δ} {σ} {t}
+      ; ,ₜ∘πₜ = ,ₜ∘πₜ
+      ; For = For
+      ; _[_]f = _[_]f
+      ; []f-id = []f-id
+      ; []f-∘ = λ {Γ} {Δ} {Ξ} {α} {β} {F} → []f-∘ {Γ} {Δ} {Ξ} {α} {β} {F}
+      ; _⊢_ = _⊢_
+      ; _▹ₚ_ = _▹ₚ_
+      ; πₚ¹ = πₚ¹
+      ; πₚ² = πₚ²
+      ; _,ₚ_ = _,ₚ_
+      ; ,ₚ∘πₚ = ,ₚ∘πₚ
+      ; πₚ¹∘,ₚ = λ {Γ} {Δ} {F} {σ} {p} → πₚ¹∘,ₚ {Γ} {Δ} {F} {σ} {p}
+      ; _⇒_ = _⇒_
+      ; []f-⇒ = λ {Γ} {F} {G} {σ} → []f-⇒ {Γ} {F} {G} {σ}
+      ; ∀∀ = ∀∀
+      ; []f-∀∀ = λ {Γ} {Δ} {F} {σ} {t} → []f-∀∀ {Γ} {Δ} {F} {σ} {t}
+      ; lam = lam
+      ; app = app
+      ; ∀i = ∀i
+      ; ∀e = ∀e
+      ; fun = fun
+      ; fun[] = fun[]
+      ; rel = rel
+      ; rel[] = rel[]
+      }
+
+
+  -- Completeness proof
+
+  -- We first build our universal Kripke model
+
+  
