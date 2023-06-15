@@ -8,17 +8,17 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
   open import ListUtil
 
   variable
-    ℓ¹ ℓ² ℓ³ : Level
+    ℓ¹ ℓ² ℓ³ ℓ⁴̂ ℓ⁵ : Level
     
-  record FFOL (F : Nat → Set) (R : Nat → Set) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³)) where
+  record FFOL (F : Nat → Set) (R : Nat → Set) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴̂ ⊔ ℓ⁵)) where
     infixr 10 _∘_
     field
       Con : Set ℓ¹
-      Sub : Con → Con → Set -- It makes a posetal category
+      Sub : Con → Con → Set ℓ⁵ -- It makes a posetal category
       _∘_ : {Γ Δ Ξ : Con} → Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
       id : {Γ : Con} → Sub Γ Γ
       ◇ : Con -- The initial object of the category
-      ε : {Γ : Con} → Sub ◇ Γ -- The morphism from the initial to any object
+      ε : {Γ : Con} → Sub Γ ◇ -- The morphism from the initial to any object
 
       -- Functor Con → Set called Tm
       Tm : Con → Set ℓ²
@@ -50,7 +50,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       rel[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {r : R n} → {tz : Array (Tm Γ) n} → (rel r tz) [ σ ]f ≡ rel r (map (λ t → t [ σ ]t) tz)
 
       -- Proofs
-      _⊢_ : (Γ : Con) → For Γ → Prop
+      _⊢_ : (Γ : Con) → For Γ → Prop ℓ⁴̂
       --_[_]p : {Γ Δ : Con} → {F : For Γ} → Γ ⊢ F → (σ : Sub Δ Γ) → Δ ⊢ (F [ σ ]f) -- The functor's action on morphisms
       -- Equalities below are useless because Γ ⊢ F is in prop
       -- []p-id : {Γ : Con} → {F : For Γ} → {prf : Γ ⊢ F} → prf [ id {Γ} ]p ≡ prf
@@ -86,90 +86,146 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
 
   module Initial where
 
-    data TmCon : Set₁ where -- isom integer ≡ number of terms in the context
-      ◇t : TmCon
-      _▹t : TmCon → TmCon
+    data Con : Set₁
+    data For : Con → Set₁
+    data Con where -- isom integer ≡ number of terms in the context
+      ◇ : Con
+      _▹t : Con → Con
+      _▹p_ : (Γ : Con) → For Γ → Con
+      
     variable
-      Γ : TmCon
+      Γ Δ Ξ : Con
       n : Nat
+      A : For Γ
     
-    data TmVar : TmCon → Set₁ where -- if Γ ≡ k, then TmVar Γ ≡ ⟦ 0 , k-1 ⟧
+    data TmVar : Con → Set₁ where
       tvzero : TmVar (Γ ▹t)
       tvnext : TmVar Γ → TmVar (Γ ▹t)
+      tvdisc : TmVar Γ → TmVar (Γ ▹p A)
 
-    data Tm : TmCon → Set₁ where
-      tvar : TmVar Γ → Tm Γ
-      tfun : F n → Array (Tm Γ) n → Tm Γ
+    data Tm : Con → Set₁ where
+      var : TmVar Γ → Tm Γ
+      fun : F n → Array (Tm Γ) n → Tm Γ
 
-    data For : TmCon → Set₁ where
+    data For where
       rel : R n → Array (Tm Γ) n → For Γ
       _⇒_ : For Γ → For Γ → For Γ
       ∀∀  : For (Γ ▹t) → For Γ
 
-    data PfCon : TmCon → Set₁ where
-      ◇p : PfCon Γ
-      _▹p_ : PfCon Γ → For Γ → PfCon Γ
-      
-    variable
-      Ψ : PfCon Γ
+    data PfVar : Con → For Γ → Set₁ where
+      pvzero : {A : For Γ} → PfVar (Γ ▹p A) A
+      pvnext : {A : For Δ} → {B : For Γ} → PfVar Γ A → PfVar (Γ ▹p B) A
+      pvdisc : {A : For Δ} → PfVar Γ A → PfVar (Γ ▹t) A
 
-    data PfVar : PfCon Γ → For Γ → Set₁ where
-      pfzero : {A : For Γ} → PfVar (Ψ ▹p A) A
-      pfnext : {A B : For Γ} → PfVar Ψ A → PfVar (Ψ ▹p B) A
+    data Pf : Con → For Γ → Prop₁ where
+      var : {A : For Δ} → PfVar Γ A → Pf Γ A
+      app : {A B : For Δ} → Pf Γ (A ⇒ B) → Pf Γ A → Pf Γ B
+      lam : {A B : For Γ} → Pf (Γ ▹p A) B → Pf Γ (A ⇒ B)
+      --p∀∀e : {A : For Γ} → Pf Γ (∀∀ A) → Pf Γ (A [ t , id ])
+      --p∀∀i : {A : For (Γ ▹t)} → Pf (Γ [?]) A → Pf Γ (∀∀ A)
 
-    data Pf : PfCon Γ → For Γ → Set₁ where
-      pvar : {A : For Γ} → PfVar Ψ A → Pf Ψ A
-      papp : {A B : For Γ} → Pf Ψ (A ⇒ B) → Pf Ψ A → Pf Ψ B
-      plam : {A B : For Γ} → Pf (Ψ ▹p A) B → Pf Ψ (A ⇒ B)
-      --p∀∀e : {A : For Γ} → Pf Ψ (∀∀ A) → Pf Ψ (A [ t , id ])
-      --p∀∀i : {A : For (Γ ▹t)} → Pf (Ψ [?]) A → Pf Ψ (∀∀ A)
+    data Sub : Con → Con → Set₁ where -- TODO replace with prop
+      ε : Sub Γ ◇
+      wk▹t : Sub Δ Γ → Tm Δ → Sub Δ (Γ ▹t)
+      wk▹p : Sub Δ Γ → Pf Δ A → Sub Δ (Γ ▹p A)
 
-    record Con : Set₁ where
-      constructor _,_
-      field
-        tc : TmCon
-        pc : PfCon tc
+    -- We subst on terms
+    _[_]t : Tm Γ → Sub Δ Γ → Tm Δ
+    _[_]tz : Array (Tm Γ) n → Sub Δ Γ → Array (Tm Δ) n
 
-    imod : FFOL {lsuc lzero} {lzero} {lzero} F R
+    var tvzero [ wk▹t σ t ]t = t
+    var (tvnext tv) [ wk▹t σ x ]t = var tv [ σ ]t
+    var (tvdisc tv) [ wk▹p σ x ]t = var tv [ σ ]t
+    fun f tz [ σ ]t = fun f (tz [ σ ]tz)
+    zero [ σ ]tz = zero
+    next t tz [ σ ]tz = next (t [ σ ]t) (tz [ σ ]tz)
+
+    -- We subst on proofs
+    _[_]p : Pf Γ A → Sub Δ Γ → Pf Δ A
+    _[_]p = {!!}
+
+    -- We subst on formulæ
+    _[_]f : For Γ → Sub Δ Γ → For Δ
+    _[_]f = {!!}
+
+  
+    _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
+    ε ∘ β = ε
+    wk▹t α t ∘ β = wk▹t (α ∘ β) (t [ β ]t)
+    wk▹p α pf ∘ β = wk▹p (α ∘ β) (pf [ β ]p)
+
+    pgcd : Con → Con → Con
+    pgcd ◇ Δ = ◇
+    pgcd (Γ ▹t) ◇ = ◇
+    pgcd (Γ ▹t) (Δ ▹t) = pgcd Γ Δ
+    pgcd (Γ ▹t) (Δ ▹p x) = pgcd Γ Δ
+    pgcd (Γ ▹p x) ◇ = ◇
+    pgcd (Γ ▹p x) (Δ ▹t) = pgcd Γ Δ
+    pgcd (Γ ▹p x) (Δ ▹p x₁) = pgcd Γ Δ
+
+
+    len : Con → Nat
+    len ◇ = 0
+    len (Γ ▹t) = succ (len Γ)
+    len (Γ ▹p A) = succ (len Γ)
+
+    lift▹tPf : Pf Γ A → Pf (Γ ▹t) A
+    lift▹tPf (var x) = var (pvdisc x)
+    lift▹tPf (app p p₁) = app (lift▹tPf p) (lift▹tPf p₁)
+    lift▹tPf (lam p) = {!!}
+    lift▹t : Sub Γ Δ → Sub (Γ ▹t) Δ
+    lift▹t ε = ε
+    lift▹t (wk▹t σ t) = wk▹t (lift▹t σ) (var tvzero)
+    lift▹t (wk▹p {A = A} σ x) = wk▹p (lift▹t σ) (var (pvdisc {!x!}))
+
+    id : Sub Γ Γ
+    id {◇} = ε
+    id {Γ ▹t} = wk▹t {!!} (var tvzero)
+    id {◇ ▹p A} = wk▹p ε (var pvzero)
+    id {(Γ ▹t) ▹p A} = wk▹p (wk▹t {!!} (var (tvdisc tvzero))) (var pvzero)
+    id {(Γ ▹p x) ▹p A} = wk▹p {!!} (var pvzero)
+
+
+    imod : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero} F R
     imod = record
       { Con = Con
-      ; Sub = {!!}
-      ; _∘_ = {!!}
-      ; id = {!!}
-      ; ◇ = {!!}
-      ; ε = {!!}
-      ; Tm = {!!}
-      ; _[_]t = {!!}
+      ; Sub = Sub
+      ; _∘_ = _∘_
+      ; id = id
+      ; ◇ = ◇
+      ; ε = ε
+      ; Tm = Tm
+      ; _[_]t = _[_]t
       ; []t-id = {!!}
       ; []t-∘ = {!!}
-      ; fun = {!!}
+      ; fun = fun
       ; fun[] = {!!}
-      ; _▹ₜ = {!!}
+      ; _▹ₜ = _▹t
       ; πₜ¹ = {!!}
       ; πₜ² = {!!}
       ; _,ₜ_ = {!!}
       ; πₜ²∘,ₜ = {!!}
       ; πₜ¹∘,ₜ = {!!}
       ; ,ₜ∘πₜ = {!!}
-      ; For = {!!}
+      ; For = For
       ; _[_]f = {!!}
       ; []f-id = {!!}
       ; []f-∘ = {!!}
-      ; rel = {!!}
+      ; rel = rel
       ; rel[] = {!!}
-      ; _⊢_ = {!!}
-      ; _▹ₚ_ = {!!}
+      ; _⊢_ = λ (Γ : Con) (A : For Γ) → Pf Γ A
+      ; _▹ₚ_ = _▹p_
       ; πₚ¹ = {!!}
       ; πₚ² = {!!}
       ; _,ₚ_ = {!!}
       ; ,ₚ∘πₚ = {!!}
       ; πₚ¹∘,ₚ = {!!}
-      ; _⇒_ = {!!}
+      ; _⇒_ = _⇒_
       ; []f-⇒ = {!!}
-      ; ∀∀ = {!!}
+      ; ∀∀ = ∀∀
       ; []f-∀∀ = {!!}
       ; lam = {!!}
-      ; app = {!!}
+      ; app = app
       ; ∀i = {!!}
       ; ∀e = {!!}
       }
@@ -186,9 +242,10 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     f ∘ g = λ x → f (g x)
     id : {Γ : Con} → Sub Γ Γ
     id = λ x → x
-    data ◇ : Con where
-    ε : {Γ : Con} → Sub ◇ Γ -- The morphism from the initial to any object
-    ε ()
+    record ◇ : Con where
+      constructor ◇◇
+    ε : {Γ : Con} → Sub Γ ◇ -- The morphism from the initial to any object
+    ε Γ = ◇◇
                                                                     
     -- Functor Con → Set called Tm
     Tm : Con → Set
@@ -358,11 +415,12 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     α ∘ β = λ w γ → α w (β w γ)
     id : {Γ : Con} → Sub Γ Γ
     id = λ w γ → γ
-    data ◇⁰ : Set where
+    record ◇⁰ : Set where
+      constructor ◇◇⁰
     ◇ : Con -- The initial object of the category
     ◇ = λ w → ◇⁰
-    ε : {Γ : Con} → Sub ◇ Γ -- The morphism from the initial to any object
-    ε w ()
+    ε : {Γ : Con} → Sub Γ ◇ -- The morphism from the initial to any object
+    ε w Γ = ◇◇⁰
                                                                     
     -- Functor Con → Set called Tm
     Tm : Con → Set
