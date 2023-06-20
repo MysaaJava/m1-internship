@@ -84,151 +84,6 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       ∀i : {Γ : Con} → {F : For (Γ ▹ₜ)} → (Γ ▹ₜ) ⊢ F → Γ ⊢ (∀∀ F)
       ∀e : {Γ : Con} → {F : For (Γ ▹ₜ)} → Γ ⊢ (∀∀ F) → {t : Tm Γ} → Γ ⊢ ( F [(id {Γ}) ,ₜ t ]f)
 
-  module Initial where
-
-    data Con : Set₁
-    data For : Con → Set₁
-    data Con where -- isom integer ≡ number of terms in the context
-      ◇ : Con
-      _▹t : Con → Con
-      _▹p_ : (Γ : Con) → For Γ → Con
-      
-    variable
-      Γ Δ Ξ : Con
-      n : Nat
-      A : For Γ
-    
-    data TmVar : Con → Set₁ where
-      tvzero : TmVar (Γ ▹t)
-      tvnext : TmVar Γ → TmVar (Γ ▹t)
-      tvdisc : TmVar Γ → TmVar (Γ ▹p A)
-
-    data Tm : Con → Set₁ where
-      var : TmVar Γ → Tm Γ
-      fun : F n → Array (Tm Γ) n → Tm Γ
-
-    data For where
-      rel : R n → Array (Tm Γ) n → For Γ
-      _⇒_ : For Γ → For Γ → For Γ
-      ∀∀  : For (Γ ▹t) → For Γ
-
-    data PfVar : Con → For Γ → Set₁ where
-      pvzero : {A : For Γ} → PfVar (Γ ▹p A) A
-      pvnext : {A : For Δ} → {B : For Γ} → PfVar Γ A → PfVar (Γ ▹p B) A
-      pvdisc : {A : For Δ} → PfVar Γ A → PfVar (Γ ▹t) A
-
-    data Pf : Con → For Γ → Prop₁ where
-      var : {A : For Δ} → PfVar Γ A → Pf Γ A
-      app : {A B : For Δ} → Pf Γ (A ⇒ B) → Pf Γ A → Pf Γ B
-      lam : {A B : For Γ} → Pf (Γ ▹p A) B → Pf Γ (A ⇒ B)
-      --p∀∀e : {A : For Γ} → Pf Γ (∀∀ A) → Pf Γ (A [ t , id ])
-      --p∀∀i : {A : For (Γ ▹t)} → Pf (Γ [?]) A → Pf Γ (∀∀ A)
-
-    data Sub : Con → Con → Set₁ where -- TODO replace with prop
-      ε : Sub Γ ◇
-      wk▹t : Sub Δ Γ → Tm Δ → Sub Δ (Γ ▹t)
-      wk▹p : Sub Δ Γ → Pf Δ A → Sub Δ (Γ ▹p A)
-
-    -- We subst on terms
-    _[_]t : Tm Γ → Sub Δ Γ → Tm Δ
-    _[_]tz : Array (Tm Γ) n → Sub Δ Γ → Array (Tm Δ) n
-
-    var tvzero [ wk▹t σ t ]t = t
-    var (tvnext tv) [ wk▹t σ x ]t = var tv [ σ ]t
-    var (tvdisc tv) [ wk▹p σ x ]t = var tv [ σ ]t
-    fun f tz [ σ ]t = fun f (tz [ σ ]tz)
-    zero [ σ ]tz = zero
-    next t tz [ σ ]tz = next (t [ σ ]t) (tz [ σ ]tz)
-
-    -- We subst on proofs
-    _[_]p : Pf Γ A → Sub Δ Γ → Pf Δ A
-    _[_]p = {!!}
-
-    -- We subst on formulæ
-    _[_]f : For Γ → Sub Δ Γ → For Δ
-    _[_]f = {!!}
-
-  
-    _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
-    ε ∘ β = ε
-    wk▹t α t ∘ β = wk▹t (α ∘ β) (t [ β ]t)
-    wk▹p α pf ∘ β = wk▹p (α ∘ β) (pf [ β ]p)
-
-    pgcd : Con → Con → Con
-    pgcd ◇ Δ = ◇
-    pgcd (Γ ▹t) ◇ = ◇
-    pgcd (Γ ▹t) (Δ ▹t) = pgcd Γ Δ
-    pgcd (Γ ▹t) (Δ ▹p x) = pgcd Γ Δ
-    pgcd (Γ ▹p x) ◇ = ◇
-    pgcd (Γ ▹p x) (Δ ▹t) = pgcd Γ Δ
-    pgcd (Γ ▹p x) (Δ ▹p x₁) = pgcd Γ Δ
-
-
-    len : Con → Nat
-    len ◇ = 0
-    len (Γ ▹t) = succ (len Γ)
-    len (Γ ▹p A) = succ (len Γ)
-
-    lift▹tPf : Pf Γ A → Pf (Γ ▹t) A
-    lift▹tPf (var x) = var (pvdisc x)
-    lift▹tPf (app p p₁) = app (lift▹tPf p) (lift▹tPf p₁)
-    lift▹tPf (lam p) = {!!}
-    lift▹t : Sub Γ Δ → Sub (Γ ▹t) Δ
-    lift▹t ε = ε
-    lift▹t (wk▹t σ t) = wk▹t (lift▹t σ) (var tvzero)
-    lift▹t (wk▹p {A = A} σ x) = wk▹p (lift▹t σ) (var (pvdisc {!x!}))
-
-    id : Sub Γ Γ
-    id {◇} = ε
-    id {Γ ▹t} = wk▹t {!!} (var tvzero)
-    id {◇ ▹p A} = wk▹p ε (var pvzero)
-    id {(Γ ▹t) ▹p A} = wk▹p (wk▹t {!!} (var (tvdisc tvzero))) (var pvzero)
-    id {(Γ ▹p x) ▹p A} = wk▹p {!!} (var pvzero)
-
-
-    imod : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero} F R
-    imod = record
-      { Con = Con
-      ; Sub = Sub
-      ; _∘_ = _∘_
-      ; id = id
-      ; ◇ = ◇
-      ; ε = ε
-      ; Tm = Tm
-      ; _[_]t = _[_]t
-      ; []t-id = {!!}
-      ; []t-∘ = {!!}
-      ; fun = fun
-      ; fun[] = {!!}
-      ; _▹ₜ = _▹t
-      ; πₜ¹ = {!!}
-      ; πₜ² = {!!}
-      ; _,ₜ_ = {!!}
-      ; πₜ²∘,ₜ = {!!}
-      ; πₜ¹∘,ₜ = {!!}
-      ; ,ₜ∘πₜ = {!!}
-      ; For = For
-      ; _[_]f = {!!}
-      ; []f-id = {!!}
-      ; []f-∘ = {!!}
-      ; rel = rel
-      ; rel[] = {!!}
-      ; _⊢_ = λ (Γ : Con) (A : For Γ) → Pf Γ A
-      ; _▹ₚ_ = _▹p_
-      ; πₚ¹ = {!!}
-      ; πₚ² = {!!}
-      ; _,ₚ_ = {!!}
-      ; ,ₚ∘πₚ = {!!}
-      ; πₚ¹∘,ₚ = {!!}
-      ; _⇒_ = _⇒_
-      ; []f-⇒ = {!!}
-      ; ∀∀ = ∀∀
-      ; []f-∀∀ = {!!}
-      ; lam = {!!}
-      ; app = app
-      ; ∀i = {!!}
-      ; ∀e = {!!}
-      }
   record Tarski : Set₁ where
     field
       TM : Set
@@ -396,6 +251,25 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
             ; rel = rel
             ; rel[] = rel[]
             }
+
+
+    -- (∀ x ∀ y . A(x,y)) ⇒ ∀ y ∀ x . A(y,x)
+    -- both sides are ∀ ∀ A (0,1)
+    ex1 : {A : For (◇ ▹ₜ ▹ₜ)} → ◇ ⊢ ((∀∀ (∀∀ A)) ⇒ (∀∀ (∀∀ A)))
+    ex1 _ hyp = hyp
+    -- (A ⇒ ∀ x . B(x)) ⇒ ∀ x . A ⇒ B(x)
+    ex2 : {A : For ◇} → {B : For (◇ ▹ₜ)} → ◇ ⊢ ((A ⇒ (∀∀ B)) ⇒ (∀∀ ((A [ πₜ¹ id ]f) ⇒ B)))
+    ex2 _ h t h' = h h' t
+    -- ∀ x y . A(x,y) ⇒ ∀ x . A(x,x)
+    -- For simplicity, I swiched positions of parameters of A (somehow...)
+    ex3 : {A : For (◇ ▹ₜ ▹ₜ)} → ◇ ⊢ ((∀∀ (∀∀ A)) ⇒ (∀∀ (A [ id ,ₜ (πₜ² id) ]f)))
+    ex3 _ h t = h t t
+    -- ∀ x . A (x) ⇒ ∀ x y . A(x)
+    ex4 : {A : For (◇ ▹ₜ)} → ◇ ⊢ ((∀∀ A) ⇒ (∀∀ (∀∀ (A [ ε ,ₜ (πₜ² (πₜ¹ id)) ]f))))
+    ex4 {A} ◇◇ x t t' = x t
+    -- (((∀ x . A (x)) ⇒ B)⇒ B) ⇒ ∀ x . ((A (x) ⇒ B) ⇒ B)
+    ex5 : {A : For (◇ ▹ₜ)} → {B : For ◇} → ◇ ⊢ ((((∀∀ A) ⇒ B) ⇒ B) ⇒ (∀∀ ((A ⇒ (B [ πₜ¹ id ]f)) ⇒ (B [ πₜ¹ id ]f))))
+    ex5 ◇◇ h t h' = h (λ h'' → h' (h'' t))
 
   record Kripke : Set₁ where
     field
@@ -583,5 +457,5 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
   -- Completeness proof
 
   -- We first build our universal Kripke model
-
+  
   

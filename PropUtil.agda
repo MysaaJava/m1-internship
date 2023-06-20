@@ -52,6 +52,8 @@ module PropUtil where
   h $ t = h t
 
   open import Agda.Primitive
+  postulate _≈_ : ∀{ℓ}{A : Set ℓ}(a : A) → A → Set ℓ
+  {-# BUILTIN REWRITE _≈_ #-}
   infix 3 _≡_
   data _≡_ {ℓ}{A : Set ℓ}(a : A) : A → Prop ℓ where
     refl : a ≡ a
@@ -64,6 +66,9 @@ module PropUtil where
 
   postulate subst       : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Set ℓ'){a a' : A} → a ≡ a' → P a → P a'
   postulate substP      : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Prop ℓ'){a a' : A} → a ≡ a' → P a → P a'
+
+  postulate substrefl   : ∀{ℓ}{A : Set ℓ}{ℓ'}{P : A → Set ℓ'}{a : A}{e : a ≡ a}{p : P a} → subst P e p ≈ p
+  {-# REWRITE substrefl   #-}
 
   {-# BUILTIN EQUALITY _≡_ #-}
 
