@@ -77,5 +77,10 @@ example {A = A} = lam (lam (App (app (suc zero)
            (wk-subst {A = A}) (App zero zero))) zero))
 
 
+-- (∀ x ∀ y . A(x,y)) ⇒ ∀ y ∀ x . A(y,x)
+-- (A ⇒ ∀ x . B(x)) ⇒ ∀ x . A ⇒ B(x)   
+-- ∀ x y . A(x,y) ⇒ ∀ x . A(x,x)
+-- ∀ x . A (x) ⇒ ∀ x y . A(x)
+-- (((∀ x . A (x)) ⇒ B)⇒ B) ⇒ ∀ x . ((A (x) ⇒ B) ⇒ B)
 
 -}
