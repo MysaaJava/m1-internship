@@ -1,7 +1,7 @@
 open import Data.Nat
 open import Relation.Binary.PropositionalEquality
 
-variable m n : ℕ
+variable m n l : ℕ
 
 data Term : ℕ → Set where
   zero : Term (suc n)
@@ -9,49 +9,16 @@ data Term : ℕ → Set where
 
 variable t u : Term n
 
-data Weak : ℕ → Set where
-  wk : Weak (suc n)
-  suc : Weak n → Weak (suc n)
+wk-t : (l : ℕ) → Term (l + n) → Term (suc (l + n))
+wk-t zero t = suc t
+wk-t (suc l) zero = zero
+wk-t (suc l) (suc t) = suc (wk-t l t)
 
-data Subst : ℕ → Set where
-  <_> : Term n → Subst n
-  suc : Subst n → Subst (suc n)
-
-_[_]t : Term n → Weak n → Term (suc n)
-t [ wk ]t = suc t
-zero [ suc w ]t = zero
-suc t [ suc w ]t = suc (t [ w ]t)
-
-{-
-0  -> 0
-1  -> 2
-2  -> 3
-
-suc wk
-
-
-wk
-0 -> 1
-1 -> 2
-2 -> 3
--}
-
-_s[_]t : Term (suc n) → Subst n → Term n
-zero s[ < u > ]t = u
-suc t s[ < u > ]t = t
-zero s[ suc s ]t = zero
-suc t s[ suc s ]t = suc (t s[ s ]t)
-
-{-
-x,y,z  --> x,z
-0,1,2  y => x,z ⊢ t 
-
-x => x  0 => 0
-y => t  1 => t
-z => z  2 => 1
-
-
--}
+subst-t : (l : ℕ) → Term (suc (l + n)) → Term n → Term (l + n)
+subst-t zero zero u = u
+subst-t zero (suc t) u = t
+subst-t (suc l) zero u = zero
+subst-t (suc l) (suc t) u = suc (subst-t l t u)
 
 infix 15 _⇒_
 
@@ -61,15 +28,15 @@ data Form : ℕ → Set where
   P : Term n → Form n
 --  R : Term n → Term n → Form n
 
-_[_]F : Form n → Weak n → Form (suc n)
-(A ⇒ B) [ w ]F = (A [ w ]F) ⇒ (B [ w ]F)
-∀F A [ w ]F = ∀F (A [ suc w ]F)
-P a [ w ]F = P (a [ w ]t )
+wk-F : (l : ℕ) → Form (l + n) → Form (suc (l + n))
+wk-F l (A ⇒ B) = wk-F l A ⇒ wk-F l B
+wk-F l (∀F A) = ∀F (wk-F (suc l) A)
+wk-F l (P t) = P (wk-t l t)
 
-_s[_]F : Form (suc n) → Subst n → Form n
-(A ⇒ B) s[ s ]F = (A s[ s ]F) ⇒ (B s[ s ]F)
-∀F A s[ s ]F = ∀F (A s[ suc s ]F)
-P a s[ s ]F = P (a s[ s ]t )
+subst-F : (l : ℕ) → Form (suc (l + n)) → Term n → Form (l + n)
+subst-F l (A ⇒ B) u = subst-F l A u ⇒ subst-F l B u
+subst-F l (∀F A) u = ∀F (subst-F (suc l) A u)
+subst-F l (P t) u = P (subst-t l t u)
 
 infix 10 _▷_
 
@@ -77,9 +44,9 @@ data Con : ℕ → Set where
   • : Con n
   _▷_ : Con n → Form n → Con n
 
-_[_]C : Con n → Weak n → Con (suc n)
-• [ w ]C = •
-(Γ ▷ A) [ w ]C = (Γ [ w ]C) ▷ (A [ w ]F)
+wk-C : (l : ℕ) → Con (l + n) → Con (suc (l + n))
+wk-C l • = •
+wk-C l (Γ ▷ A) = wk-C l Γ ▷ wk-F l A
 
 variable Γ Δ : Con n
 variable A B C : Form n
@@ -91,12 +58,15 @@ data _⊢_ : Con n → Form n → Set where
   suc : Γ ⊢ A → Γ ▷ B ⊢ A
   lam : Γ ▷ A ⊢ B → Γ ⊢ A ⇒ B
   app : Γ ⊢ A ⇒ B → Γ ⊢ A → Γ ⊢ B
-  Lam : Γ [ wk ]C ⊢ A → Γ ⊢ ∀F A
-  App : Γ ⊢ ∀F A → (t : Term _) → Γ ⊢ A s[ < t > ]F
+  Lam : (wk-C zero Γ) ⊢ A → Γ ⊢ ∀F A
+  App : Γ ⊢ ∀F A → (t : Term _) → Γ ⊢ subst-F zero A t
 
+{-
 -- (A ⇒ ∀ x . P x) ⇒ ∀ x . A → P x
 
 -- A ≡ A [ wk ][ < t > ] 
+
+wk-subst : subst l (wk l A) t ≡ t
 
 wk-subst :  (A [ wk ]F) s[ < t > ]F ≡ A
 wk-subst = {!!}
@@ -107,3 +77,5 @@ example {A = A} = lam (lam (App (app (suc zero)
            (wk-subst {A = A}) (App zero zero))) zero))
 
 
+
+-}
