@@ -36,7 +36,7 @@ comp ε us = ε
 comp (ts , u) us = (comp ts us) , (subst-t u us)
 
 {-
-t [ suc vs ] ≡ suc (t [vs ])
+t [ suc-subst vs ] ≡ suc (t [vs ])
 suc-subst ts ∘ (us , t) ≡ ts ∘ us
 
 t [ id ] ≡ t
