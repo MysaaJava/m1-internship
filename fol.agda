@@ -3,6 +3,10 @@ open import Relation.Binary.PropositionalEquality
 
 variable m n l : ℕ
 
+_$_ : {A B : Set} → (A → B) → A → B
+f $ x = f x
+infixr 1 _$_
+
 data Term : ℕ → Set where
   zero : Term (suc n)
   suc : Term n → Term (suc n)
@@ -61,26 +65,49 @@ data _⊢_ : Con n → Form n → Set where
   Lam : (wk-C zero Γ) ⊢ A → Γ ⊢ ∀F A
   App : Γ ⊢ ∀F A → (t : Term _) → Γ ⊢ subst-F zero A t
 
-{-
--- (A ⇒ ∀ x . P x) ⇒ ∀ x . A → P x
+
 
 -- A ≡ A [ wk ][ < t > ] 
 
-wk-subst : subst l (wk l A) t ≡ t
+wk-substt : {t : Term (l + n)} → subst-t l (wk-t l t) u ≡ t
+wk-substt {zero} = refl
+wk-substt {suc l} {t = zero} = refl
+wk-substt {suc l} {n} {t = suc t} = cong (λ t → suc t) (wk-substt {l})
 
-wk-subst :  (A [ wk ]F) s[ < t > ]F ≡ A
-wk-subst = {!!}
+wk-substf : {A : Form (l + n)} → subst-F l (wk-F l A) u ≡ A
+wk-substf {A = A ⇒ A₁} = cong₂ (λ B B₁ → B ⇒ B₁) wk-substf wk-substf
+wk-substf {A = ∀F A} = cong (λ B → ∀F B) wk-substf
+wk-substf {l = l} {A = P x} = cong (λ t → P t) (wk-substt {l})
 
-example : • ⊢ (A ⇒ (∀F (P zero))) ⇒ (∀F (A [ wk ]F) ⇒ P zero)
-example {A = A} = lam (lam (App (app (suc zero) 
-         (subst (λ X → (• ▷ A ⇒ ∀F (P zero)) ▷ ∀F (A [ wk ]F) ⊢ X)
-           (wk-subst {A = A}) (App zero zero))) zero))
-
+-- (A ⇒ ∀ x . P x) ⇒ ∀ x . A → P x
+example : • ⊢ (A ⇒ (∀F (P zero))) ⇒ (∀F (wk-F 0 A) ⇒ P zero)
+example {A = A} = lam (lam (App (app (suc zero) (subst (λ Φ → (• ▷ A ⇒ ∀F (P zero)) ▷ ∀F (wk-F 0 A) ⊢ Φ) wk-substf (App zero zero))) zero))
 
 -- (∀ x ∀ y . A(x,y)) ⇒ ∀ y ∀ x . A(y,x)
--- (A ⇒ ∀ x . B(x)) ⇒ ∀ x . A ⇒ B(x)   
+ex1 : {A : Form 2} → • ⊢ (∀F (∀F A)) ⇒ (∀F (∀F A))
+ex1 = lam zero
+-- (A ⇒ ∀ x . B(x)) ⇒ ∀ x . A ⇒ B(x)
+-- y → ∀x B(x) ==> y → ∀ x B(y)
+eq' : {l n : ℕ} → (l + suc n) ≡ (suc (l + n))
+eq : {l n : ℕ} → (1 + (l + (suc n))) ≡ (suc (suc (l + n)))
+--eq {zero} {zero} = refl
+--eq {zero} {suc n} = cong suc (eq {l = 0})
+--eq {suc l} = cong suc (eq {l = l})
+lm-t : {l n : ℕ} → {t : Term (l + suc n)} → subst-t {n = suc n} l (subst Term (sym eq) (wk-t (suc l) (subst Term eq' t)) ) zero ≡ t
+lm-F : {l n : ℕ} → {A : Form (l + suc n)} → subst-F {n = suc n} l (subst Form (sym eq) (wk-F (suc l) (subst Form eq' A)) ) zero ≡ A
+lm-t {t = t} = {!!}
+lm-F = {!!}
+{-
+lm-F : {A : Form 1} → subst-F 0 (wk-F 1 A) zero ≡ A
+lm-F {A ⇒ A₁} = cong₂ (λ B B₁ → B ⇒ B₁) lm-F lm-F
+lm-F {∀F A} = cong (λ B → ∀F B) {!lm-F!}
+lm-F {P x} = cong (λ t → P t) lm-t
+-}
+ex2 : {A : Form 0} → {B : Form 1} → • ⊢ ((A ⇒ (∀F B)))⇒(∀F ((wk-F 0 A) ⇒ B))
+ex2 {A = A} {B = B} = lam $ Lam $ lam $ subst (λ C → (• ▷ wk-F zero A ⇒ ∀F (wk-F 1 B)) ▷ wk-F 0 A ⊢ C) lm-F (((App (app (suc zero) zero) zero)))
+-- lam (Lam (lam ( subst (λ Φ → (• ▷ wk-F zero A ⇒ ∀F (wk-F 1 B)) ▷ wk-F 0 A ⊢ Φ) (wk-substf {l = 0}) (App (app (suc (suc lm)) (app (suc zero) zero)) zero))))
 -- ∀ x y . A(x,y) ⇒ ∀ x . A(x,x)
 -- ∀ x . A (x) ⇒ ∀ x y . A(x)
 -- (((∀ x . A (x)) ⇒ B)⇒ B) ⇒ ∀ x . ((A (x) ⇒ B) ⇒ B)
 
--}
+
