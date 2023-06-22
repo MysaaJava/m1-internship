@@ -9,6 +9,47 @@ data Term : ℕ → Set where
 
 variable t u : Term n
 
+data Subst : ℕ → ℕ → Set where
+  ε : Subst n 0
+  _,_ : Subst m n → Term m → Subst m (suc n)
+
+suc-subst : Subst m n → Subst (suc m) n
+suc-subst ε = ε
+suc-subst (ts , t) = suc-subst ts , suc t
+
+id : Subst m m
+id {zero} = ε
+id {suc m} = (suc-subst (id {m})) , zero
+
+subst-t : Term m → Subst n m → Term n
+subst-t zero (us , u) = u
+subst-t (suc t) (us , u) = subst-t t us
+
+wk-t1 : Term n → Term (suc n)
+wk-t1 t = subst-t t (suc-subst id)
+
+subst-t1 : Term (suc n) → Term n → Term n
+subst-t1 t u = subst-t t (id , u)
+
+comp : Subst m l → Subst n m → Subst n l
+comp ε us = ε
+comp (ts , u) us = (comp ts us) , (subst-t u us)
+
+{-
+t [ suc vs ] ≡ suc (t [vs ])
+suc-subst ts ∘ (us , t) ≡ ts ∘ us
+
+t [ id ] ≡ t
+t [ us ∘ vs ] ≡ t [ us ] [ vs ]
+
+ts ∘ id ≡ ts
+id ∘ ts ≡ ts
+(ts ∘ us) ∘ vs ≡ ts ∘ (us ∘ vs)
+
+-}
+
+
+{-
 wk-t : (l : ℕ) → Term (l + n) → Term (suc (l + n))
 wk-t zero t = suc t
 wk-t (suc l) zero = zero
@@ -94,3 +135,4 @@ eq : ∀ {t : Term (suc (l + n))}{u : Term n} →
    subst-t {n = suc n} l (subst Term (eqq {l = (suc l)}{n = n})(wk-t {n = n} (suc l) t)) (wk-t zero u)
    ≡ {! subst-t l t   !} -- subst-t l (wk-t (suc l) t) u ≡ subst-t l t u
 eq = {!!}
+-}
