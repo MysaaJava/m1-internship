@@ -61,6 +61,9 @@ module PropUtil where
   ≡sym : {ℓ : Level} → {A : Set ℓ}→ {a a' : A} → a ≡ a' → a' ≡ a
   ≡sym refl = refl
 
+  ≡tran : {ℓ : Level} {A : Set ℓ} → {a a' a'' : A} → a ≡ a' → a' ≡ a'' → a ≡ a''
+  ≡tran refl refl = refl
+
   postulate ≡fun : {ℓ ℓ' : Level} → {A : Set ℓ} → {B : Set ℓ'} → {f g : A → B} → ((x : A) → (f x ≡ g x)) → f ≡ g
   postulate ≡fun' : {ℓ ℓ' : Level} → {A : Set ℓ} → {B : A → Set ℓ'} → {f g : (a : A) → B a} → ((x : A) → (f x ≡ g x)) → f ≡ g
 
@@ -69,6 +72,11 @@ module PropUtil where
 
   postulate substrefl   : ∀{ℓ}{A : Set ℓ}{ℓ'}{P : A → Set ℓ'}{a : A}{e : a ≡ a}{p : P a} → subst P e p ≈ p
   {-# REWRITE substrefl   #-}
+
+  cong : {ℓ ℓ' : Level}{A : Set ℓ}{B : Set ℓ'} → (f : A → B) → {a a' : A} → a ≡ a' → f a ≡ f a'
+  cong f refl = refl
+  cong₂ : {ℓ ℓ' ℓ'' : Level}{A : Set ℓ}{B : Set ℓ'}{C : Set ℓ''} → (f : A → B → C) → {a a' : A} {b b' : B} → a ≡ a' → b ≡ b' → f a b ≡ f a' b'
+  cong₂ f refl refl = refl
 
   {-# BUILTIN EQUALITY _≡_ #-}
 

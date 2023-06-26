@@ -45,24 +45,35 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
   zero [ σ ]tz = zero
   next t tz [ σ ]tz = next (t [ σ ]t) (tz [ σ ]tz)
 
+  -- tz application is like mapping
+  tzmap : {tz : Array (Tm Γₜ) n} {σ : Subt Δₜ Γₜ} → (tz [ σ ]tz) ≡ map (λ t → t [ σ ]t) tz
+  tzmap {tz = zero} = refl
+  tzmap {tz = next t tz} {σ = σ} = cong (next (t [ σ ]t)) tzmap
+
   -- We define liftings on term variables
   -- A term of n variables is a term of n+1 variables
-  liftt : Tm Γₜ → Tm (Γₜ ▹t⁰)
   -- Same for a term array
+  liftt : Tm Γₜ → Tm (Γₜ ▹t⁰)
   lifttz : Array (Tm Γₜ) n → Array (Tm (Γₜ ▹t⁰)) n
+  
   liftt (var tv) = var (tvnext tv)
   liftt (fun f tz) = fun f (lifttz tz)
   lifttz zero = zero
   lifttz (next t tz) = next (liftt t) (lifttz tz)
-  -- From a substitution into n variables, we construct a substitution from n+1 variables to n+1 variables which maps it to itself
-  -- i.e. 0 -> 0 and for all i ->(old) σ(i) we get i+1 -> σ(i)+1
-  lift : Subt Δₜ Γₜ → Subt (Δₜ ▹t⁰) (Γₜ ▹t⁰)
-  lift εₜ = wk▹t εₜ (var tvzero)
-  lift (wk▹t σ t) = wk▹t (lift σ) (liftt t)
+  
   -- From a substition into n variables, we get a substitution into n+1 variables which don't use the last one
   llift : Subt Δₜ Γₜ → Subt (Δₜ ▹t⁰) Γₜ
   llift εₜ = εₜ
   llift (wk▹t σ t) = wk▹t (llift σ) (liftt t)
+  llift-liftt : {tv : TmVar Γₜ} → {σ : Subt Δₜ Γₜ} → liftt (var tv [ σ ]t) ≡ var tv [ llift σ ]t
+  llift-liftt {tv = tvzero} {σ = wk▹t σ x} = refl
+  llift-liftt {tv = tvnext tv} {σ = wk▹t σ x} = llift-liftt {tv = tv} {σ = σ}
+  
+  -- From a substitution into n variables, we construct a substitution from n+1 variables to n+1 variables which maps it to itself
+  -- i.e. 0 -> 0 and for all i ->(old) σ(i) we get i+1 -> σ(i)+1
+  lift : Subt Δₜ Γₜ → Subt (Δₜ ▹t⁰) (Γₜ ▹t⁰)
+  lift σ = wk▹t (llift σ) (var tvzero)
+
   
   -- We subst on formulæ
   _[_]f : For Γₜ → Subt Δₜ Γₜ → For Δₜ
@@ -73,11 +84,12 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
   -- We now can define identity on term substitutions       
   idₜ : Subt Γₜ Γₜ
   idₜ {◇t} = εₜ
-  idₜ {Γₜ ▹t⁰} = lift idₜ
+  idₜ {Γₜ ▹t⁰} = lift (idₜ {Γₜ})
 
   _∘ₜ_ : Subt Δₜ Γₜ → Subt Ξₜ Δₜ → Subt Ξₜ Γₜ
   εₜ ∘ₜ β = εₜ
   wk▹t α x ∘ₜ β = wk▹t (α ∘ₜ β) (x [ β ]t)
+
 
   -- We have the access functions from the algebra, in restricted versions
   πₜ¹ : Subt Δₜ (Γₜ ▹t⁰) → Subt Δₜ Γₜ
@@ -96,20 +108,46 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
   ,ₜ∘πₜ {σₜ = wk▹t σₜ t} = refl
 
   -- We can also prove the substitution equalities
-  lem1 : lift (idₜ {Γₜ}) ≡ wk▹t {!!} {!!}
   []t-id : {t : Tm Γₜ} → t [ idₜ {Γₜ} ]t ≡ t
   []tz-id : {tz : Array (Tm Γₜ) n} → tz [ idₜ {Γₜ} ]tz ≡ tz
-  []t-id {◇t ▹t⁰} {var tvzero} = refl
-  []t-id {(Γₜ ▹t⁰) ▹t⁰} {var tv} = {!!}
+  []t-id {Γₜ ▹t⁰} {var tvzero} = refl
+  []t-id {Γₜ ▹t⁰} {var (tvnext tv)} = substP (λ t → t ≡ var (tvnext tv)) (llift-liftt {tv = tv} {σ = idₜ}) (substP (λ t → liftt t ≡ var (tvnext tv)) (≡sym ([]t-id {t = var tv})) refl)
   []t-id {Γₜ} {fun f tz} = substP (λ tz' → fun f tz' ≡ fun f tz) (≡sym []tz-id) refl
   []tz-id {tz = zero} = refl
   []tz-id {tz = next x tz} = substP (λ tz' → (next (x [ idₜ ]t) tz') ≡ next x tz) (≡sym []tz-id) (substP (λ x' → next x' tz ≡ next x tz) (≡sym []t-id) refl)
   []t-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {t : Tm Γₜ} → t [ β ∘ₜ α ]t ≡ (t [ β ]t) [ α ]t
-  []t-∘ {α = α} {β = β} {t = t} = {!!}
+  []tz-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {tz : Array (Tm Γₜ) n} → tz [ β ∘ₜ α ]tz ≡ (tz [ β ]tz) [ α ]tz
+  []tz-∘ {tz = zero} = refl
+  []tz-∘ {tz = next t tz} = cong₂ next ([]t-∘ {t = t}) []tz-∘
+  []t-∘ {α = α} {β = wk▹t β t} {t = var tvzero} = refl
+  []t-∘ {α = α} {β = wk▹t β t} {t = var (tvnext tv)} = []t-∘ {t = var tv}
+  []t-∘ {α = α} {β = β} {t = fun f tz} = cong (fun f) ([]tz-∘ {tz = tz})
   fun[] : {σ : Subt Δₜ Γₜ} → {f : F n} → {tz : Array (Tm Γₜ) n} → (fun f tz) [ σ ]t ≡ fun f (map (λ t → t [ σ ]t) tz)
+  fun[] {tz = zero} = refl
+  fun[] {σ = σ} {f = f} {tz = next t tz} = cong (fun f) (cong (next (t [ σ ]t)) tzmap)
   []f-id : {F : For Γₜ} → F [ idₜ {Γₜ} ]f ≡ F
+  []f-id {F = rel r tz} = cong (rel r) (≡tran (≡sym tzmap) []tz-id)
+  []f-id {F = F ⇒ G} = cong₂ _⇒_ []f-id []f-id
+  []f-id {F = ∀∀ F} = cong ∀∀ []f-id
+  llift-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → llift (β ∘ₜ α) ≡ (llift β ∘ₜ lift α)
+  liftt[] : {α : Subt Δₜ Γₜ} → {t : Tm Γₜ} → liftt (t [ α ]t) ≡ (liftt t [ lift α ]t)
+  lifttz[] : {α : Subt Δₜ Γₜ} → {tz : Array (Tm Γₜ) n} → lifttz (tz [ α ]tz) ≡ (lifttz tz [ lift α ]tz)
+  llift-∘ {β = εₜ} = refl
+  llift-∘ {β = wk▹t β t} = cong₂ wk▹t llift-∘ (liftt[] {t = t})
+  liftt[] {t = fun f tz} = cong (fun f) lifttz[]
+  liftt[] {α = wk▹t α t} {var tvzero} = refl
+  liftt[] {α = wk▹t α t} {var (tvnext tv)} = liftt[] {t = var tv}
+  lifttz[] {tz = zero} = refl
+  lifttz[] {tz = next t tz} = cong₂ next (liftt[] {t = t}) lifttz[]
+  lift-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → lift (β ∘ₜ α) ≡ (lift β) ∘ₜ (lift α)
+  lift-∘ {α = α} {β = εₜ} = refl
+  lift-∘ {α = α} {β = wk▹t β t} = cong₂ wk▹t (cong₂ wk▹t llift-∘ (liftt[] {t = t})) refl
   []f-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {F : For Γₜ} → F [ β ∘ₜ α ]f ≡ (F [ β ]f) [ α ]f
+  []f-∘ {α = α} {β = β} {F = rel r tz} = cong (rel r) (≡tran (≡tran (≡sym tzmap) (substP (λ tzz → (tz [ β ∘ₜ α ]tz) ≡ (tzz [ α ]tz)) tzmap []tz-∘)) tzmap)
+  []f-∘ {F = F ⇒ G} = cong₂ _⇒_ []f-∘ []f-∘
+  []f-∘ {F = ∀∀ F} = cong ∀∀ (≡tran (cong (λ σ → F [ σ ]f) lift-∘) []f-∘)
   rel[] : {σ : Subt Δₜ Γₜ} → {r : R n} → {tz : Array (Tm Γₜ) n} → (rel r tz) [ σ ]f ≡ rel r (map (λ t → t [ σ ]t) tz)
+  rel[] {r = r} = cong (rel r) refl
 
 
   
@@ -260,19 +298,22 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
     ; πₜ²∘,ₜ = {!!}
     ; πₜ¹∘,ₜ = {!!}
     ; ,ₜ∘πₜ = {!!}
+    ; ,ₜ∘ = {!!}
     ; For = λ Γ → For (Con.t Γ)
     ; _[_]f = λ A σ → A [ subt σ ]f
-    ; []f-id = {!!}
-    ; []f-∘ = {!!}
+    ; []f-id = λ {Γ} {F} → []f-id {Con.t Γ} {F}
+    ; []f-∘ = {!λ {Γ Δ Ξ} {α} {β} {F} → []f-∘ {Con.t Γ} {Con.t Δ} {Con.t Ξ} {Sub.t α} {Sub.t β} {F}!}
     ; rel = rel
-    ; rel[] = {!!}
+    ; rel[] = rel[]
     ; _⊢_ = λ Γ A → Pf Γ A
+    ; _[_]p = {!!}
     ; _▹ₚ_ = _▹p_
     ; πₚ¹ = {!!}
     ; πₚ² = {!!}
     ; _,ₚ_ = {!!}
     ; ,ₚ∘πₚ = {!!}
     ; πₚ¹∘,ₚ = {!!}
+    ; ,ₚ∘ = {!!}
     ; _⇒_ = _⇒_
     ; []f-⇒ = {!!}
     ; ∀∀ = ∀∀

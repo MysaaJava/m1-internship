@@ -8,10 +8,11 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
   open import ListUtil
 
   variable
-    ℓ¹ ℓ² ℓ³ ℓ⁴̂ ℓ⁵ : Level
+    ℓ¹ ℓ² ℓ³ ℓ⁴ ℓ⁵ : Level
     
-  record FFOL (F : Nat → Set) (R : Nat → Set) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴̂ ⊔ ℓ⁵)) where
+  record FFOL (F : Nat → Set) (R : Nat → Set) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ⁵)) where
     infixr 10 _∘_
+    infixr 5 _⊢_
     field
       Con : Set ℓ¹
       Sub : Con → Con → Set ℓ⁵ -- It makes a posetal category
@@ -38,6 +39,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       πₜ²∘,ₜ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm Δ} → πₜ² (σ ,ₜ t) ≡ t
       πₜ¹∘,ₜ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm Δ} → πₜ¹ (σ ,ₜ t) ≡ σ
       ,ₜ∘πₜ : {Γ Δ : Con} → {σ : Sub Δ (Γ ▹ₜ)} → (πₜ¹ σ) ,ₜ (πₜ² σ) ≡ σ
+      ,ₜ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{t : Tm Γ} → (σ ,ₜ t) ∘ δ ≡ (σ ∘ δ) ,ₜ (t [ δ ]t)
 
       -- Functor Con → Set called For
       For : Con → Set ℓ³
@@ -50,8 +52,8 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       rel[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {r : R n} → {tz : Array (Tm Γ) n} → (rel r tz) [ σ ]f ≡ rel r (map (λ t → t [ σ ]t) tz)
 
       -- Proofs
-      _⊢_ : (Γ : Con) → For Γ → Prop ℓ⁴̂
-      --_[_]p : {Γ Δ : Con} → {F : For Γ} → Γ ⊢ F → (σ : Sub Δ Γ) → Δ ⊢ (F [ σ ]f) -- The functor's action on morphisms
+      _⊢_ : (Γ : Con) → For Γ → Prop ℓ⁴
+      _[_]p : {Γ Δ : Con} → {F : For Γ} → Γ ⊢ F → (σ : Sub Δ Γ) → Δ ⊢ (F [ σ ]f) -- The functor's action on morphisms
       -- Equalities below are useless because Γ ⊢ F is in prop
       -- []p-id : {Γ : Con} → {F : For Γ} → {prf : Γ ⊢ F} → prf [ id {Γ} ]p ≡ prf
       -- []p-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {F : For Γ} → {prf : Γ ⊢ F} → prf [ α ∘ β ]p ≡ (prf [ β ]p) [ α ]p
@@ -65,6 +67,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       ,ₚ∘πₚ : {Γ Δ : Con} → {F : For Γ} → {σ : Sub Δ (Γ ▹ₚ F)} → (πₚ¹ σ) ,ₚ (πₚ² σ) ≡ σ
       πₚ¹∘,ₚ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {F : For Γ} → {prf : Δ ⊢ (F [ σ ]f)} → πₚ¹ (σ ,ₚ prf) ≡ σ
       -- πₚ²∘,ₚ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {F : For Γ} → {prf : Δ ⊢ (F [ σ ]f)} → πₚ² (σ ,ₚ prf) ≡ prf
+      ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For Ξ}{prf : Γ ⊢ (F [ σ ]f)} → (σ ,ₚ prf) ∘ δ ≡ (σ ∘ δ) ,ₚ (substP (λ F → Δ ⊢ F) (≡sym []f-∘) (prf [ δ ]p))
 
 
       -- Implication
@@ -73,7 +76,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
 
       -- Forall
       ∀∀ : {Γ : Con} → For (Γ ▹ₜ) → For Γ
-      []f-∀∀ : {Γ Δ : Con} → {F : For (Γ ▹ₜ)} → {σ : Sub Δ Γ} → {t : Tm Γ} → (∀∀ F) [ σ ]f ≡ (∀∀ (F [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f))
+      []f-∀∀ : {Γ Δ : Con} → {F : For (Γ ▹ₜ)} → {σ : Sub Δ Γ} → (∀∀ F) [ σ ]f ≡ (∀∀ (F [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f))
 
       -- Lam & App
       lam : {Γ : Con} → {F : For Γ} → {G : For Γ} → (Γ ▹ₚ F) ⊢ (G [ πₚ¹ id ]f) → Γ ⊢ (F ⇒ G)
@@ -83,6 +86,48 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       -- ∀i and ∀e
       ∀i : {Γ : Con} → {F : For (Γ ▹ₜ)} → (Γ ▹ₜ) ⊢ F → Γ ⊢ (∀∀ F)
       ∀e : {Γ : Con} → {F : For (Γ ▹ₜ)} → Γ ⊢ (∀∀ F) → {t : Tm Γ} → Γ ⊢ ( F [(id {Γ}) ,ₜ t ]f)
+
+
+    -- Examples
+    -- Proof utils
+    forall-in : {Γ Δ : Con} {σ : Sub Γ Δ} {A : For (Δ ▹ₜ)} → Γ ⊢ ∀∀ (A [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f) → Γ ⊢ (∀∀ A [ σ ]f)
+    forall-in {Γ = Γ} f = substP (λ F → Γ ⊢ F) (≡sym ([]f-∀∀)) f
+    wkₜ : {Γ : Con} → Sub (Γ ▹ₜ) Γ
+    wkₜ = πₜ¹ id
+    0ₜ : {Γ : Con} → Tm (Γ ▹ₜ)
+    0ₜ = πₜ² id
+    1ₜ : {Γ : Con} → Tm (Γ ▹ₜ ▹ₜ)
+    1ₜ = πₜ² (πₜ¹ id)
+    wkₚ : {Γ : Con} {A : For Γ} → Sub (Γ ▹ₚ A) Γ
+    wkₚ = πₚ¹ id
+    0ₚ : {Γ : Con} {A : For Γ} → Γ ▹ₚ A ⊢ A [ πₚ¹ id ]f
+    0ₚ = πₚ² id
+
+    --  Examples
+    ex0 : {A :  For ◇} → ◇ ⊢ (A ⇒ A)
+    ex0 {A = A} = lam 0ₚ
+    {-
+    ex1 : {A : For (◇ ▹ₜ)} → ◇ ⊢ ((∀∀ A) ⇒ (∀∀ A))
+    -- πₚ¹ id is adding an unused variable (syntax's llift)
+    ex1 {A = A} = lam (forall-in (∀i (substP (λ σ → ((◇ ▹ₚ ∀∀ A) ▹ₜ) ⊢ (A [ σ ]f)) {!!} {!!})))
+    -- (∀ x ∀ y . A(y,x)) ⇒ ∀ x ∀ y . A(x,y)
+    -- translation is (∀ ∀ A(0,1)) => (∀ ∀ A(1,0))
+    ex1' : {A : For (◇ ▹ₜ ▹ₜ)} → ◇ ⊢ ((∀∀ (∀∀ A)) ⇒ ∀∀ (∀∀ ( A [ (ε ,ₜ 0ₜ) ,ₜ 1ₜ ]f)))
+    ex1' = {!!}
+    -- (A ⇒ ∀ x . B(x)) ⇒ ∀ x . A ⇒ B(x)
+    ex2 : {A : For ◇} → {B : For (◇ ▹ₜ)} → ◇ ⊢ ((A ⇒ (∀∀ B)) ⇒ (∀∀ ((A [ wkₜ ]f) ⇒ B)))
+    ex2 = {!!}
+    -- ∀ x y . A(x,y) ⇒ ∀ x . A(x,x)
+    -- For simplicity, I swiched positions of parameters of A (somehow...)
+    ex3 : {A : For (◇ ▹ₜ ▹ₜ)} → ◇ ⊢ ((∀∀ (∀∀ A)) ⇒ (∀∀ (A [ id ,ₜ 0ₜ ]f)))
+    ex3 = {!!}
+    -- ∀ x . A (x) ⇒ ∀ x y . A(x)
+    ex4 : {A : For (◇ ▹ₜ)} → ◇ ⊢ ((∀∀ A) ⇒ (∀∀ (∀∀ (A [ ε ,ₜ 1ₜ ]f))))
+    ex4 = {!!}
+    -- (((∀ x . A (x)) ⇒ B)⇒ B) ⇒ ∀ x . ((A (x) ⇒ B) ⇒ B)
+    ex5 : {A : For (◇ ▹ₜ)} → {B : For ◇} → ◇ ⊢ ((((∀∀ A) ⇒ B) ⇒ B) ⇒ (∀∀ ((A ⇒ (B [ wkₜ ]f)) ⇒ (B [ wkₜ ]f))))
+    ex5 = {!!}
+    -}
 
   record Tarski : Set₁ where
     field
@@ -145,6 +190,8 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     πₜ¹∘,ₜ = refl
     ,ₜ∘πₜ : {Γ Δ : Con} → {σ : Sub Δ (Γ ▹ₜ)} → (πₜ¹ σ) ,ₜ (πₜ² σ) ≡ σ
     ,ₜ∘πₜ = refl
+    ,ₜ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{t : Tm Γ} → (σ ,ₜ t) ∘ δ ≡ (σ ∘ δ) ,ₜ (t [ δ ]t)
+    ,ₜ∘ = refl
                                                                        
     -- Functor Con → Set called For
     For : Con → Set₁
@@ -181,7 +228,10 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     ,ₚ∘πₚ : {Γ Δ : Con} → {F : For Γ} → {σ : Sub Δ (Γ ▹ₚ F)} → (πₚ¹ σ) ,ₚ (πₚ² σ) ≡ σ
     ,ₚ∘πₚ = refl
     πₚ¹∘,ₚ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {F : For Γ} → {prf : Δ ⊢ (F [ σ ]f)} → πₚ¹ {Γ} {Δ} {F} (σ ,ₚ prf) ≡ σ
-    πₚ¹∘,ₚ = refl                                                                 
+    πₚ¹∘,ₚ = refl
+    ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For Ξ}{prf : Γ ⊢ (F [ σ ]f)} →
+      (_,ₚ_  {F = F} σ prf) ∘ δ ≡ (σ ∘ δ) ,ₚ (substP (λ F → Δ ⊢ F) (≡sym ([]f-∘ {α = δ} {β = σ} {F = F})) (prf [ δ ]p))
+    ,ₚ∘ {Γ} {Δ} {Ξ} {σ} {δ} {F} {prf} = refl
                                                                                                       
     -- Implication
     _⇒_ : {Γ : Con} → For Γ → For Γ → For Γ
@@ -192,8 +242,8 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     -- Forall
     ∀∀ : {Γ : Con} → For (Γ ▹ₜ) → For Γ
     ∀∀ {Γ} F = λ (γ : Γ) → (∀ (t : TM) → F (γ ,× t))
-    []f-∀∀ : {Γ Δ : Con} → {F : For (Γ ▹ₜ)} → {σ : Sub Δ Γ} → {t : Tm Γ} → (∀∀ F) [ σ ]f ≡ (∀∀ (F [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f))
-    []f-∀∀ {Γ} {Δ} {F} {σ} {t} = refl
+    []f-∀∀ : {Γ Δ : Con} → {F : For (Γ ▹ₜ)} → {σ : Sub Δ Γ} → (∀∀ F) [ σ ]f ≡ (∀∀ (F [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f))
+    []f-∀∀ {Γ} {Δ} {F} {σ} = refl
                                                                                                                                         
     -- Lam & App
     lam : {Γ : Con} → {F : For Γ} → {G : For Γ} → (Γ ▹ₚ F) ⊢ (G [ πₚ¹ id ]f) → Γ ⊢ (F ⇒ G)
@@ -227,21 +277,24 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
             ; πₜ²∘,ₜ = λ {Γ} {Δ} {σ} → πₜ²∘,ₜ {Γ} {Δ} {σ}
             ; πₜ¹∘,ₜ = λ {Γ} {Δ} {σ} {t} → πₜ¹∘,ₜ {Γ} {Δ} {σ} {t}
             ; ,ₜ∘πₜ = ,ₜ∘πₜ
+            ; ,ₜ∘ = λ {Γ} {Δ} {Ξ} {σ} {δ} {t} → ,ₜ∘ {Γ} {Δ} {Ξ} {σ} {δ} {t}
             ; For = For
             ; _[_]f = _[_]f
             ; []f-id = []f-id
             ; []f-∘ = λ {Γ} {Δ} {Ξ} {α} {β} {F} → []f-∘ {Γ} {Δ} {Ξ} {α} {β} {F}
             ; _⊢_ = _⊢_
+            ; _[_]p = _[_]p
             ; _▹ₚ_ = _▹ₚ_
             ; πₚ¹ = πₚ¹
             ; πₚ² = πₚ²
             ; _,ₚ_ = _,ₚ_
             ; ,ₚ∘πₚ = ,ₚ∘πₚ
             ; πₚ¹∘,ₚ = λ {Γ} {Δ} {F} {σ} {p} → πₚ¹∘,ₚ {Γ} {Δ} {F} {σ} {p}
+            ; ,ₚ∘ = λ {Γ} {Δ} {Ξ} {σ} {δ} {F} {prf} → ,ₚ∘ {Γ} {Δ} {Ξ} {σ} {δ} {F} {prf}
             ; _⇒_ = _⇒_
             ; []f-⇒ = λ {Γ} {F} {G} {σ} → []f-⇒ {Γ} {F} {G} {σ}
             ; ∀∀ = ∀∀
-            ; []f-∀∀ = λ {Γ} {Δ} {F} {σ} {t} → []f-∀∀ {Γ} {Δ} {F} {σ} {t}
+            ; []f-∀∀ = λ {Γ} {Δ} {F} {σ} → []f-∀∀ {Γ} {Δ} {F} {σ}
             ; lam = lam
             ; app = app
             ; ∀i = ∀i
@@ -341,6 +394,8 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     πₜ¹∘,ₜ = refl
     ,ₜ∘πₜ : {Γ Δ : Con} → {σ : Sub Δ (Γ ▹ₜ)} → (πₜ¹ σ) ,ₜ (πₜ² σ) ≡ σ
     ,ₜ∘πₜ = refl
+    ,ₜ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{t : Tm Γ} → (σ ,ₜ t) ∘ δ ≡ (σ ∘ δ) ,ₜ (t [ δ ]t)
+    ,ₜ∘ = refl
                                                                     
     -- Functor Con → Set called For
     For : Con → Set₁
@@ -381,6 +436,10 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     ,ₚ∘πₚ = refl
     πₚ¹∘,ₚ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {F : For Γ} → {prf : Δ ⊢ (F [ σ ]f)} → πₚ¹ {Γ} {Δ} {F} (σ ,ₚ prf) ≡ σ
     πₚ¹∘,ₚ = refl
+    ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For Ξ}{prf : Γ ⊢ (F [ σ ]f)} →
+      (_,ₚ_  {F = F} σ prf) ∘ δ ≡ (σ ∘ δ) ,ₚ (substP (λ F → Δ ⊢ F) (≡sym ([]f-∘ {α = δ} {β = σ} {F = F})) (prf [ δ ]p))
+    ,ₚ∘ {Γ} {Δ} {Ξ} {σ} {δ} {F} {prf} = refl
+    
                                                                                                       
                                                                                                       
     -- Implication
@@ -392,7 +451,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     -- Forall
     ∀∀ : {Γ : Con} → For (Γ ▹ₜ) → For Γ
     ∀∀ F = λ w → λ γ → ∀ t → F w (γ ,× t)
-    []f-∀∀ : {Γ Δ : Con} → {F : For (Γ ▹ₜ)} → {σ : Sub Δ Γ} → {t : Tm Γ} → (∀∀ F) [ σ ]f ≡ (∀∀ (F [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f))
+    []f-∀∀ : {Γ Δ : Con} → {F : For (Γ ▹ₜ)} → {σ : Sub Δ Γ} → (∀∀ F) [ σ ]f ≡ (∀∀ (F [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f))
     []f-∀∀ = refl
                                                                                                                            
     -- Lam & App
@@ -428,21 +487,24 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       ; πₜ²∘,ₜ = λ {Γ} {Δ} {σ} → πₜ²∘,ₜ {Γ} {Δ} {σ}
       ; πₜ¹∘,ₜ = λ {Γ} {Δ} {σ} {t} → πₜ¹∘,ₜ {Γ} {Δ} {σ} {t}
       ; ,ₜ∘πₜ = ,ₜ∘πₜ
+      ; ,ₜ∘ = λ {Γ} {Δ} {Ξ} {σ} {δ} {t} → ,ₜ∘ {Γ} {Δ} {Ξ} {σ} {δ} {t}
       ; For = For
       ; _[_]f = _[_]f
       ; []f-id = []f-id
       ; []f-∘ = λ {Γ} {Δ} {Ξ} {α} {β} {F} → []f-∘ {Γ} {Δ} {Ξ} {α} {β} {F}
       ; _⊢_ = _⊢_
+      ; _[_]p = _[_]p
       ; _▹ₚ_ = _▹ₚ_
       ; πₚ¹ = πₚ¹
       ; πₚ² = πₚ²
       ; _,ₚ_ = _,ₚ_
       ; ,ₚ∘πₚ = ,ₚ∘πₚ
       ; πₚ¹∘,ₚ = λ {Γ} {Δ} {F} {σ} {p} → πₚ¹∘,ₚ {Γ} {Δ} {F} {σ} {p}
+      ; ,ₚ∘ = λ {Γ} {Δ} {Ξ} {σ} {δ} {F} {prf} → ,ₚ∘ {Γ} {Δ} {Ξ} {σ} {δ} {F} {prf}
       ; _⇒_ = _⇒_
       ; []f-⇒ = λ {Γ} {F} {G} {σ} → []f-⇒ {Γ} {F} {G} {σ}
       ; ∀∀ = ∀∀
-      ; []f-∀∀ = λ {Γ} {Δ} {F} {σ} {t} → []f-∀∀ {Γ} {Δ} {F} {σ} {t}
+      ; []f-∀∀ = λ {Γ} {Δ} {F} {σ} → []f-∀∀ {Γ} {Δ} {F} {σ}
       ; lam = lam
       ; app = app
       ; ∀i = ∀i
