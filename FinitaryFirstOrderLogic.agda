@@ -2,7 +2,7 @@
 
 open import PropUtil
 
-module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
+module FinitaryFirstOrderLogic where
 
   open import Agda.Primitive
   open import ListUtil
@@ -10,7 +10,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
   variable
     ℓ¹ ℓ² ℓ³ ℓ⁴ ℓ⁵ : Level
     
-  record FFOL (F : Nat → Set) (R : Nat → Set) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ⁵)) where
+  record FFOL : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ⁵)) where
     infixr 10 _∘_
     infixr 5 _⊢_
     field
@@ -26,10 +26,6 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       _[_]t : {Γ Δ : Con} → Tm Γ → Sub Δ Γ → Tm Δ -- The functor's action on morphisms
       []t-id : {Γ : Con} → {x : Tm Γ} → x [ id {Γ} ]t ≡ x
       []t-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {t : Tm Γ} → t [ β ∘ α ]t ≡ (t [ β ]t) [ α ]t
-
-      -- Term extension with functions
-      fun : {Γ : Con} → {n : Nat} → F n → Array (Tm Γ) n → Tm Γ
-      fun[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {f : F n} → {tz : Array (Tm Γ) n} → (fun f tz) [ σ ]t ≡ fun f (map (λ t → t [ σ ]t) tz)
 
       -- Tm⁺
       _▹ₜ : Con → Con
@@ -48,8 +44,8 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       []f-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {F : For Γ} → F [ β ∘ α ]f ≡ (F [ β ]f) [ α ]f
 
       -- Formulas with relation on terms
-      rel : {Γ : Con} → {n : Nat} → R n → Array (Tm Γ) n → For Γ
-      rel[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {r : R n} → {tz : Array (Tm Γ) n} → (rel r tz) [ σ ]f ≡ rel r (map (λ t → t [ σ ]t) tz)
+      R : {Γ : Con} → (t u : Tm Γ) → For Γ
+      R[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t u : Tm Γ} → (R t u) [ σ ]f ≡ R (t [ σ ]t) (u [ σ ]t)
 
       -- Proofs
       _⊢_ : (Γ : Con) → For Γ → Prop ℓ⁴
@@ -132,8 +128,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
   record Tarski : Set₁ where
     field
       TM : Set
-      REL : (n : Nat) → R n → (Array TM n → Prop)
-      FUN : (n : Nat) → F n → (Array TM n → TM)
+      REL : TM → TM → Prop
     infixr 10 _∘_
     Con = Set
     Sub : Con → Con → Set
@@ -169,12 +164,6 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     thm {tz = zero} = refl
     thm {tz = next x tz} {σ} {δ} = substP (λ tz' → (next (x (σ δ)) (map (λ t → t δ) (map (λ s γ → s (σ γ)) tz))) ≡ (next (x (σ δ)) tz')) (thm {tz = tz}) refl
 
-    -- Term extension with functions
-    fun : {Γ : Con} → {n : Nat} → F n → Array (Tm Γ) n → Tm Γ
-    fun {n = n} f tz = λ γ → FUN n f (map (λ t → t γ) tz)
-    fun[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {f : F n} → {tz : Array (Tm Γ) n} → (fun f tz) [ σ ]t ≡ fun f (tz [ σ ]tz)
-    fun[] {σ = σ} {n = n} {f = f} {tz = tz} = ≡fun (λ γ → (substP (λ x → (FUN n f) x ≡ (FUN n f) (map (λ t → t γ) (tz [ σ ]tz))) thm refl))
-    
     -- Tm⁺
     _▹ₜ : Con → Con
     Γ ▹ₜ = Γ × TM
@@ -203,12 +192,11 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     []f-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {F : For Γ} → F [ β ∘ α ]f ≡ (F [ β ]f) [ α ]f
     []f-∘ = refl
 
-    -- Formulas with relation on terms
-    rel : {Γ : Con} → {n : Nat} → R n → Array (Tm Γ) n → For Γ
-    rel {n = n} r tz = λ γ → REL n r (map (λ t → t γ) tz)
-    rel[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {r : R n} → {tz : Array (Tm Γ) n} → (rel r tz) [ σ ]f ≡ rel r (tz [ σ ]tz)
-    rel[] {σ = σ} {n = n} {r = r} {tz = tz} = ≡fun (λ γ → (substP (λ x → (REL n r) x ≡ (REL n r) (map (λ t → t γ) (tz [ σ ]tz))) thm refl))
-                                                                                                     
+    R : {Γ : Con} → Tm Γ → Tm Γ → For Γ
+    R t u = λ γ → REL (t γ) (u γ)
+    R[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t u : Tm Γ} → (R t u) [ σ ]f ≡ R (t [ σ ]t) (u [ σ ]t)
+    R[] {σ = σ} = cong₂ R refl refl
+
     -- Proofs
     _⊢_ : (Γ : Con) → For Γ → Prop
     Γ ⊢ F = ∀ (γ : Γ) → F γ
@@ -258,7 +246,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     ∀e : {Γ : Con} → {F : For (Γ ▹ₜ)} → Γ ⊢ (∀∀ F) → {t : Tm Γ} → Γ ⊢ ( F [(id {Γ}) ,ₜ t ]f)
     ∀e p {t} γ = p γ (t γ)
 
-    tod : FFOL F R
+    tod : FFOL
     tod = record
             { Con = Con
             ; Sub = Sub
@@ -299,10 +287,8 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
             ; app = app
             ; ∀i = ∀i
             ; ∀e = ∀e
-            ; fun = fun
-            ; fun[] = fun[]
-            ; rel = rel
-            ; rel[] = rel[]
+            ; R = R
+            ; R[] = λ {Γ} {Δ} {σ} {t} {u} →  R[] {Γ} {Δ} {σ} {t} {u}
             }
 
 
@@ -331,9 +317,8 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       ≤refl : {w : World} → w ≤ w
       ≤tran : {w w' w'' : World} → w ≤ w' → w' ≤ w'' → w ≤ w'
       TM : Set
-      REL : (n : Nat) → R n → Array TM n → World → Prop
-      RELmon : {n : Nat} → {r : R n} → {x : Array TM n} → {w w' : World} → REL n r x w → REL n r x w'
-      FUN : (n : Nat) → F n → Array TM n → TM
+      REL : TM → TM → World → Prop
+      RELmon : {t u : TM} → {w w' : World} → REL t u w → REL t u w'
     infixr 10 _∘_
     Con = World → Set
     Sub : Con → Con → Set
@@ -372,13 +357,6 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     thm {tz = zero} = refl
     thm {tz = next x tz} {σ} {w} {δ} = substP (λ tz' → (next (x w (σ w δ)) (map (λ t → t w δ) (map (λ s w γ → s w (σ w γ)) tz))) ≡ (next (x w (σ w δ)) tz')) (thm {tz = tz}) refl -- substP (λ tz' → (next (x w (σ w δ)) (map (λ t → t δ) (map (λ s γ → s w (σ w γ)) tz))) ≡ (next (x w (σ w δ)) tz')) (thm {tz = tz}) refl
 
-    
-    -- Term extension with functions
-    fun : {Γ : Con} → {n : Nat} → F n → Array (Tm Γ) n → Tm Γ
-    fun {n = n} f tz = λ w γ → FUN n f (map (λ t → t w γ) tz)
-    fun[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {f : F n} → {tz : Array (Tm Γ) n} → (fun f tz) [ σ ]t ≡ fun f (map (λ t → t [ σ ]t) tz)
-    fun[] {Γ = Γ} {Δ = Δ} {σ = σ} {n = n} {f = f} {tz = tz} = ≡fun' λ w → ≡fun λ γ → substP ((λ x → (FUN n f) x ≡ (FUN n f) (map (λ t → t w γ) (tz [ σ ]tz)))) (thm {tz = tz}) refl
-                                                                                                                                          
     -- Tm⁺
     _▹ₜ : Con → Con
     Γ ▹ₜ = λ w → (Γ w) × TM
@@ -406,14 +384,14 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     []f-id = refl
     []f-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {F : For Γ} → F [ β ∘ α ]f ≡ (F [ β ]f) [ α ]f
     []f-∘ = refl
-                                                                                                        
+
     -- Formulas with relation on terms
-    rel : {Γ : Con} → {n : Nat} → R n → Array (Tm Γ) n → For Γ
-    rel {n = n} r tz = λ w → λ γ → (REL n r) (map (λ t → t w γ) tz) w
-    rel[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {n : Nat} → {r : R n} → {tz : Array (Tm Γ) n} → (rel r tz) [ σ ]f ≡ rel r (map (λ t → t [ σ ]t) tz)
-    rel[] {σ = σ} {n = n} {r = r} {tz = tz} = ≡fun' ( λ w →  ≡fun (λ γ → (substP (λ x → (REL n r) x w ≡ (REL n r) (map (λ t → t w γ) (tz [ σ ]tz)) w) thm refl)))
-    
-                                                                                                                                          
+    R : {Γ : Con} → Tm Γ → Tm Γ → For Γ
+    R t u = λ w → λ γ → REL (t w γ) (u w γ) w
+    R[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t u : Tm Γ} → (R t u) [ σ ]f ≡ R (t [ σ ]t) (u [ σ ]t)
+    R[] {σ = σ} = cong₂ R refl refl
+
+                                                                                                        
     -- Proofs
     _⊢_ : (Γ : Con) → For Γ → Prop
     Γ ⊢ F = ∀ w (γ : Γ w) →  F w γ
@@ -468,7 +446,7 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
     ∀e p {t} w γ = p w γ (t w γ)
 
 
-    tod : FFOL F R
+    tod : FFOL
     tod = record
       { Con = Con
       ; Sub = Sub
@@ -509,10 +487,8 @@ module FinitaryFirstOrderLogic (F : Nat → Set) (R : Nat → Set) where
       ; app = app
       ; ∀i = ∀i
       ; ∀e = ∀e
-      ; fun = fun
-      ; fun[] = fun[]
-      ; rel = rel
-      ; rel[] = rel[]
+      ; R = R
+      ; R[] = λ {Γ} {Δ} {σ} {t} {u} → R[] {Γ} {Δ} {σ} {t} {u}
       }
 
 
