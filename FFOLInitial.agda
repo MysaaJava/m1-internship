@@ -2,14 +2,11 @@
 
 open import PropUtil
 
-module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
+module FFOLInitial where
 
-  open import FinitaryFirstOrderLogic F R
+  open import FinitaryFirstOrderLogic
   open import Agda.Primitive
   open import ListUtil
-
-  variable
-    n : Nat
 
   -- First definition of terms and term contexts --
   data Cont : Set₁ where
@@ -23,11 +20,10 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
     
   data Tm : Cont → Set₁ where
     var : TmVar Γₜ → Tm Γₜ
-    fun : F n → Array (Tm Γₜ) n → Tm Γₜ
-
+    
   -- Now we can define formulæ
   data For : Cont → Set₁ where
-    rel : R n → Array (Tm Γₜ) n → For Γₜ
+    r : Tm Γₜ → Tm Γₜ → For Γₜ
     _⇒_ : For Γₜ → For Γₜ → For Γₜ
     ∀∀  : For (Γₜ ▹t⁰) → For Γₜ
 
@@ -38,28 +34,15 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
     
   -- We subst on terms
   _[_]t : Tm Γₜ → Subt Δₜ Γₜ → Tm Δₜ
-  _[_]tz : Array (Tm Γₜ) n → Subt Δₜ Γₜ → Array (Tm Δₜ) n                                         
   var tvzero [ wk▹t σ t ]t = t
   var (tvnext tv) [ wk▹t σ t ]t = var tv [ σ ]t
-  fun f tz [ σ ]t = fun f (tz [ σ ]tz)
-  zero [ σ ]tz = zero
-  next t tz [ σ ]tz = next (t [ σ ]t) (tz [ σ ]tz)
-
-  -- tz application is like mapping
-  tzmap : {tz : Array (Tm Γₜ) n} {σ : Subt Δₜ Γₜ} → (tz [ σ ]tz) ≡ map (λ t → t [ σ ]t) tz
-  tzmap {tz = zero} = refl
-  tzmap {tz = next t tz} {σ = σ} = cong (next (t [ σ ]t)) tzmap
-
+  
   -- We define liftings on term variables
   -- A term of n variables is a term of n+1 variables
   -- Same for a term array
   liftt : Tm Γₜ → Tm (Γₜ ▹t⁰)
-  lifttz : Array (Tm Γₜ) n → Array (Tm (Γₜ ▹t⁰)) n
   
   liftt (var tv) = var (tvnext tv)
-  liftt (fun f tz) = fun f (lifttz tz)
-  lifttz zero = zero
-  lifttz (next t tz) = next (liftt t) (lifttz tz)
   
   -- From a substition into n variables, we get a substitution into n+1 variables which don't use the last one
   llift : Subt Δₜ Γₜ → Subt (Δₜ ▹t⁰) Γₜ
@@ -77,7 +60,7 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
   
   -- We subst on formulæ
   _[_]f : For Γₜ → Subt Δₜ Γₜ → For Δₜ
-  (rel r tz) [ σ ]f = rel r ((map (λ t → t [ σ ]t) tz))
+  (r t u) [ σ ]f = r (t [ σ ]t) (u [ σ ]t)
   (A ⇒ B) [ σ ]f = (A [ σ ]f) ⇒ (B [ σ ]f)
   (∀∀ A) [ σ ]f = ∀∀ (A [ lift σ ]f)
                                  
@@ -109,52 +92,30 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
 
   -- We can also prove the substitution equalities
   []t-id : {t : Tm Γₜ} → t [ idₜ {Γₜ} ]t ≡ t
-  []tz-id : {tz : Array (Tm Γₜ) n} → tz [ idₜ {Γₜ} ]tz ≡ tz
   []t-id {Γₜ ▹t⁰} {var tvzero} = refl
   []t-id {Γₜ ▹t⁰} {var (tvnext tv)} = substP (λ t → t ≡ var (tvnext tv)) (llift-liftt {tv = tv} {σ = idₜ}) (substP (λ t → liftt t ≡ var (tvnext tv)) (≡sym ([]t-id {t = var tv})) refl)
-  []t-id {Γₜ} {fun f tz} = substP (λ tz' → fun f tz' ≡ fun f tz) (≡sym []tz-id) refl
-  []tz-id {tz = zero} = refl
-  []tz-id {tz = next x tz} = substP (λ tz' → (next (x [ idₜ ]t) tz') ≡ next x tz) (≡sym []tz-id) (substP (λ x' → next x' tz ≡ next x tz) (≡sym []t-id) refl)
   []t-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {t : Tm Γₜ} → t [ β ∘ₜ α ]t ≡ (t [ β ]t) [ α ]t
-  []tz-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {tz : Array (Tm Γₜ) n} → tz [ β ∘ₜ α ]tz ≡ (tz [ β ]tz) [ α ]tz
-  []tz-∘ {tz = zero} = refl
-  []tz-∘ {tz = next t tz} = cong₂ next ([]t-∘ {t = t}) []tz-∘
   []t-∘ {α = α} {β = wk▹t β t} {t = var tvzero} = refl
   []t-∘ {α = α} {β = wk▹t β t} {t = var (tvnext tv)} = []t-∘ {t = var tv}
-  []t-∘ {α = α} {β = β} {t = fun f tz} = cong (fun f) ([]tz-∘ {tz = tz})
-  fun[] : {σ : Subt Δₜ Γₜ} → {f : F n} → {tz : Array (Tm Γₜ) n} → (fun f tz) [ σ ]t ≡ fun f (map (λ t → t [ σ ]t) tz)
-  fun[] {tz = zero} = refl
-  fun[] {σ = σ} {f = f} {tz = next t tz} = cong (fun f) (cong (next (t [ σ ]t)) tzmap)
   []f-id : {F : For Γₜ} → F [ idₜ {Γₜ} ]f ≡ F
-  []f-id {F = rel r tz} = cong (rel r) (≡tran (≡sym tzmap) []tz-id)
+  []f-id {F = r t u} = cong₂ r []t-id []t-id
   []f-id {F = F ⇒ G} = cong₂ _⇒_ []f-id []f-id
   []f-id {F = ∀∀ F} = cong ∀∀ []f-id
   llift-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → llift (β ∘ₜ α) ≡ (llift β ∘ₜ lift α)
   liftt[] : {α : Subt Δₜ Γₜ} → {t : Tm Γₜ} → liftt (t [ α ]t) ≡ (liftt t [ lift α ]t)
-  lifttz[] : {α : Subt Δₜ Γₜ} → {tz : Array (Tm Γₜ) n} → lifttz (tz [ α ]tz) ≡ (lifttz tz [ lift α ]tz)
   llift-∘ {β = εₜ} = refl
   llift-∘ {β = wk▹t β t} = cong₂ wk▹t llift-∘ (liftt[] {t = t})
-  liftt[] {t = fun f tz} = cong (fun f) lifttz[]
   liftt[] {α = wk▹t α t} {var tvzero} = refl
   liftt[] {α = wk▹t α t} {var (tvnext tv)} = liftt[] {t = var tv}
-  lifttz[] {tz = zero} = refl
-  lifttz[] {tz = next t tz} = cong₂ next (liftt[] {t = t}) lifttz[]
   lift-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → lift (β ∘ₜ α) ≡ (lift β) ∘ₜ (lift α)
   lift-∘ {α = α} {β = εₜ} = refl
   lift-∘ {α = α} {β = wk▹t β t} = cong₂ wk▹t (cong₂ wk▹t llift-∘ (liftt[] {t = t})) refl
   []f-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {F : For Γₜ} → F [ β ∘ₜ α ]f ≡ (F [ β ]f) [ α ]f
-  []f-∘ {α = α} {β = β} {F = rel r tz} = cong (rel r) (≡tran (≡tran (≡sym tzmap) (substP (λ tzz → (tz [ β ∘ₜ α ]tz) ≡ (tzz [ α ]tz)) tzmap []tz-∘)) tzmap)
+  []f-∘ {α = α} {β = β} {F = r t u} = cong₂ r ([]t-∘ {α = α} {β = β} {t = t}) ([]t-∘ {α = α} {β = β} {t = u})
   []f-∘ {F = F ⇒ G} = cong₂ _⇒_ []f-∘ []f-∘
   []f-∘ {F = ∀∀ F} = cong ∀∀ (≡tran (cong (λ σ → F [ σ ]f) lift-∘) []f-∘)
-  rel[] : {σ : Subt Δₜ Γₜ} → {r : R n} → {tz : Array (Tm Γₜ) n} → (rel r tz) [ σ ]f ≡ rel r (map (λ t → t [ σ ]t) tz)
-  rel[] {r = r} = cong (rel r) refl
-
-
-  
-
-
-
-
+  R[] : {σ : Subt Δₜ Γₜ} → {t u : Tm Γₜ} → (r t u) [ σ ]f ≡ r (t [ σ ]t) (u [ σ ]t)
+  R[] = refl
 
 
   data Conp : Cont → Set₁ -- pu tit in Prop
@@ -166,6 +127,7 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
   data Conp where
     ◇p : Conp Γₜ
     _▹p⁰_ : Conp Γₜ → For Γₜ → Conp Γₜ
+    
   record Con : Set₁ where
     constructor con
     field
@@ -201,18 +163,96 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
     var : {A : For (Con.t Γ)} → PfVar Γ A → Pf Γ A
     app : {A B : For (Con.t Γ)} → Pf Γ (A ⇒ B) → Pf Γ A → Pf Γ B
     lam : {A B : For (Con.t Γ)} → Pf (Γ ▹p A) B → Pf Γ (A ⇒ B)
+    p∀∀e : {A : For ((Con.t Γ) ▹t⁰)} → {t : Tm (Con.t Γ)} → Pf Γ (∀∀ A) → Pf Γ (A [ wk▹t idₜ t ]f)
+    p∀∀i : {A : For (Con.t (Γ ▹t))} → Pf (Γ ▹t) A → Pf Γ (∀∀ A)
+
     
-    --p∀∀e : {A : For Γ} → Pf Γ (∀∀ A) → Pf Γ (A [ t , id ])
-    --p∀∀i : {A : For (Γ ▹t)} → Pf (Γ [?]) A → Pf Γ (∀∀ A)
   data Sub : Con → Con → Set₁
   subt : Sub Δ Γ → Subt (Con.t Δ) (Con.t Γ)
   data Sub where
-    εₚ : Subt (Con.t Δ) Γₜ → Sub Δ (con Γₜ ◇p) -- Γₜ → Δₜ ≡≡> (Γₜ,◇p) → (Δₜ,Δₚ)
+    εₚ : Subt (Con.t Δ) (Con.t Γ) → Sub Δ (con (Con.t Γ) ◇p) -- Γₜ → Δₜ ≡≡> (Γₜ,◇p) → (Δₜ,Δₚ)
     -- If i tell you by what you should replace a missing proof of A, then you can
     -- prove anything that uses a proof of A
-    wk▹p : {A : For (Con.t Γ)} → (σ : Sub Δ Γ) →  Pf Δ (A [ subt σ ]f) → Sub Δ (Γ ▹p A)
+    _,ₚ_ : {A : For (Con.t Γ)} → (σ : Sub Δ Γ) →  Pf Δ (A [ subt σ ]f) → Sub Δ (Γ ▹p A)
   subt (εₚ σₜ) = σₜ
-  subt (wk▹p σ pf) = subt σ
+  subt (σ ,ₚ pf) = subt σ
+  
+  πₚ¹ : {Γ Δ : Con} → {F : For (Con.t Γ)} → Sub Δ (Γ ▹p F) → Sub Δ Γ
+  πₚ¹ (σ ,ₚ pf) = σ
+  πₚ² : {Γ Δ : Con} → {F : For (Con.t Γ)} → (σ : Sub Δ (Γ ▹p F)) → Pf Δ (F [ subt (πₚ¹ σ) ]f)
+  πₚ² (σ ,ₚ pf) = pf
+
+  -- An order on contexts, where we can only change positions
+  infixr 5 _∈ₚ_ _∈ₚ*_
+  data _∈ₚ_ : For Γₜ → Conp Γₜ → Set₁ where
+    zero∈ₚ : {A : For Γₜ} → A ∈ₚ Γₚ ▹p⁰ A
+    next∈ₚ : {A B : For Γₜ} → A ∈ₚ Γₚ → A ∈ₚ Γₚ ▹p⁰ B
+  data _∈ₚ*_ : Conp Γₜ → Conp Γₜ → Set₁ where
+    zero∈ₚ* : ◇p ∈ₚ* Γₚ
+    next∈ₚ* : {A : For Γₜ} → A ∈ₚ Δₚ → Γₚ ∈ₚ* Δₚ → (Γₚ ▹p⁰ A) ∈ₚ* Δₚ
+  -- Allows to grow ∈ₚ* to the right
+  right∈ₚ* :{A : For Δₜ} → Γₚ ∈ₚ* Δₚ → Γₚ ∈ₚ* (Δₚ ▹p⁰ A)
+  right∈ₚ* zero∈ₚ* = zero∈ₚ*
+  right∈ₚ* (next∈ₚ* x h) = next∈ₚ* (next∈ₚ x) (right∈ₚ* h)
+  both∈ₚ* : {A : For Γₜ} → Γₚ ∈ₚ* Δₚ → (Γₚ ▹p⁰ A) ∈ₚ* (Δₚ ▹p⁰ A)
+  both∈ₚ* zero∈ₚ* = next∈ₚ* zero∈ₚ zero∈ₚ*
+  both∈ₚ* (next∈ₚ* x h) = next∈ₚ* zero∈ₚ (next∈ₚ* (next∈ₚ x) (right∈ₚ* h))
+  refl∈ₚ* : Γₚ ∈ₚ* Γₚ
+  refl∈ₚ* {Γₚ = ◇p} = zero∈ₚ*
+  refl∈ₚ* {Γₚ = Γₚ ▹p⁰ x} = both∈ₚ* refl∈ₚ*
+
+  ∈ₚ▹tp : {A : For Δₜ} → A ∈ₚ Δₚ → A [ llift idₜ ]f ∈ₚ (Δₚ ▹tp)
+  ∈ₚ▹tp zero∈ₚ = zero∈ₚ
+  ∈ₚ▹tp (next∈ₚ x) = next∈ₚ (∈ₚ▹tp x)
+  ∈ₚ*▹tp : Γₚ ∈ₚ* Δₚ → (Γₚ ▹tp) ∈ₚ* (Δₚ ▹tp)
+  ∈ₚ*▹tp zero∈ₚ* = zero∈ₚ*
+  ∈ₚ*▹tp (next∈ₚ* x s) = next∈ₚ* (∈ₚ▹tp x) (∈ₚ*▹tp s)
+
+  -- Todo fuse both concepts (remove ∈ₚ)
+  var→∈ₚ : {A : For Γₜ} → (x : PfVar (con Γₜ Γₚ) A) → A ∈ₚ Γₚ
+  ∈ₚ→var : {A : For Γₜ} → A ∈ₚ Γₚ → PfVar (con Γₜ Γₚ) A
+  var→∈ₚ pvzero = zero∈ₚ
+  var→∈ₚ (pvnext x) = next∈ₚ (var→∈ₚ x)
+  ∈ₚ→var zero∈ₚ = pvzero
+  ∈ₚ→var (next∈ₚ s) = pvnext (∈ₚ→var s)
+  mon∈ₚ∈ₚ* : {A : For Γₜ} → A ∈ₚ Γₚ → Γₚ ∈ₚ* Δₚ → A ∈ₚ Δₚ
+  mon∈ₚ∈ₚ* zero∈ₚ (next∈ₚ* x x₁) = x
+  mon∈ₚ∈ₚ* (next∈ₚ s) (next∈ₚ* x x₁) = mon∈ₚ∈ₚ* s x₁
+  liftpₚ : {Δₚ Ξₚ : Conp Δₜ} {A : For Δₜ}  → Δₚ ∈ₚ* Ξₚ → Pf (con Δₜ Δₚ) A → Pf (con Δₜ Ξₚ) A
+  liftpₚ s (var x) = var (∈ₚ→var (mon∈ₚ∈ₚ* (var→∈ₚ x) s))
+  liftpₚ s (app pf pf₁) = app (liftpₚ s pf) (liftpₚ s pf₁)
+  liftpₚ s (lam pf) = lam (liftpₚ (both∈ₚ* s) pf)
+  liftpₚ s (p∀∀e pf) = p∀∀e (liftpₚ s pf)
+  liftpₚ s (p∀∀i pf) = p∀∀i (liftpₚ (∈ₚ*▹tp s) pf)
+  lliftₚ : {Δₚ Ξₚ : Conp Δₜ} →  Δₚ ∈ₚ* Ξₚ → Sub (con Δₜ Δₚ) Γ → Sub (con Δₜ Ξₚ) Γ
+  lliftₚ≡subt : {σ : Sub (con Δₜ Δₚ) Γ} → {s : Δₚ ∈ₚ* Ξₚ} → subt (lliftₚ s σ) ≡ subt σ
+  lliftₚ≡subt {σ = εₚ x} = {!refl!}
+  lliftₚ≡subt {σ = σ ,ₚ x} = {!lliftₚ≡subt {σ = σ}!}
+  lliftₚ {Γ = Γ} _ (εₚ σₜ) = εₚ {Γ = Γ} σₜ
+  lliftₚ {Δₜ = Δₜ} {Δₚ = Δₚ} s (_,ₚ_ {A = A} σ pf) = lliftₚ s σ ,ₚ liftpₚ s (substP (λ σₜ → Pf (con Δₜ Δₚ) (A [ σₜ ]f)) (≡sym (lliftₚ≡subt {σ = σ} {s = s})) pf)
+  
+  llift' : {A : For (Con.t Δ)} → Sub Δ Γ → Sub (Δ ▹p A) Γ
+  llift' s = lliftₚ (right∈ₚ* refl∈ₚ*) s
+
+  _[_]p : {Γ Δ : Con} → {F : For (Con.t Γ)} → Pf Γ F → (σ : Sub Δ Γ) → Pf Δ (F [ subt σ ]f) -- The functor's action on morphisms
+  var pvzero [ σ ,ₚ pf ]p = pf
+  var (pvnext pv) [ σ ,ₚ pf ]p = var pv [ σ ]p
+  app pf pf₁ [ σ ]p = app (pf [ σ ]p) (pf₁ [ σ ]p)
+  lam pf [ σ ]p = lam (pf [ llift' {!σ!} ,ₚ var pvzero ]p)
+  p∀∀e pf [ σ ]p = {!p∀∀e!}
+  p∀∀i pf [ σ ]p = p∀∀i {!!}
+  _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
+  εₚ σₜ ∘ β = {!!}
+  (α ,ₚ pf) ∘ β = {!!}
+  
+  -- Equalities below are useless because Γ ⊢ F is in Prop
+  ,ₚ∘πₚ : {Γ Δ : Con} → {F : For (Con.t Γ)} → {σ : Sub Δ (Γ ▹p F)} → (πₚ¹ σ) ,ₚ (πₚ² σ) ≡ σ
+  πₚ¹∘,ₚ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {F : For (Con.t Γ)} → {prf : Pf Δ (F [ subt σ ]f)} → πₚ¹ (σ ,ₚ prf) ≡ σ
+  -- πₚ²∘,ₚ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {F : For Γ} → {prf : Δ ⊢ (F [ σ ]f)} → πₚ² (σ ,ₚ prf) ≡ prf
+  ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For (Con.t Ξ)}{prf : Pf Γ (F [ subt σ ]f)} → (σ ,ₚ prf) ∘ δ ≡ (σ ∘ δ) ,ₚ (substP (λ F → Pf Δ F) (≡sym {!!}) (prf [ δ ]p))
+
+
+
 
   -- lifts
   --liftpt : Pf Δ (A [ subt σ ]f) → Pf Δ ((A [ llift idₜ ]f) [ subt (σ ,ₜ t) ]f)
@@ -277,7 +317,7 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
   sub αₜ αₚ ∘ (sub βₜ βₚ) = sub (αₜ ∘ₜ βₜ) {!!}
   -}
     
-  imod : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero} F R
+  imod : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}
   imod = record
     { Con = Con
     ; Sub = Sub
@@ -289,8 +329,6 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
     ; _[_]t = λ t σ → t [ subt σ ]t
     ; []t-id = {!!}
     ; []t-∘ = {!!}
-    ; fun = fun
-    ; fun[] = {!!}
     ; _▹ₜ = _▹t
     ; πₜ¹ = {!!}
     ; πₜ² = {!!}
@@ -303,8 +341,8 @@ module FFOLInitial (F : Nat → Set) (R : Nat → Set) where
     ; _[_]f = λ A σ → A [ subt σ ]f
     ; []f-id = λ {Γ} {F} → []f-id {Con.t Γ} {F}
     ; []f-∘ = {!λ {Γ Δ Ξ} {α} {β} {F} → []f-∘ {Con.t Γ} {Con.t Δ} {Con.t Ξ} {Sub.t α} {Sub.t β} {F}!}
-    ; rel = rel
-    ; rel[] = rel[]
+    ; R = r
+    ; R[] = {!!}
     ; _⊢_ = λ Γ A → Pf Γ A
     ; _[_]p = {!!}
     ; _▹ₚ_ = _▹p_
