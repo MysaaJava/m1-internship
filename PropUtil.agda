@@ -61,14 +61,24 @@ module PropUtil where
   ≡sym : {ℓ : Level} → {A : Set ℓ}→ {a a' : A} → a ≡ a' → a' ≡ a
   ≡sym refl = refl
 
+
   ≡tran : {ℓ : Level} {A : Set ℓ} → {a a' a'' : A} → a ≡ a' → a' ≡ a'' → a ≡ a''
-  ≡tran refl refl = refl
+  ≡tran² : {ℓ : Level} {A : Set ℓ} → {a₀ a₁ a₂ a₃ : A} → a₀ ≡ a₁ → a₁ ≡ a₂ → a₂ ≡ a₃ → a₀ ≡ a₃
+  ≡tran³ : {ℓ : Level} {A : Set ℓ} → {a₀ a₁ a₂ a₃ a₄ : A} → a₀ ≡ a₁ → a₁ ≡ a₂ → a₂ ≡ a₃ → a₃ ≡ a₄ → a₀ ≡ a₄
+  ≡tran⁴ : {ℓ : Level} {A : Set ℓ} → {a₀ a₁ a₂ a₃ a₄ a₅ : A} → a₀ ≡ a₁ → a₁ ≡ a₂ → a₂ ≡ a₃ → a₃ ≡ a₄ → a₄ ≡ a₅ → a₀ ≡ a₅
+  ≡tran  refl refl = refl
+  ≡tran² refl refl refl = refl
+  ≡tran³ refl refl refl refl = refl
+  ≡tran⁴ refl refl refl refl refl = refl
+
+  -- We can make a proof-irrelevant substitution
+  substP      : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Prop ℓ'){a a' : A} → a ≡ a' → P a → P a'
+  substP P refl h = h
 
   postulate ≡fun : {ℓ ℓ' : Level} → {A : Set ℓ} → {B : Set ℓ'} → {f g : A → B} → ((x : A) → (f x ≡ g x)) → f ≡ g
   postulate ≡fun' : {ℓ ℓ' : Level} → {A : Set ℓ} → {B : A → Set ℓ'} → {f g : (a : A) → B a} → ((x : A) → (f x ≡ g x)) → f ≡ g
 
   postulate subst       : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Set ℓ'){a a' : A} → a ≡ a' → P a → P a'
-  postulate substP      : ∀{ℓ}{A : Set ℓ}{ℓ'}(P : A → Prop ℓ'){a a' : A} → a ≡ a' → P a → P a'
 
   postulate substrefl   : ∀{ℓ}{A : Set ℓ}{ℓ'}{P : A → Set ℓ'}{a : A}{e : a ≡ a}{p : P a} → subst P e p ≈ p
   {-# REWRITE substrefl   #-}
