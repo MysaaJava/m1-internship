@@ -114,7 +114,9 @@ module FFOLInitial where
   []f-∘ {F = ∀∀ F} = cong ∀∀ (≡tran (cong (λ σ → F [ σ ]f) liftₜσ-∘) []f-∘)
   R[] : {σ : Subt Δₜ Γₜ} → {t u : Tm Γₜ} → (r t u) [ σ ]f ≡ r (t [ σ ]t) (u [ σ ]t)
   R[] = refl
-
+  lem3 : {α : Subt Γₜ Δₜ} → {β : Subt Ξₜ Γₜ} → α ∘ₜ (wkₜσt β) ≡ wkₜσt (α ∘ₜ β)
+  lem3 {α = εₜ} = refl
+  lem3 {α = α ,ₜ var tv} = cong₂ _,ₜ_ (lem3 {α = α}) (≡sym (wkₜσt-wkₜt {tv = tv}))
   wk[,] : {t : Tm Γₜ}{u : Tm Δₜ}{β : Subt Δₜ Γₜ} → (wkₜt t) [ β ,ₜ u ]t ≡ t [ β ]t
   wk[,] {t = var tvzero} = refl
   wk[,] {t = var (tvnext tv)} = refl
@@ -127,6 +129,9 @@ module FFOLInitial where
   σ-idr : {α : Subt Δₜ Γₜ} → α ∘ₜ idₜ ≡ α
   σ-idr {α = εₜ} = refl
   σ-idr {α = α ,ₜ x} = cong₂ _,ₜ_ σ-idr []t-id
+  []f-∀∀ : {A : For (Γₜ ▹t⁰)} → {σₜ : Subt Δₜ Γₜ} → (∀∀ A) [ σₜ ]f ≡ (∀∀ (A [ (σₜ ∘ₜ πₜ¹ idₜ) ,ₜ πₜ² idₜ ]f))
+  []f-∀∀ {A = A} = cong ∀∀ (cong (_[_]f A) (cong₂ _,ₜ_ (≡tran (cong wkₜσt (≡sym σ-idr)) (≡sym lem3)) refl))
+
 
   data Conp : Cont → Set₁ -- pu tit in Prop
   variable
@@ -185,6 +190,15 @@ module FFOLInitial where
   _[_]c : Conp Γₜ → Subt Δₜ Γₜ → Conp Δₜ
   ◇p [ σₜ ]c = ◇p
   (Γₚ ▹p⁰ A) [ σₜ ]c = (Γₚ [ σₜ ]c) ▹p⁰ (A [ σₜ ]f)
+
+  []c-id : Γₚ [ idₜ ]c ≡ Γₚ
+  []c-id {Γₚ = ◇p} = refl
+  []c-id {Γₚ = Γₚ ▹p⁰ x} = cong₂ _▹p⁰_ []c-id []f-id
+
+  []c-∘ : {α : Subt Δₜ Ξₜ} {β : Subt Γₜ Δₜ} {Ξₚ : Conp Ξₜ} → Ξₚ [ α ∘ₜ β ]c ≡ (Ξₚ [ α ]c) [ β ]c 
+  []c-∘ {α = α} {β = β} {◇p} = refl
+  []c-∘ {α = α} {β = β} {Ξₚ ▹p⁰ A} = cong₂ _▹p⁰_ []c-∘ []f-∘
+
   
   record Sub (Γ : Con) (Δ : Con) : Set₁ where
     constructor sub
@@ -193,51 +207,41 @@ module FFOLInitial where
       p : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ t ]c)
 
   -- An order on contexts, where we can only change positions
-  infixr 5 _∈ₚ_ _∈ₚ*_
-  data _∈ₚ_ : For Γₜ → Conp Γₜ → Set₁ where
-    zero∈ₚ : {A : For Γₜ} → A ∈ₚ Γₚ ▹p⁰ A
-    next∈ₚ : {A B : For Γₜ} → A ∈ₚ Γₚ → A ∈ₚ Γₚ ▹p⁰ B
+  infixr 5 _∈ₚ*_
   data _∈ₚ*_ : Conp Γₜ → Conp Γₜ → Set₁ where
     zero∈ₚ* : ◇p ∈ₚ* Γₚ
-    next∈ₚ* : {A : For Γₜ} → A ∈ₚ Δₚ → Γₚ ∈ₚ* Δₚ → (Γₚ ▹p⁰ A) ∈ₚ* Δₚ
+    next∈ₚ* : {A : For Δₜ} → PfVar (con Δₜ Δₚ) A → Δₚ' ∈ₚ* Δₚ → (Δₚ' ▹p⁰ A) ∈ₚ* Δₚ
   -- Allows to grow ∈ₚ* to the right
   right∈ₚ* :{A : For Δₜ} → Γₚ ∈ₚ* Δₚ → Γₚ ∈ₚ* (Δₚ ▹p⁰ A)
   right∈ₚ* zero∈ₚ* = zero∈ₚ*
-  right∈ₚ* (next∈ₚ* x h) = next∈ₚ* (next∈ₚ x) (right∈ₚ* h)
+  right∈ₚ* (next∈ₚ* x h) = next∈ₚ* (pvnext x) (right∈ₚ* h)
   both∈ₚ* : {A : For Γₜ} → Γₚ ∈ₚ* Δₚ → (Γₚ ▹p⁰ A) ∈ₚ* (Δₚ ▹p⁰ A)
-  both∈ₚ* zero∈ₚ* = next∈ₚ* zero∈ₚ zero∈ₚ*
-  both∈ₚ* (next∈ₚ* x h) = next∈ₚ* zero∈ₚ (next∈ₚ* (next∈ₚ x) (right∈ₚ* h))
+  both∈ₚ* zero∈ₚ* = next∈ₚ* pvzero zero∈ₚ*
+  both∈ₚ* (next∈ₚ* x h) = next∈ₚ* pvzero (next∈ₚ* (pvnext x) (right∈ₚ* h))
   refl∈ₚ* : Γₚ ∈ₚ* Γₚ
   refl∈ₚ* {Γₚ = ◇p} = zero∈ₚ*
   refl∈ₚ* {Γₚ = Γₚ ▹p⁰ x} = both∈ₚ* refl∈ₚ*
 
-  ∈ₚ▹tp : {A : For Δₜ} → A ∈ₚ Δₚ → A [ wkₜσt idₜ ]f ∈ₚ (Δₚ ▹tp)
-  ∈ₚ▹tp zero∈ₚ = zero∈ₚ
-  ∈ₚ▹tp (next∈ₚ x) = next∈ₚ (∈ₚ▹tp x)
+  ∈ₚ▹tp : {A : For Δₜ} → PfVar (con Δₜ Δₚ) A → PfVar (con Δₜ Δₚ ▹t) (A [ wkₜσt idₜ ]f)
+  ∈ₚ▹tp pvzero = pvzero
+  ∈ₚ▹tp (pvnext x) = pvnext (∈ₚ▹tp x)
   ∈ₚ*▹tp : Γₚ ∈ₚ* Δₚ → (Γₚ ▹tp) ∈ₚ* (Δₚ ▹tp)
   ∈ₚ*▹tp zero∈ₚ* = zero∈ₚ*
   ∈ₚ*▹tp (next∈ₚ* x s) = next∈ₚ* (∈ₚ▹tp x) (∈ₚ*▹tp s)
 
-  -- Todo fuse both concepts (remove ∈ₚ)
-  var→∈ₚ : {A : For Γₜ} → (x : PfVar (con Γₜ Γₚ) A) → A ∈ₚ Γₚ
-  ∈ₚ→var : {A : For Γₜ} → A ∈ₚ Γₚ → PfVar (con Γₜ Γₚ) A
-  var→∈ₚ pvzero = zero∈ₚ
-  var→∈ₚ (pvnext x) = next∈ₚ (var→∈ₚ x)
-  ∈ₚ→var zero∈ₚ = pvzero
-  ∈ₚ→var (next∈ₚ s) = pvnext (∈ₚ→var s)
-  mon∈ₚ∈ₚ* : {A : For Γₜ} → A ∈ₚ Γₚ → Γₚ ∈ₚ* Δₚ → A ∈ₚ Δₚ
-  mon∈ₚ∈ₚ* zero∈ₚ (next∈ₚ* x x₁) = x
-  mon∈ₚ∈ₚ* (next∈ₚ s) (next∈ₚ* x x₁) = mon∈ₚ∈ₚ* s x₁
+  mon∈ₚ∈ₚ* : {A : For Δₜ} → PfVar (con Δₜ Δₚ') A → Δₚ' ∈ₚ* Δₚ → PfVar (con Δₜ Δₚ) A
+  mon∈ₚ∈ₚ* pvzero (next∈ₚ* x x₁) = x
+  mon∈ₚ∈ₚ* (pvnext s) (next∈ₚ* x x₁) = mon∈ₚ∈ₚ* s x₁
 
   ∈ₚ*→Sub : Δₚ ∈ₚ* Δₚ' → Subp {Δₜ} Δₚ' Δₚ
   ∈ₚ*→Sub zero∈ₚ* = εₚ
-  ∈ₚ*→Sub (next∈ₚ* x s) = ∈ₚ*→Sub s ,ₚ var (∈ₚ→var x)
+  ∈ₚ*→Sub (next∈ₚ* x s) = ∈ₚ*→Sub s ,ₚ var x
 
   idₚ : Subp {Δₜ} Δₚ Δₚ
   idₚ = ∈ₚ*→Sub refl∈ₚ*
 
   wkₚp : {A : For Δₜ} → Δₚ ∈ₚ* Δₚ' → Pf (con Δₜ Δₚ) A → Pf (con Δₜ Δₚ') A
-  wkₚp s (var pv) = var (∈ₚ→var (mon∈ₚ∈ₚ* (var→∈ₚ pv) s))
+  wkₚp s (var pv) = var (mon∈ₚ∈ₚ* pv s)
   wkₚp s (app pf pf₁) = app (wkₚp s pf) (wkₚp s pf₁)
   wkₚp s (lam {A = A} pf) = lam (wkₚp (both∈ₚ* s) pf)
   wkₚp s (p∀∀e pf) = p∀∀e (wkₚp s pf)
@@ -255,10 +259,6 @@ module FFOLInitial where
 
 
 
-
-  lem3 : {α : Subt Γₜ Δₜ} → {β : Subt Ξₜ Γₜ} → α ∘ₜ (wkₜσt β) ≡ wkₜσt (α ∘ₜ β)
-  lem3 {α = εₜ} = refl
-  lem3 {α = α ,ₜ var tv} = cong₂ _,ₜ_ (lem3 {α = α}) (≡sym (wkₜσt-wkₜt {tv = tv}))
   lem7 : {σ : Subt Δₜ Γₜ} → ((Δₚ ▹tp) [ liftₜσ σ ]c) ≡ ((Δₚ [ σ ]c) ▹tp)
   lem7 {Δₚ = ◇p} = refl
   lem7 {Δₚ = Δₚ ▹p⁰ A} = cong₂ _▹p⁰_ lem7 (≡tran² (≡sym []f-∘) (cong (λ σ → A [ σ ]f) (≡tran² (≡sym wkₜσt-∘) (cong wkₜσt (≡tran σ-idl (≡sym σ-idr))) (≡sym lem3))) []f-∘)
@@ -275,10 +275,9 @@ module FFOLInitial where
   _[_]pₜ {Δₚ = Δₚ} {Γₜ = Γₜ} (p∀∀e {A = A} {t = t} pf) σ = substP (λ F → Pf (con Γₜ (Δₚ [ σ ]c)) F) (≡tran² (≡sym []f-∘) (cong (λ σ → A [ σ ]f) (lem8 {t = t})) ([]f-∘)) (p∀∀e {t = t [ σ ]t} (pf [ σ ]pₜ))
   _[_]pₜ {Γₜ = Γₜ} (p∀∀i pf) σ = p∀∀i (substP (λ Ξₚ → Pf (con (Γₜ ▹t⁰) (Ξₚ)) _) lem7 (pf [ liftₜσ σ ]pₜ))
   
-
-
-
-
+  _[_]σₚ : Subp {Δₜ} Δₚ Δₚ' → (σ : Subt Γₜ Δₜ) → Subp {Γₜ} (Δₚ [ σ ]c) (Δₚ' [ σ ]c)
+  εₚ [ σₜ ]σₚ = εₚ
+  (σₚ ,ₚ pf) [ σₜ ]σₚ = (σₚ [ σₜ ]σₚ) ,ₚ (pf [ σₜ ]pₜ)
 
 
   lem9 : (Δₚ [ wkₜσt idₜ ]c) ≡ (Δₚ ▹tp)
@@ -297,111 +296,122 @@ module FFOLInitial where
   p∀∀i pf [ σ ]p = p∀∀i (pf [ wkₜσₚ σ ]p)
 
 
-  -- lifts
-  --liftpt : Pf Δ (A [ subt σ ]f) → Pf Δ ((A [ llift idₜ ]f) [ subt (σ ,ₜ t) ]f)
-  {-
-  -- The functions made for accessing the terms of Sub, needed for the algebra
-  πₜ¹ : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Sub Δ Γ
-  πₜ¹ σ = {!!}
-  πₜ² : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Tm (Con.t Δ)
-  πₜ² σ = {!!}
-  _,ₜ_ : {Γ Δ : Con} → Sub Δ Γ → Tm (Con.t Δ) → Sub Δ (Γ ▹t)
-  llift∘,ₜ : {σ : Sub Δ Γ} → {A : For (Con.t Γ)} → {t : Tm (Con.t Δ)} → (A [ llift idₜ ]f) [ subt (σ ,ₜ t) ]f ≡ A [ subt σ ]f
-  llift∘,ₜ {A = rel x x₁} = {!!}
-  llift∘,ₜ {A = A ⇒ A₁} = {!!}
-  llift∘,ₜ {A = ∀∀ A} = {!substrefl!}
-  (εₚ σₜ) ,ₜ t = εₚ (wk▹t σₜ t)
-  _,ₜ_ {Γ = ΓpA} {Δ = Δ} (wk▹p σ pf) t = wk▹p (σ ,ₜ t) (substP (λ a → Pf Δ a) llift∘,ₜ {!pf!})
-  πₚ¹ : {A : Con.t Γ} → Sub Δ (Γ ▹p A) → Sub Δ Γ
-  πₚ¹ Γₚ (wk▹p Γₚ' σ pf) = σ
-  πₚ² : {A : Con.t Γ} → (σ : Sub Δ (Γ ▹p A)) → Pf Δ (A [ subt (πₚ¹ (Con.p Γ) σ) ]f)
-  πₚ² Γₚ (wk▹p Γₚ' σ pf) = pf
-  _,ₚ_ : {A : Con.t Γ} → (σ : Sub Δ Γ) → Pf Δ (A [ subt σ ]f) → Sub Δ (Γ ▹p A)
-  _,ₚ_ = wk▹p
-  -}
-  
+  _∘ₚ_ : {Γₚ Δₚ Ξₚ : Conp Δₜ} → Subp {Δₜ} Δₚ Ξₚ → Subp {Δₜ} Γₚ Δₚ → Subp {Δₜ} Γₚ Ξₚ
+  εₚ ∘ₚ β = εₚ
+  (α ,ₚ pf) ∘ₚ β = (α ∘ₚ β) ,ₚ (pf [ β ]p)
 
-  {-
-  -- We subst on proofs
-  _,ₚ_ : {F : For (Con.t Γ)} → (σ : Sub Δ Γ) → Pf Δ (F [ subt σ ]f) → Sub Δ (Γ ▹p F)
-  _,ₚ_ {Γ} σ pf = wk▹p (Con.p Γ) σ pf
-  sub▹p : (σ : Sub (con Δₜ Δₚ) (con Γₜ Γₚ)) → Sub (con Δₜ (Δₚ ▹p⁰ (A [ subt σ ]f))) (con Γₜ (Γₚ ▹p⁰ A))
-  p[] : Pf Γ A → (σ : Sub Δ Γ) → Pf Δ (A [ subt σ ]f)
-  sub▹p Γₚ (εₚ σₜ) = wk▹p Γₚ (εₚ σₜ) (var pvzero)
-  sub▹p Γₚ (wk▹p p σ pf) = {!!}
-  test : (σ : Sub Δ Γ) → Sub (Δ ▹p (A [ subt σ ]f)) (Γ ▹p A)
-  p[] Γₚ (var pvzero) (wk▹p p σ pf) = pf
-  p[] Γₚ (var (pvnext pv)) (wk▹p p σ pf) = p[] Γₚ (var pv) σ 
-  p[] Γₚ (app pf pf') σ = app (p[] Γₚ pf σ) (p[] Γₚ pf' σ)
-  p[] Γₚ (lam pf) σ = lam (p[] {!\!} {!!} (sub▹p {!!} {!σ!}))
-  -}
-  
-  {-
-  idₚ : Subp Γₚ Γₚ
-  idₚ {Γₚ = ◇p} = εₚ
-  idₚ {Γₚ = Γₚ ▹p⁰ A} = wk▹p Γₚ (liftₚ Γₚ idₚ) (var pvzero)
-                                                    
-  ε : Sub Γ ◇
-  ε = sub εₜ εₚ
-             
   id : Sub Γ Γ
-  id = sub idₜ idₚ
-               
-  _∘ₜ_ : Subt Δₜ Ξₜ → Subt Γₜ Δₜ → Subt Γₜ Ξₜ
-  εₜ ∘ₜ εₜ = εₜ
-  εₜ ∘ₜ wk▹t β x = εₜ
-  (wk▹t α t) ∘ₜ β = wk▹t (α ∘ₜ β) (t [ β ]t)
-                                         
-  _∘ₚ_ : Subp Δₚ Ξₚ → Subp Γₚ Δₚ → Subp Γₚ Ξₚ
-  εₚ ∘ₚ βₚ = εₚ
-  wk▹p p αₚ x ∘ₚ βₚ = {!wk▹p ? ? ?!}
-  
+  id {Γ} = sub idₜ (subst (Subp _) (≡sym []c-id) idₚ)
   _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
-  sub αₜ αₚ ∘ (sub βₜ βₚ) = sub (αₜ ∘ₜ βₜ) {!!}
-  -}
+  sub αₜ αₚ ∘ sub βₜ βₚ = sub (αₜ ∘ₜ βₜ) (subst (Subp _) (≡sym []c-∘) (αₚ [ βₜ ]σₚ) ∘ₚ βₚ)
+
+
+  -- SUB-ization
+
+  lemA : {σₜ : Subt Γₜ Δₜ}{t : Tm Γₜ} → (Γₚ ▹tp) [ σₜ ,ₜ t ]c ≡  Γₚ [ σₜ ]c
+  lemA {Γₚ = ◇p} = refl
+  lemA {Γₚ = Γₚ ▹p⁰ t} = cong₂ _▹p⁰_ lemA (≡tran (≡sym []f-∘) (cong (λ σ → t [ σ ]f) (≡tran wk∘, σ-idl)))
+  πₜ¹* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Sub Δ Γ
+  πₜ¹* (sub (σₜ ,ₜ t) σₚ) = sub σₜ (subst (Subp _) lemA σₚ)
+  πₜ²* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Tm (Con.t Δ)
+  πₜ²* (sub (σₜ ,ₜ t) σₚ) = t
+  _,ₜ*_ : {Γ Δ : Con} → Sub Δ Γ → Tm (Con.t Δ) → Sub Δ (Γ ▹t)
+  (sub σₜ σₚ) ,ₜ* t = sub (σₜ ,ₜ t) (subst (Subp _) (≡sym lemA) σₚ)
+  πₜ²∘,ₜ* : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm (Con.t Δ)} → πₜ²* (σ ,ₜ* t) ≡ t
+  πₜ²∘,ₜ* = refl
+  πₜ¹∘,ₜ* : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm (Con.t Δ)} → πₜ¹* (σ ,ₜ* t) ≡ σ
+  πₜ¹∘,ₜ* {Γ}{Δ}{σ}{t} = cong (sub (Sub.t σ)) coeaba
+  ,ₜ∘πₜ* : {Γ Δ : Con} → {σ : Sub Δ (Γ ▹t)} → (πₜ¹* σ) ,ₜ* (πₜ²* σ) ≡ σ
+  ,ₜ∘πₜ* {Γ} {Δ} {sub (σₜ ,ₜ t) σₚ} = cong (sub (σₜ ,ₜ t)) coeaba
+  ,ₜ∘* : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{t : Tm (Con.t Γ)} → (σ ,ₜ* t) ∘ δ ≡ (σ ∘ δ) ,ₜ* (t [ Sub.t δ ]t)
+  lemE : {σₜ : Subt Γₜ Ξₜ}{σₚ : Subp Γₚ (Ξₚ [ σₜ ]c)} {δₜ : Subt Δₜ Γₜ} → (coe _ σₚ [ δₜ ]σₚ) ≡ coe _ (σₚ [ δₜ ]σₚ)
+  lemE {δₜ = δₜ} = coecong {eq = refl} {eq' = refl} (λ ξₚ → ξₚ [ δₜ ]σₚ)
+  lemF : {Γα Γβ : Conp Δₜ}{δₜ : Subt Δₜ Γₜ}{δₚ : Subp Δₚ (Γₚ [ δₜ ]c)} → (eq : Γβ ≡ Γα) → (ξ : Subp (Γₚ [ δₜ ]c) Γβ) → coe (cong (Subp Δₚ) eq) (ξ ∘ₚ δₚ) ≡ coe (cong (Subp _) eq) ξ ∘ₚ δₚ
+  lemF refl ξ = ≡tran coerefl (cong₂ _∘ₚ_ (≡sym coerefl) refl)
+  --lemG : {Γα Γβ : Conp Δₜ}{σₜ : Subt Γₜ Ξₜ}{δₜ : Subt Δₜ Γₜ} → (eq : Γβ ≡ Γα) → (ξ : Subp Γₚ (Ξₚ [ σₜ ]c)) → coe refl (ξ [ δₜ ]σₚ) ≡ (coe refl ξ) [ δₜ ]σₚ
+  --lemG eq ε= {!!}
+  substf : {ℓ ℓ' : Level}{A : Set ℓ}{P : A → Set ℓ'}{Q : A → Set ℓ'}{a b c d : A}{eqa : a ≡ a}{eqb : b ≡ b}{eqcd : c ≡ d}{eqdc : d ≡ c}{f : P a → P b}{g : P b → Q c}{x : P a} → g (subst P eqb (f (subst P eqa x))) ≡ subst Q eqdc (subst Q eqcd (g (f x)))
+  substf {P = P} {Q = Q} {eqcd = refl} {f = f} {g = g} = ≡tran² (cong g (≡tran (substrefl {P = P} {e = refl}) (cong f (substrefl {P = P} {e = refl})))) (≡sym (substrefl {P = Q} {e = refl})) (≡sym (substrefl {P = Q} {e = refl}))
+  lemG : {σₜ : Subt Γₜ Ξₜ}{δₜ : Subt Δₜ Γₜ}{σₚ : Subp Γₚ (Ξₚ [ σₜ ]c)}{δₚ : Subp Δₚ (Γₚ [ δₜ ]c)}{t : Tm Γₜ}
+    {eq₁ : Subp (Γₚ [ δₜ ]c) (((Ξₚ ▹tp) [ σₜ ,ₜ t ]c) [ δₜ ]c) ≡ Subp (Γₚ [ δₜ ]c) ((Ξₚ ▹tp) [ (σₜ ∘ₜ δₜ) ,ₜ (t [ δₜ ]t) ]c)}
+    {eq₂ : Subp Γₚ (Ξₚ [ σₜ ]c) ≡ Subp Γₚ ((Ξₚ ▹tp) [ σₜ ,ₜ t ]c)}
+    {eq₃ : Subp Δₚ (Ξₚ [ σₜ ∘ₜ δₜ ]c) ≡ Subp Δₚ ((Ξₚ ▹tp) [ (σₜ ∘ₜ δₜ) ,ₜ (t [ δₜ ]t)]c)}
+    {eq₄ : Subp (Γₚ [ δₜ ]c) ((Ξₚ [ σₜ ]c) [ δₜ ]c) ≡ Subp (Γₚ [ δₜ ]c) (Ξₚ [ σₜ ∘ₜ δₜ ]c)}
+    → (coe eq₁ ((coe eq₂ σₚ) [ δₜ ]σₚ)) ∘ₚ δₚ ≡ coe eq₃ ((coe eq₄ (σₚ [ δₜ ]σₚ)) ∘ₚ δₚ)
+  lemG {σₜ = σₜ} {δₜ} {σₚ} {δₚ} {t} {eq₁} {eq₂} {eq₃} {eq₄} = {!eq₁!}
+  ,ₜ∘* {Γ} {Δ} {Ξ} {sub σₜ σₚ} {sub δₜ δₚ} {t} = cong (sub ((σₜ ∘ₜ δₜ) ,ₜ (t [ δₜ ]t))) lemG
+
+
+  πₚ¹* : {Γ Δ : Con} {A : For (Con.t Γ)} → Sub Δ (Γ ▹p A) → Sub Δ Γ
+  πₚ¹* (sub σₜ (σₚ ,ₚ pf)) = sub σₜ σₚ
+  πₚ² : {Γ Δ : Con} {F : For (Con.t Γ)} (σ : Sub Δ (Γ ▹p F)) → Pf Δ (F [ Sub.t (πₚ¹* σ) ]f)
+  πₚ² (sub σₜ (σₚ ,ₚ pf)) = pf
+  _,ₚ*_ : {Γ Δ : Con} {F : For (Con.t Γ)} (σ : Sub Δ Γ) → Pf Δ (F [ Sub.t σ ]f) → Sub Δ (Γ ▹p F)
+  sub σₜ σₚ ,ₚ* pf = sub σₜ (σₚ ,ₚ pf)
+
+  ,ₚ∘πₚ : {Γ Δ : Con} → {F : For (Con.t Γ)} → {σ : Sub Δ (Γ ▹p F)} → (πₚ¹* σ) ,ₚ* (πₚ² σ) ≡ σ
+  ,ₚ∘πₚ {σ = sub σₜ (σₚ ,ₚ pf)} = refl
+  ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For (Con.t Ξ)}{prf : Pf Γ (F [ Sub.t σ ]f)} → (σ ,ₚ* prf) ∘ δ ≡ (σ ∘ δ) ,ₚ* (substP (λ F → Pf Δ F) (≡sym []f-∘) ((prf [ Sub.t δ ]pₜ) [ Sub.p δ ]p))
+  ,ₚ∘ {Γ = Γ} {Δ = Δ} {σ = sub σₜ σₚ} {sub δₜ δₚ} {F = A} = cong (sub (σₜ ∘ₜ δₜ)) {!!}
+  
+  --_,ₜ_ : {Γ Δ : Con} → Sub Δ Γ → Tm Δ → Sub Δ (Γ ▹t)
+  --πₜ²∘,ₜ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm Δ} → πₜ² (σ ,ₜ t) ≡ t
+  --πₜ¹∘,ₜ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm Δ} → πₜ¹ (σ ,ₜ t) ≡ σ
+  --,ₜ∘πₜ : {Γ Δ : Con} → {σ : Sub Δ (Γ ▹ₜ)} → (πₜ¹ σ) ,ₜ (πₜ² σ) ≡ σ
+  --,ₜ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{t : Tm Γ} → (σ ,ₜ t) ∘ δ ≡ (σ ∘ δ) ,ₜ (t [ δ ]t)
+
+--  lemB : ∀{ℓ}{A : Set ℓ}{ℓ'}{P : A → Set ℓ'}{a a' : A}{e : a ≡ a'}{p : P a}{p' : P a'} → p' ≡ p → subst P e p' ≡ p
+  
+  lemC : {σₜ : Subt Δₜ Γₜ}{t : Tm Δₜ} → (Γₚ ▹tp) [ σₜ ,ₜ t ]c ≡ Γₚ [ σₜ ]c
+  lemC {Γₚ = ◇p} = refl
+  lemC {Γₚ = Γₚ ▹p⁰ x} = cong₂ _▹p⁰_ lemC (≡tran (≡sym []f-∘) (cong (λ σ → x [ σ ]f) (≡tran wk∘, σ-idl)))
+
+  lemD : {A : For (Con.t Γ)}{σ : Sub Δ (Γ ▹p A)} → Sub.t (πₚ¹* σ) ≡ Sub.t σ
+  lemD {σ = sub σₜ (σₚ ,ₚ pf)} = refl
+
     
   imod : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}
   imod = record
     { Con = Con
     ; Sub = Sub
-    ; _∘_ = {!!}
-    ; id = {!!}
+    ; _∘_ = _∘_
+    ; id = id
     ; ◇ = ◇
-    ; ε = {!!}
+    ; ε = sub εₜ εₚ
     ; Tm = λ Γ → Tm (Con.t Γ)
-    ; _[_]t = λ t σ → t [ {!!} ]t
-    ; []t-id = {!!}
-    ; []t-∘ = {!!}
+    ; _[_]t = λ t σ → t [ Sub.t σ ]t
+    ; []t-id = []t-id
+    ; []t-∘ = λ {Γ}{Δ}{Ξ}{α}{β}{t} → []t-∘ {α = Sub.t α} {β = Sub.t β} {t = t}
     ; _▹ₜ = _▹t
-    ; πₜ¹ = {!!}
-    ; πₜ² = {!!}
-    ; _,ₜ_ = {!!}
-    ; πₜ²∘,ₜ = {!!}
-    ; πₜ¹∘,ₜ = {!!}
-    ; ,ₜ∘πₜ = {!!}
-    ; ,ₜ∘ = {!!}
+    ; πₜ¹ = πₜ¹*
+    ; πₜ² = πₜ²*
+    ; _,ₜ_ = _,ₜ*_
+    ; πₜ²∘,ₜ = refl
+    ; πₜ¹∘,ₜ = πₜ¹∘,ₜ*
+    ; ,ₜ∘πₜ = ,ₜ∘πₜ*
+    ; ,ₜ∘ = ,ₜ∘*
     ; For = λ Γ → For (Con.t Γ)
-    ; _[_]f = λ A σ → A [ {!!} ]f
-    ; []f-id = λ {Γ} {F} → {!!}
-    ; []f-∘ = {!λ {Γ Δ Ξ} {α} {β} {F} → []f-∘ {Con.t Γ} {Con.t Δ} {Con.t Ξ} {Sub.t α} {Sub.t β} {F}!}
+    ; _[_]f = λ A σ → A [ Sub.t σ ]f
+    ; []f-id = []f-id
+    ; []f-∘ = []f-∘
     ; R = r
-    ; R[] = {!!}
+    ; R[] = refl
     ; _⊢_ = λ Γ A → Pf Γ A
-    ; _[_]p = {!!}
+    ; _[_]p = λ {Γ}{Δ}{F} pf σ → (pf [ Sub.t σ ]pₜ) [ Sub.p σ ]p
     ; _▹ₚ_ = _▹p_
-    ; πₚ¹ = {!!}
-    ; πₚ² = {!!}
-    ; _,ₚ_ = {!!}
-    ; ,ₚ∘πₚ = {!!}
-    ; πₚ¹∘,ₚ = {!!}
-    ; ,ₚ∘ = {!!}
+    ; πₚ¹ = πₚ¹*
+    ; πₚ² = πₚ²
+    ; _,ₚ_ = _,ₚ*_
+    ; ,ₚ∘πₚ = ,ₚ∘πₚ
+    ; πₚ¹∘,ₚ = refl
+    ; ,ₚ∘ = λ {Γ}{Δ}{Ξ}{σ}{δ}{F}{prf} → ,ₚ∘ {prf = prf}
     ; _⇒_ = _⇒_
-    ; []f-⇒ = {!!}
+    ; []f-⇒ = refl
     ; ∀∀ = ∀∀
-    ; []f-∀∀ = {!!}
-    ; lam = {!!}
+    ; []f-∀∀ = []f-∀∀
+    ; lam = λ {Γ}{F}{G} pf → substP (λ H → Pf Γ (F ⇒ H)) (≡tran (cong (_[_]f G) (lemD {σ = id})) []f-id) (lam pf)
     ; app = app
-    ; ∀i = {!!}
-    ; ∀e = {!!}
+    ; ∀i = p∀∀i
+    ; ∀e = λ {Γ} {F} pf {t} → p∀∀e pf
     }
 

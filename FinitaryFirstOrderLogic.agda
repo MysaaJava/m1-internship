@@ -316,9 +316,10 @@ module FinitaryFirstOrderLogic where
       _≤_ : World → World → Prop
       ≤refl : {w : World} → w ≤ w
       ≤tran : {w w' w'' : World} → w ≤ w' → w' ≤ w'' → w ≤ w'
-      TM : Set
-      REL : TM → TM → World → Prop
-      RELmon : {t u : TM} → {w w' : World} → REL t u w → REL t u w'
+      TM : World → Set
+      TM≤ : {w w' : World} → w ≤ w' → TM w → TM w'
+      REL : (w : World) → TM w → TM w → Prop
+      REL≤ : {w w' : World} → {t u : TM w} → (eq : w ≤ w') → REL w t u → REL w' (TM≤ eq t) (TM≤ eq u)
     infixr 10 _∘_
     Con = World → Set
     Sub : Con → Con → Set
@@ -336,13 +337,14 @@ module FinitaryFirstOrderLogic where
                                                                     
     -- Functor Con → Set called Tm
     Tm : Con → Set
-    Tm Γ = (w : World) → (Γ w) → TM
+    Tm Γ = (w : World) → (Γ w) → TM w
     _[_]t : {Γ Δ : Con} → Tm Γ → Sub Δ Γ → Tm Δ -- The functor's action on morphisms
     t [ σ ]t = λ w → λ γ → t w (σ w γ)
     []t-id : {Γ : Con} → {x : Tm Γ} → x [ id {Γ} ]t ≡ x
     []t-id = refl
     []t-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {t : Tm Γ} → t [ β ∘ α ]t ≡ (t [ β ]t) [ α ]t
     []t-∘ = refl
+
 
 
     _[_]tz : {Γ Δ : Con} → {n : Nat} → Array (Tm Γ) n → Sub Δ Γ → Array (Tm Δ) n
@@ -353,13 +355,10 @@ module FinitaryFirstOrderLogic where
     []tz-id : {Γ : Con} → {n : Nat} → {tz : Array (Tm Γ) n} → tz [ id ]tz ≡ tz
     []tz-id {tz = zero} = refl
     []tz-id {tz = next x tz} = substP (λ tz' → next x tz' ≡ next x tz) (≡sym ([]tz-id {tz = tz})) refl
-    thm : {Γ Δ : Con} → {n : Nat} → {tz : Array (Tm Γ) n} → {σ : Sub Δ Γ} → {w : World} → {δ : Δ w} → map (λ t → t w δ) (tz [ σ ]tz) ≡ map (λ t → t w (σ w δ)) tz
-    thm {tz = zero} = refl
-    thm {tz = next x tz} {σ} {w} {δ} = substP (λ tz' → (next (x w (σ w δ)) (map (λ t → t w δ) (map (λ s w γ → s w (σ w γ)) tz))) ≡ (next (x w (σ w δ)) tz')) (thm {tz = tz}) refl -- substP (λ tz' → (next (x w (σ w δ)) (map (λ t → t δ) (map (λ s γ → s w (σ w γ)) tz))) ≡ (next (x w (σ w δ)) tz')) (thm {tz = tz}) refl
-
+    
     -- Tm⁺
     _▹ₜ : Con → Con
-    Γ ▹ₜ = λ w → (Γ w) × TM
+    Γ ▹ₜ = λ w → (Γ w) × (TM w)
     πₜ¹ : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Sub Δ Γ
     πₜ¹ σ = λ w → λ x → proj×₁ (σ w x)
     πₜ² : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Tm Δ
@@ -387,7 +386,7 @@ module FinitaryFirstOrderLogic where
 
     -- Formulas with relation on terms
     R : {Γ : Con} → Tm Γ → Tm Γ → For Γ
-    R t u = λ w → λ γ → REL (t w γ) (u w γ) w
+    R t u = λ w → λ γ → REL w (t w γ) (u w γ)
     R[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t u : Tm Γ} → (R t u) [ σ ]f ≡ R (t [ σ ]t) (u [ σ ]t)
     R[] {σ = σ} = cong₂ R refl refl
 
