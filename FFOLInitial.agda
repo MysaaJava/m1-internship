@@ -1,4 +1,4 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
 open import PropUtil
 
@@ -129,6 +129,9 @@ module FFOLInitial where
   σ-idr : {α : Subt Δₜ Γₜ} → α ∘ₜ idₜ ≡ α
   σ-idr {α = εₜ} = refl
   σ-idr {α = α ,ₜ x} = cong₂ _,ₜ_ σ-idr []t-id
+  ∘ₜ-ass : {Γₜ Δₜ Ξₜ Ψₜ : Cont}{α : Subt Γₜ Δₜ}{β : Subt Δₜ Ξₜ}{γ : Subt Ξₜ Ψₜ} → (γ ∘ₜ β) ∘ₜ α ≡ γ ∘ₜ (β ∘ₜ α)
+  ∘ₜ-ass {α = α} {β} {εₜ} = refl
+  ∘ₜ-ass {α = α} {β} {γ ,ₜ x} = cong₂ _,ₜ_ ∘ₜ-ass (≡sym ([]t-∘ {t = x}))
   []f-∀∀ : {A : For (Γₜ ▹t⁰)} → {σₜ : Subt Δₜ Γₜ} → (∀∀ A) [ σₜ ]f ≡ (∀∀ (A [ (σₜ ∘ₜ πₜ¹ idₜ) ,ₜ πₜ² idₜ ]f))
   []f-∀∀ {A = A} = cong ∀∀ (cong (_[_]f A) (cong₂ _,ₜ_ (≡tran (cong wkₜσt (≡sym σ-idr)) (≡sym lem3)) refl))
 
@@ -299,11 +302,32 @@ module FFOLInitial where
   _∘ₚ_ : {Γₚ Δₚ Ξₚ : Conp Δₜ} → Subp {Δₜ} Δₚ Ξₚ → Subp {Δₜ} Γₚ Δₚ → Subp {Δₜ} Γₚ Ξₚ
   εₚ ∘ₚ β = εₚ
   (α ,ₚ pf) ∘ₚ β = (α ∘ₚ β) ,ₚ (pf [ β ]p)
+  idlₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} → (idₚ {Δₚ = Δₚ}) ∘ₚ σₚ ≡ σₚ
+  idlₚ {Δₚ = ◇p} = ?
+  idlₚ {Δₚ = Δₚ ▹p⁰ x} = ?
+  idrₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} →  σₚ ∘ₚ (idₚ {Δₚ = Γₚ}) ≡ σₚ
+  idrₚ = {!!}  
 
   id : Sub Γ Γ
   id {Γ} = sub idₜ (subst (Subp _) (≡sym []c-id) idₚ)
   _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
   sub αₜ αₚ ∘ sub βₜ βₚ = sub (αₜ ∘ₜ βₜ) (subst (Subp _) (≡sym []c-∘) (αₚ [ βₜ ]σₚ) ∘ₚ βₚ)
+  idl : {Γ Δ : Con} {σ : Sub Γ Δ} →  (id {Δ}) ∘ σ ≡ σ
+  idl {σ = sub σₜ σₚ} = cong₂' sub σ-idl {!!}
+  idr : {Γ Δ : Con} {σ : Sub Γ Δ} →  σ ∘ (id {Γ}) ≡ σ
+  idr {σ = sub σₜ σₚ} = cong₂' sub σ-idr {!!}
+  {-
+  ∘ₚ-ass :
+    {Γₜ Δₜ Ξₜ Ψₜ : Cont}{Γₚ : Conp Γₜ}{Δₚ : Conp Δₜ}{Ξₚ : Conp Ξₜ}{Ψₚ : Conp Ψₜ}
+    {αₜ : Subt Γₜ Δₜ}{βₜ : Subt Δₜ Ξₜ}{γₜ : Subt Ξₜ Ψₜ}{γₚ : Subp Ξₚ (Ψₚ [ γₜ ]c)}{βₚ : Subp Δₚ (Ξₚ [ βₜ ]c)}{αₚ : Subp Γₚ (Δₚ [ αₜ ]c)}
+    {eq₁ : Subp (Δₚ [ αₜ ]c) ((Ψₚ [ γₜ ∘ₜ βₜ ]c)[ αₜ ]c) ≡ Subp (Δₚ [ αₜ ]c) (Ψₚ [ (γₜ ∘ₜ βₜ) ∘ₜ αₜ ]c)}
+    {eq₂ : Subp (Ξₚ [ βₜ ]c) ((Ψₚ [ γₜ ]c)[ βₜ ]c) ≡  Subp (Ξₚ [ βₜ ]c) (Ψₚ [ γₜ ∘ₜ βₜ ]c)}
+    {eq₃ : Subp (Ξₚ [ βₜ ∘ₜ αₜ ]c) ((Ψₚ [ γₜ ]c) [ βₜ ∘ₜ αₜ ]c) ≡ {!Subp (Ξₚ [ βₜ ∘ₜ αₜ ]c) (Ψₚ [ γₜ ∘ₜ (βₜ ∘ₜ αₜ) ]c)!}}
+    {eq₄ : Subp (Δₚ [ αₜ ]c) ((Ξₚ [ βₜ ]c) [ αₜ ]c) ≡ Subp (Δₚ [ αₜ ]c) (Ξₚ [ βₜ ∘ₜ αₜ ]c)}
+    → (coe eq₁ (((coe eq₂ (γₚ [ βₜ ]σₚ)) ∘ₚ βₚ) [ αₜ ]σₚ) ∘ₚ αₚ) ≡ (coe eq₃ (γₚ [ βₜ ∘ₜ αₜ ]σₚ)) ∘ₚ ((coe eq₄ (βₚ [ αₜ ]σₚ) ∘ₚ αₚ))
+  -}
+  postulate ∘-ass : {Γ Δ Ξ Ψ : Con}{α : Sub Γ Δ}{β : Sub Δ Ξ}{γ : Sub Ξ Ψ} → (γ ∘ β) ∘ α ≡ γ ∘ (β ∘ α)
+  -- ∘-ass {Γ}{Δ}{Ξ}{Ψ}{α = sub αₜ αₚ} {β = sub βₜ βₚ} {γ = sub γₜ γₚ} = {!Subp (Con.p Ξ [ βₜ ∘ₜ αₜ ]c) (Con.p Ψ [ γₜ ∘ₜ (βₜ ∘ₜ αₜ) ]c)!}
 
 
   -- SUB-ization
@@ -332,15 +356,20 @@ module FFOLInitial where
   --lemG eq ε= {!!}
   substf : {ℓ ℓ' : Level}{A : Set ℓ}{P : A → Set ℓ'}{Q : A → Set ℓ'}{a b c d : A}{eqa : a ≡ a}{eqb : b ≡ b}{eqcd : c ≡ d}{eqdc : d ≡ c}{f : P a → P b}{g : P b → Q c}{x : P a} → g (subst P eqb (f (subst P eqa x))) ≡ subst Q eqdc (subst Q eqcd (g (f x)))
   substf {P = P} {Q = Q} {eqcd = refl} {f = f} {g = g} = ≡tran² (cong g (≡tran (substrefl {P = P} {e = refl}) (cong f (substrefl {P = P} {e = refl})))) (≡sym (substrefl {P = Q} {e = refl})) (≡sym (substrefl {P = Q} {e = refl}))
-  lemG : {σₜ : Subt Γₜ Ξₜ}{δₜ : Subt Δₜ Γₜ}{σₚ : Subp Γₚ (Ξₚ [ σₜ ]c)}{δₚ : Subp Δₚ (Γₚ [ δₜ ]c)}{t : Tm Γₜ}
-    {eq₁ : Subp (Γₚ [ δₜ ]c) (((Ξₚ ▹tp) [ σₜ ,ₜ t ]c) [ δₜ ]c) ≡ Subp (Γₚ [ δₜ ]c) ((Ξₚ ▹tp) [ (σₜ ∘ₜ δₜ) ,ₜ (t [ δₜ ]t) ]c)}
-    {eq₂ : Subp Γₚ (Ξₚ [ σₜ ]c) ≡ Subp Γₚ ((Ξₚ ▹tp) [ σₜ ,ₜ t ]c)}
-    {eq₃ : Subp Δₚ (Ξₚ [ σₜ ∘ₜ δₜ ]c) ≡ Subp Δₚ ((Ξₚ ▹tp) [ (σₜ ∘ₜ δₜ) ,ₜ (t [ δₜ ]t)]c)}
-    {eq₄ : Subp (Γₚ [ δₜ ]c) ((Ξₚ [ σₜ ]c) [ δₜ ]c) ≡ Subp (Γₚ [ δₜ ]c) (Ξₚ [ σₜ ∘ₜ δₜ ]c)}
-    → (coe eq₁ ((coe eq₂ σₚ) [ δₜ ]σₚ)) ∘ₚ δₚ ≡ coe eq₃ ((coe eq₄ (σₚ [ δₜ ]σₚ)) ∘ₚ δₚ)
-  lemG {σₜ = σₜ} {δₜ} {σₚ} {δₚ} {t} {eq₁} {eq₂} {eq₃} {eq₄} = {!eq₁!}
-  ,ₜ∘* {Γ} {Δ} {Ξ} {sub σₜ σₚ} {sub δₜ δₚ} {t} = cong (sub ((σₜ ∘ₜ δₜ) ,ₜ (t [ δₜ ]t))) lemG
-
+  
+  ,ₜ∘* {Γ} {Δ} {Ξ} {sub σₜ σₚ} {sub δₜ δₚ} {t} = cong (sub ((σₜ ∘ₜ δₜ) ,ₜ (t [ δₜ ]t)))
+    (substfgpoly
+      {P = Subp {Con.t Δ} (Con.p Δ)}
+      {Q = Subp {Con.t Δ} ((Con.p Γ) [ δₜ ]c)}
+      {R = Subp {Con.t Γ} (Con.p Γ)}
+      {F = λ X → X [ δₜ ]c}
+      {eq₁ = ≡sym lemA}
+      {eq₂ = ≡sym []c-∘}
+      {eq₃ = ≡sym []c-∘}
+      {eq₄ = ≡sym lemA}
+      {g = λ σₚ → σₚ ∘ₚ δₚ}
+      {f = λ σₚ → σₚ [ δₜ ]σₚ}
+      {x = σₚ})
 
   πₚ¹* : {Γ Δ : Con} {A : For (Con.t Γ)} → Sub Δ (Γ ▹p A) → Sub Δ Γ
   πₚ¹* (sub σₜ (σₚ ,ₚ pf)) = sub σₜ σₚ
@@ -350,10 +379,19 @@ module FFOLInitial where
   sub σₜ σₚ ,ₚ* pf = sub σₜ (σₚ ,ₚ pf)
 
   ,ₚ∘πₚ : {Γ Δ : Con} → {F : For (Con.t Γ)} → {σ : Sub Δ (Γ ▹p F)} → (πₚ¹* σ) ,ₚ* (πₚ² σ) ≡ σ
-  ,ₚ∘πₚ {σ = sub σₜ (σₚ ,ₚ pf)} = refl
-  ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For (Con.t Ξ)}{prf : Pf Γ (F [ Sub.t σ ]f)} → (σ ,ₚ* prf) ∘ δ ≡ (σ ∘ δ) ,ₚ* (substP (λ F → Pf Δ F) (≡sym []f-∘) ((prf [ Sub.t δ ]pₜ) [ Sub.p δ ]p))
-  ,ₚ∘ {Γ = Γ} {Δ = Δ} {σ = sub σₜ σₚ} {sub δₜ δₚ} {F = A} = cong (sub (σₜ ∘ₜ δₜ)) {!!}
-  
+  ,ₚ∘πₚ {σ = sub σₜ (σₚ ,ₚ p)} = refl
+  --funlol : {Γₜ Δₜ : Cont}{Γₚ : Conp Γₜ}{Δₚ : Conp Δₜ}{Ξₚ : Conp Ξₜ}{σₜ : Subt Γₜ Ξₜ}{δₜ : Subt Δₜ Γₜ}{δₚ : Subp Δₚ (Γₚ [ δₜ ]c)}{A : For Ξₜ}{prf : Pf (con Δₜ (Γₚ [ δₜ ]c)) ((A [ σₜ ∘ₜ δₜ ]f))} → Subp {Δₜ} (Γₚ [ δₜ ]c) ((Ξₚ [ σₜ ∘ₜ δₜ ]c) ▹p⁰ ((A [ σₜ ]f) [ δₜ ]f)) → Subp {Δₜ} (Δₚ) ((Ξₚ [ σₜ ∘ₜ δₜ ]c) ▹p⁰ (A [ σₜ ∘ₜ δₜ ]f))
+  --funlol {Γₚ = Γₚ} {Ξₚ = Ξₚ} {σₜ = σₜ} {δₜ = δₜ} {δₚ = δₚ} {prf = prf} (ξ ,ₚ pf) = ((subst (λ X → Subp (Γₚ [ δₜ ]c) ((Ξₚ [ σₜ ∘ₜ δₜ ]c) ▹p⁰ X)) (≡sym []f-∘) ξ) ,ₚ ?) ∘ₚ δₚ
+  postulate ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For (Con.t Ξ)}{prf : Pf Γ (F [ Sub.t σ ]f)} → (σ ,ₚ* prf) ∘ δ ≡ (σ ∘ δ) ,ₚ* (substP (λ F → Pf Δ F) (≡sym []f-∘) ((prf [ Sub.t δ ]pₜ) [ Sub.p δ ]p))
+  {-,ₚ∘ {Γ = Γ} {Δ = Δ} {σ = sub σₜ σₚ} {sub δₜ δₚ} {F = A} {prf} = cong (sub (σₜ ∘ₜ δₜ)) (cong {!funlol!} 
+    (substfpoly
+      {P = λ X → Subp (Con.p Γ [ δₜ ]c) (X ▹p⁰ ((A [ σₜ ]f) [ δₜ ]f))}
+      {R = λ X → Subp (Con.p Γ [ δₜ ]c) X}
+      {eq = ≡sym []c-∘}
+      {f = λ ξ → ξ ,ₚ (prf [ δₜ ]pₜ)}
+      {x = σₚ [ δₜ ]σₚ}
+    ))
+  -}
   --_,ₜ_ : {Γ Δ : Con} → Sub Δ Γ → Tm Δ → Sub Δ (Γ ▹t)
   --πₜ²∘,ₜ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm Δ} → πₜ² (σ ,ₜ t) ≡ t
   --πₜ¹∘,ₜ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm Δ} → πₜ¹ (σ ,ₜ t) ≡ σ
@@ -375,9 +413,13 @@ module FFOLInitial where
     { Con = Con
     ; Sub = Sub
     ; _∘_ = _∘_
+    ; ∘-ass = ∘-ass
     ; id = id
+    ; idl = {!!}
+    ; idr = {!!}
     ; ◇ = ◇
     ; ε = sub εₜ εₚ
+    ; ε-u = {!!}
     ; Tm = λ Γ → Tm (Con.t Γ)
     ; _[_]t = λ t σ → t [ Sub.t σ ]t
     ; []t-id = []t-id

@@ -1,4 +1,4 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
 open import PropUtil
 
@@ -15,11 +15,15 @@ module FinitaryFirstOrderLogic where
     infixr 5 _⊢_
     field
       Con : Set ℓ¹
-      Sub : Con → Con → Set ℓ⁵ -- It makes a posetal category
+      Sub : Con → Con → Set ℓ⁵ -- It makes a category
       _∘_ : {Γ Δ Ξ : Con} → Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
+      ∘-ass : {Γ Δ Ξ Ψ : Con}{α : Sub Γ Δ}{β : Sub Δ Ξ}{γ : Sub Ξ Ψ} → (γ ∘ β) ∘ α ≡ γ ∘ (β ∘ α)
       id : {Γ : Con} → Sub Γ Γ
+      idl : {Γ Δ : Con} {σ : Sub Γ Δ} →  (id {Δ}) ∘ σ ≡ σ
+      idr : {Γ Δ : Con} {σ : Sub Γ Δ} →  σ ∘ (id {Γ}) ≡ σ
       ◇ : Con -- The initial object of the category
       ε : {Γ : Con} → Sub Γ ◇ -- The morphism from the initial to any object
+      ε-u : {Γ : Con} → {σ : Sub Γ ◇} → σ ≡ ε {Γ}
 
       -- Functor Con → Set called Tm
       Tm : Con → Set ℓ²
@@ -27,7 +31,7 @@ module FinitaryFirstOrderLogic where
       []t-id : {Γ : Con} → {x : Tm Γ} → x [ id {Γ} ]t ≡ x
       []t-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {t : Tm Γ} → t [ β ∘ α ]t ≡ (t [ β ]t) [ α ]t
 
-      -- Tm⁺
+      -- Tm : Set+
       _▹ₜ : Con → Con
       πₜ¹ : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Sub Δ Γ
       πₜ² : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Tm Δ
@@ -137,11 +141,11 @@ module FinitaryFirstOrderLogic where
     f ∘ g = λ x → f (g x)
     id : {Γ : Con} → Sub Γ Γ
     id = λ x → x
-    record ◇ : Con where
-      constructor ◇◇
-    ε : {Γ : Con} → Sub Γ ◇ -- The morphism from the initial to any object
-    ε Γ = ◇◇
-                                                                    
+    ε : {Γ : Con} → Sub Γ ⊤ₛ -- The morphism from the initial to any object
+    ε Γ = ttₛ
+    ε-u : {Γ : Con} → {σ : Sub Γ ⊤ₛ} → σ ≡ ε {Γ}
+    ε-u = refl
+
     -- Functor Con → Set called Tm
     Tm : Con → Set
     Tm Γ = Γ → TM
@@ -251,9 +255,13 @@ module FinitaryFirstOrderLogic where
             { Con = Con
             ; Sub = Sub
             ; _∘_ = _∘_
+            ; ∘-ass = refl
             ; id = id
-            ; ◇ = ◇
+            ; idl = refl
+            ; idr = refl
+            ; ◇ = ⊤ₛ
             ; ε = ε
+            ; ε-u = refl
             ; Tm = Tm
             ; _[_]t = _[_]t
             ; []t-id = []t-id
@@ -294,49 +302,47 @@ module FinitaryFirstOrderLogic where
 
     -- (∀ x ∀ y . A(x,y)) ⇒ ∀ y ∀ x . A(y,x)
     -- both sides are ∀ ∀ A (0,1)
-    ex1 : {A : For (◇ ▹ₜ ▹ₜ)} → ◇ ⊢ ((∀∀ (∀∀ A)) ⇒ (∀∀ (∀∀ A)))
+    ex1 : {A : For (⊤ₛ ▹ₜ ▹ₜ)} → ⊤ₛ ⊢ ((∀∀ (∀∀ A)) ⇒ (∀∀ (∀∀ A)))
     ex1 _ hyp = hyp
     -- (A ⇒ ∀ x . B(x)) ⇒ ∀ x . A ⇒ B(x)
-    ex2 : {A : For ◇} → {B : For (◇ ▹ₜ)} → ◇ ⊢ ((A ⇒ (∀∀ B)) ⇒ (∀∀ ((A [ πₜ¹ id ]f) ⇒ B)))
+    ex2 : {A : For ⊤ₛ} → {B : For (⊤ₛ ▹ₜ)} → ⊤ₛ ⊢ ((A ⇒ (∀∀ B)) ⇒ (∀∀ ((A [ πₜ¹ id ]f) ⇒ B)))
     ex2 _ h t h' = h h' t
     -- ∀ x y . A(x,y) ⇒ ∀ x . A(x,x)
     -- For simplicity, I swiched positions of parameters of A (somehow...)
-    ex3 : {A : For (◇ ▹ₜ ▹ₜ)} → ◇ ⊢ ((∀∀ (∀∀ A)) ⇒ (∀∀ (A [ id ,ₜ (πₜ² id) ]f)))
+    ex3 : {A : For (⊤ₛ ▹ₜ ▹ₜ)} → ⊤ₛ ⊢ ((∀∀ (∀∀ A)) ⇒ (∀∀ (A [ id ,ₜ (πₜ² id) ]f)))
     ex3 _ h t = h t t
     -- ∀ x . A (x) ⇒ ∀ x y . A(x)
-    ex4 : {A : For (◇ ▹ₜ)} → ◇ ⊢ ((∀∀ A) ⇒ (∀∀ (∀∀ (A [ ε ,ₜ (πₜ² (πₜ¹ id)) ]f))))
+    ex4 : {A : For (⊤ₛ ▹ₜ)} → ⊤ₛ ⊢ ((∀∀ A) ⇒ (∀∀ (∀∀ (A [ ε ,ₜ (πₜ² (πₜ¹ id)) ]f))))
     ex4 {A} ◇◇ x t t' = x t
     -- (((∀ x . A (x)) ⇒ B)⇒ B) ⇒ ∀ x . ((A (x) ⇒ B) ⇒ B)
-    ex5 : {A : For (◇ ▹ₜ)} → {B : For ◇} → ◇ ⊢ ((((∀∀ A) ⇒ B) ⇒ B) ⇒ (∀∀ ((A ⇒ (B [ πₜ¹ id ]f)) ⇒ (B [ πₜ¹ id ]f))))
+    ex5 : {A : For (⊤ₛ ▹ₜ)} → {B : For ⊤ₛ} → ⊤ₛ ⊢ ((((∀∀ A) ⇒ B) ⇒ B) ⇒ (∀∀ ((A ⇒ (B [ πₜ¹ id ]f)) ⇒ (B [ πₜ¹ id ]f))))
     ex5 ◇◇ h t h' = h (λ h'' → h' (h'' t))
 
-  record Kripke : Set₁ where
+  record Kripke : Set (lsuc (ℓ¹)) where
     field
-      World : Set
+      World : Set ℓ¹
       _≤_ : World → World → Prop
       ≤refl : {w : World} → w ≤ w
       ≤tran : {w w' w'' : World} → w ≤ w' → w' ≤ w'' → w ≤ w'
-      TM : World → Set
+      TM : World → Set ℓ¹
       TM≤ : {w w' : World} → w ≤ w' → TM w → TM w'
-      REL : (w : World) → TM w → TM w → Prop
+      REL : (w : World) → TM w → TM w → Prop ℓ¹
       REL≤ : {w w' : World} → {t u : TM w} → (eq : w ≤ w') → REL w t u → REL w' (TM≤ eq t) (TM≤ eq u)
     infixr 10 _∘_
-    Con = World → Set
-    Sub : Con → Con → Set
+    Con = World → Set ℓ¹
+    Sub : Con → Con → Set ℓ¹
     Sub Δ Γ = (w : World) → Δ w → Γ w
     _∘_ : {Γ Δ Ξ : Con} → Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
     α ∘ β = λ w γ → α w (β w γ)
     id : {Γ : Con} → Sub Γ Γ
     id = λ w γ → γ
-    record ◇⁰ : Set where
-      constructor ◇◇⁰
     ◇ : Con -- The initial object of the category
-    ◇ = λ w → ◇⁰
+    ◇ = λ w → ⊤ₛ
     ε : {Γ : Con} → Sub Γ ◇ -- The morphism from the initial to any object
-    ε w Γ = ◇◇⁰
+    ε w Γ = ttₛ
                                                                     
     -- Functor Con → Set called Tm
-    Tm : Con → Set
+    Tm : Con → Set ℓ¹
     Tm Γ = (w : World) → (Γ w) → TM w
     _[_]t : {Γ Δ : Con} → Tm Γ → Sub Δ Γ → Tm Δ -- The functor's action on morphisms
     t [ σ ]t = λ w → λ γ → t w (σ w γ)
@@ -346,7 +352,7 @@ module FinitaryFirstOrderLogic where
     []t-∘ = refl
 
 
-
+    -- We simply define « bulk _[σ]t » (that acts on *n* terms from *Tm Γ*)
     _[_]tz : {Γ Δ : Con} → {n : Nat} → Array (Tm Γ) n → Sub Δ Γ → Array (Tm Δ) n
     tz [ σ ]tz = map (λ s → s [ σ ]t) tz
     []tz-∘  : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {n : Nat} → {tz : Array (Tm Γ) n} → tz [ β ∘ α ]tz ≡ tz [ β ]tz [ α ]tz
@@ -375,8 +381,8 @@ module FinitaryFirstOrderLogic where
     ,ₜ∘ = refl
                                                                     
     -- Functor Con → Set called For
-    For : Con → Set₁
-    For Γ = (w : World) → (Γ w) → Prop
+    For : Con → Set (lsuc ℓ¹)
+    For Γ = (w : World) → (Γ w) → Prop ℓ¹
     _[_]f : {Γ Δ : Con} → For Γ → Sub Δ Γ → For Δ -- The functor's action on morphisms
     F [ σ ]f = λ w → λ x → F w (σ w x)
     []f-id : {Γ : Con} → {F : For Γ} → F [ id {Γ} ]f ≡ F
@@ -392,7 +398,7 @@ module FinitaryFirstOrderLogic where
 
                                                                                                         
     -- Proofs
-    _⊢_ : (Γ : Con) → For Γ → Prop
+    _⊢_ : (Γ : Con) → For Γ → Prop ℓ¹
     Γ ⊢ F = ∀ w (γ : Γ w) →  F w γ
     _[_]p : {Γ Δ : Con} → {F : For Γ} → Γ ⊢ F → (σ : Sub Δ Γ) → Δ ⊢ (F [ σ ]f) -- The functor's action on morphisms
     prf [ σ ]p = λ w → λ γ → prf w (σ w γ)
@@ -450,9 +456,13 @@ module FinitaryFirstOrderLogic where
       { Con = Con
       ; Sub = Sub
       ; _∘_ = _∘_
+      ; ∘-ass = refl
       ; id = id
+      ; idl = refl
+      ; idr = refl
       ; ◇ = ◇
       ; ε = ε
+      ; ε-u = refl
       ; Tm = Tm
       ; _[_]t = _[_]t
       ; []t-id = []t-id
@@ -491,8 +501,30 @@ module FinitaryFirstOrderLogic where
       }
 
 
+  {-
   -- Completeness proof
 
   -- We first build our universal Kripke model
   
-  
+  module ComplenessProof (M : FFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} {ℓ⁵}) where
+    
+    -- We have a model, we construct the Universal Kripke model of this model
+
+    World : Set ℓ¹
+    World = FFOL.Con M
+    
+    _≤_ : World → World → Prop
+    Γ ≤ Δ = {!FFOL.Sub M Δ Γ!}
+
+    UK : Kripke
+    UK = record
+           { World = World
+           ; _≤_ = λ Δ Γ → {!FFOL.Sub M Δ Γ!}
+           ; ≤refl = {!FFOL.id M!}
+           ; ≤tran = {!FFOL.∘ M!}
+           ; TM = {!!}
+           ; TM≤ = {!!}
+           ; REL = {!!}
+           ; REL≤ = {!!}
+           }
+  -}

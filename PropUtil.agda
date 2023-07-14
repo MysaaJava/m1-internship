@@ -2,6 +2,14 @@
 
 module PropUtil where
 
+  open import Agda.Primitive
+  variable ℓ ℓ' : Level
+  
+  data ⊥ₛ : Set where
+  record ⊤ₛ : Set ℓ where
+    constructor ttₛ
+
+
   -- ⊥ is a data with no constructor
   -- ⊤ is a record with one always-available constructor
   data ⊥ : Prop where
@@ -56,7 +64,6 @@ module PropUtil where
 
 
 
-  open import Agda.Primitive
   postulate _≈_ : ∀{ℓ}{A : Set ℓ}(a : A) → A → Set ℓ
   infix 3 _≡_
   data _≡_ {ℓ}{A : Set ℓ}(a : A) : A → Prop ℓ where
@@ -124,9 +131,22 @@ module PropUtil where
   substreflrefl : {ℓ ℓ' : Level}{A : Set ℓ}{P : A → Set ℓ'}{a : A}{e : a ≡ a}{p : P a} → subst P e (subst P e p) ≡ p
   substreflrefl {P = P} {a} {e} {p} = ≡tran (substrefl {P = P} {a = a} {e = e} {p = subst P e p}) (substrefl {P = P} {a = a} {e = e} {p = p})
 
+  cong₂' : {ℓ ℓ' ℓ'' : Level}{A : Set ℓ}{B : A → Set ℓ'}{C : Set ℓ''} → (f : (a : A) → B a → C) → {a a' : A} {b : B a} {b' : B a'} → (eq : a ≡ a') → subst B eq b ≡ b' → f a b ≡ f a' b'
+  cong₂' f {a} refl refl = cong (f a) (≡sym coerefl)
+  
   congsubst : {ℓ ℓ' : Level}{A : Set ℓ}{P : A → Set ℓ'}{a a' : A}{e : a ≡ a}{p : P a}{p' : P a} → p ≡ p' → subst P e p ≡ subst P e p'
   congsubst {P = P} {e = refl} h = cong (subst P refl) h
-  
+
+  substfpoly : {ℓ ℓ' : Level}{A : Set ℓ}{P R : A → Set ℓ'}{α β : A}
+    {eq : α ≡ β} {f : {ξ : A} → R ξ → P ξ} {x : R α}
+    → coe (cong P eq) (f {α} x) ≡ f (coe (cong R eq) x)
+  substfpoly {eq = refl} {f} = ≡tran coerefl (cong f (≡sym coerefl))
+
+  substfgpoly : {ℓ ℓ' : Level}{A B : Set ℓ} {P Q : A → Set ℓ'} {R : B → Set ℓ'} {F : B → A} {α β : A} {ε φ : B}
+       {eq₁ : α ≡ β} {eq₂ : F ε ≡ α} {eq₃ : F φ ≡ β} {eq₄ : ε ≡ φ}
+       {g : {a : A} → Q a → P a} {f : {b : B} → R b → Q (F b)} {x : R ε}
+    → g {β} (subst Q eq₃ (f {φ} (subst R eq₄ x))) ≡ subst P eq₁ (g {α} (subst Q eq₂ (f {ε} x)))
+  substfgpoly {P = P} {Q} {R} {eq₁ = refl} {refl} {refl} {refl} {g} {f} = ≡tran³ (cong g (substrefl {P = Q} {e = refl})) (cong g (cong f (substrefl {P = R} {e = refl}))) (cong g (≡sym (substrefl {P = Q} {e = refl}))) (≡sym (substrefl {P = P} {e = refl}))
 
   {-# BUILTIN EQUALITY _≡_ #-}
 
@@ -145,16 +165,14 @@ module PropUtil where
     succ : Nat → Nat
 
   {-# BUILTIN NATURAL Nat #-}
-  variable
-    ℓ ℓ' : Level
 
-  record _×_ (A : Set ℓ) (B : Set ℓ) : Set ℓ where
+  record _×_ (A : Set ℓ) (B : Set ℓ') : Set (ℓ ⊔ ℓ') where
     constructor _,×_
     field
       a : A
       b : B
 
-  record _×'_ (A : Set ℓ) (B : Prop ℓ) : Set ℓ where
+  record _×'_ (A : Set ℓ) (B : Prop ℓ') : Set (ℓ ⊔ ℓ') where
     constructor _,×'_
     field
       a : A
@@ -166,19 +184,19 @@ module PropUtil where
       a : A
       b : B a
 
-  proj×₁ : {A B : Set} → (A × B) → A
+  proj×₁ : {ℓ ℓ' : Level}{A : Set ℓ}{B : Set ℓ'} → (A × B) → A
   proj×₁ p = _×_.a p
-  proj×₂ : {A B : Set} → (A × B) → B
+  proj×₂ : {ℓ ℓ' : Level}{A : Set ℓ}{B : Set ℓ'} → (A × B) → B
   proj×₂ p = _×_.b p
 
-  proj×'₁ : {A : Set} → {B : Prop} → (A ×' B) → A
+  proj×'₁ : {ℓ ℓ' : Level}{A : Set ℓ}{B : Prop ℓ'} → (A ×' B) → A
   proj×'₁ p = _×'_.a p
-  proj×'₂ : {A : Set} → {B : Prop} → (A ×' B) → B
+  proj×'₂ : {ℓ ℓ' : Level}{A : Set ℓ}{B : Prop ℓ'} → (A ×' B) → B
   proj×'₂ p = _×'_.b p
 
-  proj×''₁ : {A : Set} → {B : A → Prop} → (A ×'' B) → A
+  proj×''₁ : {ℓ ℓ' : Level}{A : Set ℓ}{B : A → Prop ℓ'} → (A ×'' B) → A
   proj×''₁ p = _×''_.a p
-  proj×''₂ : {A : Set} → {B : A → Prop} → (p : A ×'' B) → B (proj×''₁ p)
+  proj×''₂ : {ℓ ℓ' : Level}{A : Set ℓ}{B : A → Prop ℓ'} → (p : A ×'' B) → B (proj×''₁ p)
   proj×''₂ p = _×''_.b p
 
   
