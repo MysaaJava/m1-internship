@@ -153,17 +153,17 @@ module FFOLCompleteness where
   record Presheaf : Set (lsuc (ℓ¹)) where
     field
       World : Set ℓ¹
-      _≤_ : World → World → Set ℓ¹ -- arrows
-      ≤refl : {w : World} → w ≤ w -- id arrow
-      ≤tran : {w w' w'' : World} → w ≤ w' → w' ≤ w'' → w ≤ w'' -- arrow composition
-      ≤-ass : {w w' w'' w''' : World}{a : w ≤ w'}{b : w' ≤ w''}{c : w'' ≤ w'''}
-        → (≤tran (≤tran a b) c) ≡ (≤tran a (≤tran b c))
-      ≤-idl : {w w' : World} → {a : w ≤ w'} → ≤tran (≤refl {w}) a ≡ a
-      ≤-idr : {w w' : World} → {a : w ≤ w'} → ≤tran a (≤refl {w'}) ≡ a
+      Arr : World → World → Set ℓ¹ -- arrows
+      id-a : {w : World} → Arr w w -- id arrow
+      _∘a_ : {w w' w'' : World} → Arr w w' → Arr w' w'' → Arr w w'' -- arrow composition
+      ∘a-ass : {w w' w'' w''' : World}{a : Arr w w'}{b : Arr w' w''}{c : Arr w'' w'''}
+        → ((a ∘a b) ∘a c) ≡ (a ∘a (b ∘a c))
+      idl-a : {w w' : World} → {a : Arr w w'} → (id-a {w}) ∘a a ≡ a
+      idr-a : {w w' : World} → {a : Arr w w'} → a ∘a (id-a {w'}) ≡ a
       TM : World → Set ℓ¹
-      TM≤ : {w w' : World} → w ≤ w' → TM w → TM w'
+      TM≤ : {w w' : World} → Arr w w' → TM w' → TM w
       REL : (w : World) → TM w → TM w → Prop ℓ¹
-      REL≤ : {w w' : World} → {t u : TM w} → (eq : w ≤ w') → REL w t u → REL w' (TM≤ eq t) (TM≤ eq u)
+      REL≤ : {w w' : World} → {t u : TM w'} → (eq : Arr w w') → REL w' t u → REL w (TM≤ eq t) (TM≤ eq u)
     infixr 10 _∘_
     Con = World → Set ℓ¹
     Sub : Con → Con → Set ℓ¹
@@ -227,7 +227,7 @@ module FFOLCompleteness where
                                                                                                       
     -- Implication
     _⇒_ : {Γ : Con} → For Γ → For Γ → For Γ
-    F ⇒ G = λ w → λ γ → (∀ w' → w ≤ w' → (F w γ) → (G w γ))
+    F ⇒ G = λ w → λ γ → (∀ w' → Arr w w' → (F w γ) → (G w γ))
     
     -- Forall
     ∀∀ : {Γ : Con} → For (Γ ▹ₜ) → For Γ
@@ -237,7 +237,7 @@ module FFOLCompleteness where
     lam : {Γ : Con} → {F : For Γ} → {G : For Γ} → (Γ ▹ₚ F) ⊢ (G [ πₚ¹ id ]f) → Γ ⊢ (F ⇒ G)
     lam prf = λ w γ w' s h → prf w (γ ,×'' h)
     app : {Γ : Con} → {F G : For Γ} → Γ ⊢ (F ⇒ G) → Γ ⊢ F → Γ ⊢ G
-    app prf prf' = λ w γ → prf w γ w ≤refl (prf' w γ)
+    app prf prf' = λ w γ → prf w γ w id-a (prf' w γ)
     -- Again, we don't write the _[_]p equalities as everything is in Prop
                                                                       
     -- ∀i and ∀e
@@ -303,25 +303,28 @@ module FFOLCompleteness where
   module ComplenessProof where
     
     -- We have a model, we construct the Universal Presheaf model of this model
-    open import FFOLInitial as I
-    
-    World : Set₁
-    World = I.Con
-    
-    _≤_ : World → World → Set₁
-    Γ ≤ Δ = I.Sub Γ Δ
+    import FFOLInitial as I
 
-    UP : Presheaf
-    UP = record
-           { World = I.Con
-           ; _≤_ = I.Sub
-           ; ≤refl = I.id
-           ; ≤tran = λ σ σ' → σ' I.∘ σ
-           ; ≤-ass = λ {w}{w'}{w''}{w'''}{a}{b}{c} → ≡sym I.∘-ass
-           ; ≤-idl = I.idr
-           ; ≤-idr = I.idl
-           ; TM = λ Γ → I.Tm (Con.t Γ)
-           ; TM≤ = {!!}
-           ; REL = λ Γ t u → {!I.r t u!}
-           ; REL≤ = {!!}
-           }
+    UniversalPresheaf : Presheaf
+    UniversalPresheaf = record
+       { World = I.Con
+       ; Arr = I.Sub
+       ; id-a = I.id
+       ; _∘a_ = λ σ σ' → σ' I.∘ σ
+       ; ∘a-ass = ≡sym I.∘-ass
+       ; idl-a = I.idr
+       ; idr-a = I.idl
+       ; TM = λ Γ → I.Tm (I.Con.t Γ)
+       ; TM≤ = λ σ t → t I.[ I.Sub.t σ ]t
+       ; REL = λ Γ t u → I.Pf Γ (I.r t u)
+       ; REL≤ = λ σ pf → (pf I.[ I.Sub.t σ ]pₜ) I.[ I.Sub.p σ ]p
+       }
+
+    -- I.xx are from initial, xx are from up
+    open Presheaf UniversalPresheaf
+    
+    -- Now we want to show universality of this model, that is
+    -- if you have a proof in UP, you have the same in I.
+
+    q : {Γ : Con}{A : For Γ} → Γ ⊢ A → I.Pf {!!} {!!}
+    u : {Γ : Con}{A : For Γ} → I.Pf {!!} {!!} → Γ ⊢ A
