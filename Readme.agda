@@ -1,31 +1,31 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
 module Readme where
 
 -- We will use String as propositional variables
-open import Agda.Builtin.String using (String)
-open import ListUtil
+postulate String : Set
+{-# BUILTIN STRING String #-}
+
 open import PropUtil
+open import ListUtil
 
 -- We can use the basic propositional logic
-open import PropositionalLogic String
+open import ZOL String
 
 -- Here is an example of a propositional formula and its proof
 -- The formula is (Q → R) → (P → Q) → P → R
-d-C : [] ⊢ ((Var "Q") ⇒ (Var "R")) ⇒ ((Var "P") ⇒ (Var "Q")) ⇒ (Var "P") ⇒ (Var "R")
-d-C = lam (lam (lam (app (zero $ next∈ $ next∈ zero∈) (app (zero $ next∈ zero∈) (zero zero∈)))))
+zol-ex : [] ⊢ ((Var "Q") ⇒ (Var "R")) ⇒ ((Var "P") ⇒ (Var "Q")) ⇒ (Var "P") ⇒ (Var "R")
+zol-ex = lam (lam (lam (app (zero $ next∈ $ next∈ zero∈) (app (zero $ next∈ zero∈) (zero zero∈)))))
 
 -- We can with the basic interpretation ⟦_⟧ prove that some formulæ are not provable
 -- For example, we can disprove (P → Q) → P 's provability as we can construct an
 -- environnement where the statement doesn't hold
-
 ρ₀ : Env
 ρ₀ "P" = ⊥
 ρ₀ "Q" = ⊤
 ρ₀ _ = ⊥
-
-cex-d : ([] ⊢ (((Var "P") ⇒ (Var "Q")) ⇒ (Var "P"))) → ⊥
-cex-d h = ⟦ h ⟧ᵈ {ρ₀} tt λ x → tt
+zol-cex : ([] ⊢ (((Var "P") ⇒ (Var "Q")) ⇒ (Var "P"))) → ⊥
+zol-cex h = ⟦ h ⟧ᵈ {ρ₀} tt λ x → tt
 
 -- But this is not enough to show the non-provability of every non-provable statement.
 -- Let's take as an example Pierce formula : ((P → Q) → P) → P
@@ -52,7 +52,7 @@ TND→P tnd {P} {Q} pqp = dis (tnd {P}) (λ p → p) (λ np → pqp (λ p → ca
 -- that the Pierce formula cannot be proven
 
 -- We import the general definition of Kripke models
-open import PropositionalKripke String
+open import ZOLKripke String
 
 -- We will now create a specific Kripke model in which Pierce formula doesn't hold
 
@@ -116,9 +116,9 @@ module PierceDisproof where
   PierceNotProvable h = Pierce⊥w₁ (⟦ h ⟧ {w₁} tt)
   
   
-module GeneralizationInPropositionalLogic where
+module GeneralizationInZOL where
 
-  -- With Kripke models, we can even prove completeness
+  -- With Kripke models, we can even prove completeness of ZOL
   -- Using the Universal Kripke Model
   
   -- With a slightly different universal model (using normal and neutral forms),
@@ -130,7 +130,7 @@ module GeneralizationInPropositionalLogic where
 
   -- As all those proofs are really similar, we created a NormalizationFrame structure
   -- that computes most of the proofs with only a few lemmas
-  open import PropositionalKripkeGeneral String
+  open import ZOLNormalization String
 
   -- We now have access to quote and unquote functions with this
   u1 = NormalizationFrame.u NormalizationTests.Frame⊢
@@ -146,13 +146,13 @@ module GeneralizationInPropositionalLogic where
   u6 = NormalizationFrame.u NormalizationTests.Frame⊆
   q6 = NormalizationFrame.q NormalizationTests.Frame⊆
 
-module GeneralizationInInfinitaryFirstOrderLogic where
+module GeneralizationInIFOL where
 
   -- We also did implement infinitary first order logic
   -- (i.e. ∀ is like an infinitary ∧)
   -- The proofs works the same with only little modifications
 
-  open import InfinitaryFirstOrderKripkeGeneral String (λ n → String)
+  open import IFOLNormalization String (λ n → String)
 
   u1 = NormalizationFrame.u NormalizationTests.Frame⊢
   q1 = NormalizationFrame.q NormalizationTests.Frame⊢
@@ -166,6 +166,24 @@ module GeneralizationInInfinitaryFirstOrderLogic where
   q5 = NormalizationFrame.q NormalizationTests.Frame⊂
   u6 = NormalizationFrame.u NormalizationTests.Frame⊆
   q6 = NormalizationFrame.q NormalizationTests.Frame⊆
+
+
+module NormalizationInFFOL where
+
+  -- We also did an implementation of the negative fragment
+  -- of finitary first order logic (∀ is defined with context extension)
+
+  -- The algebra has been written in this file
+  -- There is also the class of Tarski models, written as an example
+  open import FFOL
+
+  -- We have also written the syntax (initial model)
+  -- (a lot of transport hell, but i did it !)
+  open import FFOLInitial
+
+  -- And now, we can finally write the class of Family and Presheaf models
+  -- and we can make the proof of completeness of the latter.
+  open import FFOLCompleteness
 
 
 

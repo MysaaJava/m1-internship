@@ -5,7 +5,7 @@ open import PropUtil
 module FFOLCompleteness where
 
   open import Agda.Primitive
-  open import FinitaryFirstOrderLogic
+  open import FFOL
   open import ListUtil
 
   record Family : Set (lsuc (ℓ¹)) where
@@ -239,7 +239,7 @@ module FFOLCompleteness where
     app : {Γ : Con} → {F G : For Γ} → Γ ⊢ (F ⇒ G) → Γ ⊢ F → Γ ⊢ G
     app prf prf' = λ w γ → prf w γ w id-a (prf' w γ)
     -- Again, we don't write the _[_]p equalities as everything is in Prop
-vv                                                                      
+    
     -- ∀i and ∀e
     ∀i : {Γ : Con} → {F : For (Γ ▹ₜ)} → (Γ ▹ₜ) ⊢ F → Γ ⊢ (∀∀ F)
     ∀i p w γ = λ t → p w (γ ,× t)

@@ -1,15 +1,14 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
-open import Agda.Builtin.Nat
+open import PropUtil
 
-module InfinitaryFirstOrderLogic (Term : Set) (R : Nat → Set) where
+module IFOL (Term : Set) (R : Nat → Set) where
 
-  open import PropUtil
   open import ListUtil
 
   data Args : Nat → Set where
     zero : Args 0
-    next : {n : Nat} → Args n → Term → Args (suc n)
+    next : {n : Nat} → Args n → Term → Args (succ n)
     
   data Form : Set where
     Rel : {n : Nat} → R n → (Args n) → Form

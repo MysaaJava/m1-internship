@@ -4,7 +4,7 @@ open import PropUtil
 
 module FFOLInitial where
 
-  open import FinitaryFirstOrderLogic
+  open import FFOL
   open import Agda.Primitive
   open import ListUtil
 

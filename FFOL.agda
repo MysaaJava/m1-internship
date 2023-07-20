@@ -1,8 +1,8 @@
 {-# OPTIONS --prop --rewriting #-}
 
 open import PropUtil
-
-module FinitaryFirstOrderLogic where
+ 
+module FFOL where
 
   open import Agda.Primitive
   open import ListUtil

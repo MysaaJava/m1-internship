@@ -1,15 +1,16 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
-module PropositionalKripke (PV : Set) where
+open import PropUtil
+
+module IFOLKripke (Term : Set) (R : Nat → Set) where
 
   open import ListUtil
-  open import PropUtil
-  open import PropositionalLogic PV
+  open import IFOL Term R
 
   private
     variable
-      x : PV
-      y : PV
+      x : Term
+      y : Term
       F : Form
       G : Form
       Γ : Con
@@ -23,8 +24,8 @@ module PropositionalKripke (PV : Set) where
       _≤_ : Worlds → Worlds → Prop
       refl≤ : {w : Worlds} → w ≤ w
       tran≤ : {a b c : Worlds} → a ≤ b → b ≤ c → a ≤ c
-      _⊩_ : Worlds → PV → Prop
-      mon⊩ : {a b : Worlds} → a ≤ b → {p : PV} → a ⊩ p → b ⊩ p
+      _⊩_[_] : Worlds → {n : Nat} → R n → Args n → Prop
+      mon⊩ : {a b : Worlds} → a ≤ b → {n : Nat} → {r : R n} → {A : Args n} → a ⊩ r [ A ] → b ⊩ r [ A ]
 
     private
       variable
@@ -36,10 +37,11 @@ module PropositionalKripke (PV : Set) where
     
     {- Extending ⊩ to Formulas and Contexts -}
     _⊩ᶠ_ : Worlds → Form → Prop
-    w ⊩ᶠ Var x = w ⊩ x
+    w ⊩ᶠ (Rel r A) = w ⊩ r [ A ]
     w ⊩ᶠ (fp ⇒ fq) = {w' : Worlds} → w ≤ w' → w' ⊩ᶠ fp → w' ⊩ᶠ fq
     w ⊩ᶠ (fp ∧∧ fq) = w ⊩ᶠ fp ∧ w ⊩ᶠ fq
     w ⊩ᶠ ⊤⊤ = ⊤
+    w ⊩ᶠ ∀∀ F = { t : Term } → w ⊩ᶠ F t
     
     _⊩ᶜ_ : Worlds → Con → Prop
     w ⊩ᶜ [] = ⊤
@@ -47,10 +49,11 @@ module PropositionalKripke (PV : Set) where
     
     -- The extensions are monotonous
     mon⊩ᶠ : w ≤ w' → w ⊩ᶠ F → w' ⊩ᶠ F
-    mon⊩ᶠ {F = Var x} ww' wF = mon⊩ ww' wF
+    mon⊩ᶠ {F = Rel r A} ww' wF = mon⊩ ww' wF
     mon⊩ᶠ {F = F ⇒ G} ww' wF w'w'' w''F = wF (tran≤ ww' w'w'') w''F
     mon⊩ᶠ {F = F ∧∧ G} ww' ⟨ wF , wG ⟩ = ⟨ mon⊩ᶠ {F = F} ww' wF , mon⊩ᶠ {F = G} ww' wG ⟩
     mon⊩ᶠ {F = ⊤⊤} ww' wF = tt
+    mon⊩ᶠ {F = ∀∀ F} ww' wF {t} = mon⊩ᶠ {F = F t} ww' (wF {t})
   
     mon⊩ᶜ : w ≤ w' → w ⊩ᶜ Γ → w' ⊩ᶜ Γ
     mon⊩ᶜ {Γ = []} ww' wΓ = wΓ
@@ -70,3 +73,5 @@ module PropositionalKripke (PV : Set) where
     ⟦ ande₁ p ⟧ wΓ = proj₁ $ ⟦ p ⟧ wΓ
     ⟦ ande₂ p ⟧ wΓ = proj₂ $ ⟦ p ⟧ wΓ
     ⟦ true ⟧ wΓ = tt
+    ⟦ ∀i p ⟧ wΓ {t} = ⟦ p {t} ⟧ wΓ
+    ⟦ ∀e p {t} ⟧ wΓ = ⟦ p ⟧ wΓ {t}

@@ -1,14 +1,13 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
-open import Agda.Builtin.Nat hiding (zero)
+open import PropUtil hiding (zero)
 
-module InfinitaryFirstOrderKripkeGeneral (Term : Set) (R : Nat → Set) where
+module IFOLNormalization (Term : Set) (R : Nat → Set) where
 
-  open import ListUtil
-  open import PropUtil
-  open import InfinitaryFirstOrderLogic Term R using (Form; Args; Rel; _⇒_; _∧∧_; ⊤⊤; ∀∀; Con)
+  open import ListUtil hiding (zero)
+  open import IFOL Term R using (Form; Args; Rel; _⇒_; _∧∧_; ⊤⊤; ∀∀; Con)
 
-  open import InfinitaryFirstOrderKripke Term R using (Kripke)
+  open import IFOLKripke Term R using (Kripke)
 
   record Preorder (T : Set₀) : Set₁ where
     constructor order
@@ -78,7 +77,7 @@ module InfinitaryFirstOrderKripkeGeneral (Term : Set) (R : Nat → Set) where
   module NormalizationTests where
 
     {- Now using our records -}
-    open import InfinitaryFirstOrderLogic Term R hiding (Form; _⇒_; Con)
+    open import IFOL Term R hiding (Form; _⇒_; Con)
 
 
     ClassicNN : NormalAndNeutral

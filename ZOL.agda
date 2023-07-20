@@ -1,6 +1,6 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
-module PropositionalLogic (PV : Set) where
+module ZOL (PV : Set) where
 
   open import PropUtil
   open import ListUtil

@@ -1,12 +1,12 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
-module PropositionalKripkeGeneral (PV : Set) where
+module ZOLNormalization (PV : Set) where
 
-  open import ListUtil
-  open import PropUtil
-  open import PropositionalLogic PV using (Form; Var; _⇒_; _∧∧_; ⊤⊤; Con)
+  open import ListUtil hiding (zero)
+  open import PropUtil hiding (zero)
+  open import ZOL PV using (Form; Var; _⇒_; _∧∧_; ⊤⊤; Con)
 
-  open import PropositionalKripke PV using (Kripke)
+  open import ZOLKripke PV using (Kripke)
 
   record Preorder (T : Set₀) : Set₁ where
     constructor order
@@ -75,7 +75,7 @@ module PropositionalKripkeGeneral (PV : Set) where
   module NormalizationTests where
 
     {- Now using our records -}
-    open import PropositionalLogic PV hiding (Form; Var; _⇒_; Con)
+    open import ZOL PV hiding (Form; Var; _⇒_; Con)
 
 
     ClassicNN : NormalAndNeutral
