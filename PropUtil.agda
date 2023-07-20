@@ -162,10 +162,12 @@ module PropUtil where
     {eq : α ≡ β} {f : {ξ : A} → R ξ → P ξ} {x : R α}
     → coe (cong P eq) (f {α} x) ≡ f (coe (cong R eq) x)
   substfpoly {eq = refl} {f} = ≡tran coerefl (cong f (≡sym coerefl))
+  
   substppoly : {ℓ ℓ' ℓ'' ℓ''' : Level}{A : Set ℓ}{P : A → Set ℓ'}{R : A → Set ℓ''}{Q : A → Set ℓ'''}{α β : A}
     {eq : α ≡ β}{f : {ξ : A} → R ξ → Q ξ → P ξ} {x : R α} {y : Q α}
     → coe (cong P eq) (f {α} x y) ≡ f {β} (coe (cong R eq) x) (coe (cong Q eq) y)
   substppoly {eq = refl} {f}{x}{y} = ≡tran coerefl (cong₂ f (≡sym coerefl) (≡sym coerefl))
+  
   substfpoly' : {ℓ ℓ' ℓ'' : Level}{A B : Set ℓ}{P R : A → Set ℓ'}{Q : B → Prop ℓ''}{α β : A}{γ δ : B}
     {eq : α ≡ β}{eq' : γ ≡ δ} {f : {ξ : A}{ι : B} → R ξ → Q ι → P ξ} {x : R α} {y : Q γ}
     → coe (cong P eq) (f {α} {γ} x y) ≡ f {β} {δ} (coe (cong R eq) x) (substP Q eq' y)
