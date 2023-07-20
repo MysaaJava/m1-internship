@@ -1,8 +1,14 @@
-{-# OPTIONS --prop #-}
+{-# OPTIONS --prop --rewriting #-}
 
 module ListUtil where
 
-  open import Data.List using (List; _∷_; []) public
+
+  infixr 5 _∷_
+  data List : (T : Set₀) → Set where
+    [] : {T : Set₀} → List T
+    _∷_ : {T : Set₀} → T → List T → List T
+
+  {-# BUILTIN LIST List #-}
   
   private
     variable
@@ -138,4 +144,17 @@ module ListUtil where
 
   ⊆→∈* : L ⊆ L' → L ∈* L'
   ⊆→∈* h = ⊂⁺→∈* (⊂→⊂⁺ (⊆→⊂ h))
+
+  open import PropUtil using (Nat; zero; succ)
+  open import Agda.Primitive
+  variable
+    ℓ : Level
   
+  data Array (T : Set ℓ) : Nat → Set ℓ where
+    zero : Array T zero
+    next : {n : Nat} → T → Array T n → Array T (succ n)
+
+  map : {T U : Set ℓ} → (T → U) → {n : Nat} →  Array T n → Array U n
+  map f zero = zero
+  map f (next t a) = next (f t) (map f a)
+
