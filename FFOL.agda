@@ -14,6 +14,8 @@ module FFOL where
     infixr 10 _∘_
     infixr 5 _⊢_
     field
+      
+      -- We first make the base category with its final object
       Con : Set ℓ¹
       Sub : Con → Con → Set ℓ⁵ -- It makes a category
       _∘_ : {Γ Δ Ξ : Con} → Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
@@ -21,8 +23,8 @@ module FFOL where
       id : {Γ : Con} → Sub Γ Γ
       idl : {Γ Δ : Con} {σ : Sub Γ Δ} →  (id {Δ}) ∘ σ ≡ σ
       idr : {Γ Δ : Con} {σ : Sub Γ Δ} →  σ ∘ (id {Γ}) ≡ σ
-      ◇ : Con -- The initial object of the category
-      ε : {Γ : Con} → Sub Γ ◇ -- The morphism from the initial to any object
+      ◇ : Con -- The terminal object of the category
+      ε : {Γ : Con} → Sub Γ ◇ -- The morphism from any object to the terminal
       ε-u : {Γ : Con} → {σ : Sub Γ ◇} → σ ≡ ε {Γ}
 
       -- Functor Con → Set called Tm
@@ -31,7 +33,7 @@ module FFOL where
       []t-id : {Γ : Con} → {x : Tm Γ} → x [ id {Γ} ]t ≡ x
       []t-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {t : Tm Γ} → t [ β ∘ α ]t ≡ (t [ β ]t) [ α ]t
 
-      -- Tm : Set+
+      -- Tm : Set⁺
       _▹ₜ : Con → Con
       πₜ¹ : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Sub Δ Γ
       πₜ² : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Tm Δ
@@ -47,11 +49,7 @@ module FFOL where
       []f-id : {Γ : Con} → {F : For Γ} → F [ id {Γ} ]f ≡ F
       []f-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {F : For Γ} → F [ β ∘ α ]f ≡ (F [ β ]f) [ α ]f
 
-      -- Formulas with relation on terms
-      R : {Γ : Con} → (t u : Tm Γ) → For Γ
-      R[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t u : Tm Γ} → (R t u) [ σ ]f ≡ R (t [ σ ]t) (u [ σ ]t)
-
-      -- Proofs
+      -- Functor Con × For → Prop called Pf or ⊢
       _⊢_ : (Γ : Con) → For Γ → Prop ℓ⁴
       _[_]p : {Γ Δ : Con} → {F : For Γ} → Γ ⊢ F → (σ : Sub Δ Γ) → Δ ⊢ (F [ σ ]f) -- The functor's action on morphisms
       -- Equalities below are useless because Γ ⊢ F is in prop
@@ -63,12 +61,17 @@ module FFOL where
       πₚ¹ : {Γ Δ : Con} → {F : For Γ} → Sub Δ (Γ ▹ₚ F) → Sub Δ Γ
       πₚ² : {Γ Δ : Con} → {F : For Γ} → (σ : Sub Δ (Γ ▹ₚ F)) → Δ ⊢ (F [ πₚ¹ σ ]f)
       _,ₚ_ : {Γ Δ : Con} → {F : For Γ} → (σ : Sub Δ Γ) → Δ ⊢ (F [ σ ]f) → Sub Δ (Γ ▹ₚ F)
-      -- Equalities below are useless because Γ ⊢ F is in Prop
       ,ₚ∘πₚ : {Γ Δ : Con} → {F : For Γ} → {σ : Sub Δ (Γ ▹ₚ F)} → (πₚ¹ σ) ,ₚ (πₚ² σ) ≡ σ
       πₚ¹∘,ₚ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {F : For Γ} → {prf : Δ ⊢ (F [ σ ]f)} → πₚ¹ (σ ,ₚ prf) ≡ σ
+      -- Equality below is useless because Γ ⊢ F is in Prop
       -- πₚ²∘,ₚ : {Γ Δ : Con} → {σ : Sub Δ Γ} → {F : For Γ} → {prf : Δ ⊢ (F [ σ ]f)} → πₚ² (σ ,ₚ prf) ≡ prf
       ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For Ξ}{prf : Γ ⊢ (F [ σ ]f)} → (σ ,ₚ prf) ∘ δ ≡ (σ ∘ δ) ,ₚ (substP (λ F → Δ ⊢ F) (≡sym []f-∘) (prf [ δ ]p))
 
+      
+      {-- FORMULAE CONSTRUCTORS --}
+      -- Formulas with relation on terms
+      R : {Γ : Con} → (t u : Tm Γ) → For Γ
+      R[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t u : Tm Γ} → (R t u) [ σ ]f ≡ R (t [ σ ]t) (u [ σ ]t)
 
       -- Implication
       _⇒_ : {Γ : Con} → For Γ → For Γ → For Γ
@@ -78,10 +81,12 @@ module FFOL where
       ∀∀ : {Γ : Con} → For (Γ ▹ₜ) → For Γ
       []f-∀∀ : {Γ Δ : Con} → {F : For (Γ ▹ₜ)} → {σ : Sub Δ Γ} → (∀∀ F) [ σ ]f ≡ (∀∀ (F [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f))
 
+      {-- PROOFS CONSTRUCTORS --}
+      -- Again, we don't have to write the _[_]p equalities as Proofs are in Prop
+      
       -- Lam & App
       lam : {Γ : Con} → {F : For Γ} → {G : For Γ} → (Γ ▹ₚ F) ⊢ (G [ πₚ¹ id ]f) → Γ ⊢ (F ⇒ G)
       app : {Γ : Con} → {F G : For Γ} → Γ ⊢ (F ⇒ G) → Γ ⊢ F → Γ ⊢ G
-      -- Again, we don't write the _[_]p equalities as everything is in Prop
 
       -- ∀i and ∀e
       ∀i : {Γ : Con} → {F : For (Γ ▹ₜ)} → (Γ ▹ₜ) ⊢ F → Γ ⊢ (∀∀ F)

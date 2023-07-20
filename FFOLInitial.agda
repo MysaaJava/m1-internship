@@ -8,78 +8,44 @@ module FFOLInitial where
   open import Agda.Primitive
   open import ListUtil
 
-  -- First definition of terms and term contexts --
+  {-- TERM CONTEXTS - TERMS - FORMULAE - TERM SUBSTITUTIONS --}
+
+  -- Term contexts are isomorphic to Nat
   data Cont : Set₁ where
     ◇t : Cont
     _▹t⁰ : Cont → Cont
+    
   variable
     Γₜ Δₜ Ξₜ : Cont
+
+  -- A term variable is a de-bruijn variable, TmVar n ≈ ⟦0,n-1⟧
   data TmVar : Cont → Set₁ where
     tvzero : TmVar (Γₜ ▹t⁰)
     tvnext : TmVar Γₜ → TmVar (Γₜ ▹t⁰)
-    
+
+  -- For now, we only have term variables (no function symbol)
   data Tm : Cont → Set₁ where
     var : TmVar Γₜ → Tm Γₜ
     
   -- Now we can define formulæ
   data For : Cont → Set₁ where
-    r : Tm Γₜ → Tm Γₜ → For Γₜ
+    R : Tm Γₜ → Tm Γₜ → For Γₜ
     _⇒_ : For Γₜ → For Γₜ → For Γₜ
     ∀∀  : For (Γₜ ▹t⁰) → For Γₜ
 
-  -- Then we define term substitutions, and the application of them on terms and formulæ
+
+
+
+  -- Then we define term substitutions
   data Subt : Cont → Cont → Set₁ where
     εₜ : Subt Γₜ ◇t
     _,ₜ_ : Subt Δₜ Γₜ → Tm Δₜ → Subt Δₜ (Γₜ ▹t⁰)
     
-  -- We subst on terms
-  _[_]t : Tm Γₜ → Subt Δₜ Γₜ → Tm Δₜ
-  var tvzero [ σ ,ₜ t ]t = t
-  var (tvnext tv) [ σ ,ₜ t ]t = var tv [ σ ]t
-  
-  -- We define liftings on term variables
-  -- A term of n variables is a term of n+1 variables
-  -- Same for a term array
-  wkₜt : Tm Γₜ → Tm (Γₜ ▹t⁰)
-  
-  wkₜt (var tv) = var (tvnext tv)
-  
-  -- From a substition into n variables, we get a substitution into n+1 variables which don't use the last one
-  wkₜσt : Subt Δₜ Γₜ → Subt (Δₜ ▹t⁰) Γₜ
-  wkₜσt εₜ = εₜ
-  wkₜσt (σ ,ₜ t) = (wkₜσt σ) ,ₜ (wkₜt t)
-  wkₜσt-wkₜt : {tv : TmVar Γₜ} → {σ : Subt Δₜ Γₜ} → wkₜt (var tv [ σ ]t) ≡ var tv [ wkₜσt σ ]t
-  wkₜσt-wkₜt {tv = tvzero} {σ = σ ,ₜ x} = refl
-  wkₜσt-wkₜt {tv = tvnext tv} {σ = σ ,ₜ x} = wkₜσt-wkₜt {tv = tv} {σ = σ}
-  
-  -- From a substitution into n variables, we construct a substitution from n+1 variables to n+1 variables which maps it to itself
-  -- i.e. 0 -> 0 and for all i ->(old) σ(i) we get i+1 -> σ(i)+1
-  liftₜσ : Subt Δₜ Γₜ → Subt (Δₜ ▹t⁰) (Γₜ ▹t⁰)
-  liftₜσ σ = (wkₜσt σ) ,ₜ (var tvzero)
-
-  
-  -- We subst on formulæ
-  _[_]f : For Γₜ → Subt Δₜ Γₜ → For Δₜ
-  (r t u) [ σ ]f = r (t [ σ ]t) (u [ σ ]t)
-  (A ⇒ B) [ σ ]f = (A [ σ ]f) ⇒ (B [ σ ]f)
-  (∀∀ A) [ σ ]f = ∀∀ (A [ liftₜσ σ ]f)
-                                 
-  -- We now can define identity on term substitutions       
-  idₜ : Subt Γₜ Γₜ
-  idₜ {◇t} = εₜ
-  idₜ {Γₜ ▹t⁰} = liftₜσ (idₜ {Γₜ})
-
-  _∘ₜ_ : Subt Δₜ Γₜ → Subt Ξₜ Δₜ → Subt Ξₜ Γₜ
-  εₜ ∘ₜ β = εₜ
-  (α ,ₜ x) ∘ₜ β = (α ∘ₜ β) ,ₜ (x [ β ]t)
-
-
-  -- We have the access functions from the algebra, in restricted versions
+  -- We write down the access functions from the algebra, in restricted versions
   πₜ¹ : Subt Δₜ (Γₜ ▹t⁰) → Subt Δₜ Γₜ
   πₜ¹ (σₜ ,ₜ t) = σₜ
   πₜ² : Subt Δₜ (Γₜ ▹t⁰) → Tm Δₜ
   πₜ² (σₜ ,ₜ t) = t
-  
   -- And their equalities (the fact that there are reciprocical)
   πₜ²∘,ₜ : {σₜ : Subt Δₜ Γₜ} → {t : Tm Δₜ} → πₜ² (σₜ ,ₜ t) ≡ t
   πₜ²∘,ₜ = refl
@@ -88,64 +54,125 @@ module FFOLInitial where
   ,ₜ∘πₜ : {σₜ : Subt Δₜ (Γₜ ▹t⁰)} → (πₜ¹ σₜ) ,ₜ (πₜ² σₜ) ≡ σₜ
   ,ₜ∘πₜ {σₜ = σₜ ,ₜ t} = refl
 
-  -- We can also prove the substitution equalities
+    
+  -- We now define the action of term substitutions on terms
+  _[_]t : Tm Γₜ → Subt Δₜ Γₜ → Tm Δₜ
+  var tvzero [ σ ,ₜ t ]t = t
+  var (tvnext tv) [ σ ,ₜ t ]t = var tv [ σ ]t
+  
+  -- We define weakenings of the term-context for terms
+  -- «A term of n variables can be seen as a term of n+1 variables»
+  wkₜt : Tm Γₜ → Tm (Γₜ ▹t⁰)
+  wkₜt (var tv) = var (tvnext tv)
+  
+  -- From a substition into n variables, we get a substitution into n+1 variables which don't use the last one
+  wkₜσₜ : Subt Δₜ Γₜ → Subt (Δₜ ▹t⁰) Γₜ
+  wkₜσₜ εₜ = εₜ
+  wkₜσₜ (σ ,ₜ t) = (wkₜσₜ σ) ,ₜ (wkₜt t)
+  
+  -- From a substitution into n variables, we construct a substitution from n+1 variables to n+1 variables which maps it to itself
+  -- i.e. 0 -> 0 and for all i ->(old) σ(i) we get i+1 -> σ(i)+1
+  lfₜσₜ : Subt Δₜ Γₜ → Subt (Δₜ ▹t⁰) (Γₜ ▹t⁰)
+  lfₜσₜ σ = (wkₜσₜ σ) ,ₜ (var tvzero)
+
+  -- We show how wkₜt and interacts with [_]t
+  wkₜ[]t : {α : Subt Δₜ Γₜ} → {t : Tm Γₜ} →  wkₜt (t [ α ]t) ≡ (wkₜt t [ lfₜσₜ α ]t)
+  wkₜ[]t {α = α ,ₜ t} {var tvzero} = refl
+  wkₜ[]t {α = α ,ₜ t} {var (tvnext tv)} = wkₜ[]t {t = var tv}
+  
+  -- We can now subst on formulæ
+  _[_]f : For Γₜ → Subt Δₜ Γₜ → For Δₜ
+  (R t u) [ σ ]f = R (t [ σ ]t) (u [ σ ]t)
+  (A ⇒ B) [ σ ]f = (A [ σ ]f) ⇒ (B [ σ ]f)
+  (∀∀ A) [ σ ]f = ∀∀ (A [ lfₜσₜ σ ]f)
+
+
+
+
+  -- We now can define identity and composition of term substitutions       
+  idₜ : Subt Γₜ Γₜ
+  idₜ {◇t} = εₜ
+  idₜ {Γₜ ▹t⁰} = lfₜσₜ (idₜ {Γₜ})
+  _∘ₜ_ : Subt Δₜ Γₜ → Subt Ξₜ Δₜ → Subt Ξₜ Γₜ
+  εₜ ∘ₜ β = εₜ
+  (α ,ₜ x) ∘ₜ β = (α ∘ₜ β) ,ₜ (x [ β ]t)
+
+  -- We now have to show all their equalities (idₜ and ∘ₜ respect []t, []f, wkₜ, lfₜ, categorical rules
+
+  -- Substitution for terms
   []t-id : {t : Tm Γₜ} → t [ idₜ {Γₜ} ]t ≡ t
   []t-id {Γₜ ▹t⁰} {var tvzero} = refl
-  []t-id {Γₜ ▹t⁰} {var (tvnext tv)} = substP (λ t → t ≡ var (tvnext tv)) (wkₜσt-wkₜt {tv = tv} {σ = idₜ}) (substP (λ t → wkₜt t ≡ var (tvnext tv)) (≡sym ([]t-id {t = var tv})) refl)
+  []t-id {Γₜ ▹t⁰} {var (tvnext tv)} = substP (λ t → t ≡ var (tvnext tv)) (wkₜ[]t {t = var tv}) (substP (λ t → wkₜt t ≡ var (tvnext tv)) (≡sym ([]t-id {t = var tv})) refl)
   []t-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {t : Tm Γₜ} → t [ β ∘ₜ α ]t ≡ (t [ β ]t) [ α ]t
   []t-∘ {α = α} {β = β ,ₜ t} {t = var tvzero} = refl
   []t-∘ {α = α} {β = β ,ₜ t} {t = var (tvnext tv)} = []t-∘ {t = var tv}
-  []f-id : {F : For Γₜ} → F [ idₜ {Γₜ} ]f ≡ F
-  []f-id {F = r t u} = cong₂ r []t-id []t-id
-  []f-id {F = F ⇒ G} = cong₂ _⇒_ []f-id []f-id
-  []f-id {F = ∀∀ F} = cong ∀∀ []f-id
-  wkₜσt-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → wkₜσt (β ∘ₜ α) ≡ (wkₜσt β ∘ₜ liftₜσ α)
-  wkₜt[] : {α : Subt Δₜ Γₜ} → {t : Tm Γₜ} → wkₜt (t [ α ]t) ≡ (wkₜt t [ liftₜσ α ]t)
-  wkₜσt-∘ {β = εₜ} = refl
-  wkₜσt-∘ {β = β ,ₜ t} = cong₂ _,ₜ_ wkₜσt-∘ (wkₜt[] {t = t})
-  wkₜt[] {α = α ,ₜ t} {var tvzero} = refl
-  wkₜt[] {α = α ,ₜ t} {var (tvnext tv)} = wkₜt[] {t = var tv}
-  liftₜσ-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → liftₜσ (β ∘ₜ α) ≡ (liftₜσ β) ∘ₜ (liftₜσ α)
-  liftₜσ-∘ {α = α} {β = εₜ} = refl
-  liftₜσ-∘ {α = α} {β = β ,ₜ t} = cong₂ _,ₜ_ (cong₂ _,ₜ_ wkₜσt-∘ (wkₜt[] {t = t})) refl
-  []f-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {F : For Γₜ} → F [ β ∘ₜ α ]f ≡ (F [ β ]f) [ α ]f
-  []f-∘ {α = α} {β = β} {F = r t u} = cong₂ r ([]t-∘ {α = α} {β = β} {t = t}) ([]t-∘ {α = α} {β = β} {t = u})
-  []f-∘ {F = F ⇒ G} = cong₂ _⇒_ []f-∘ []f-∘
-  []f-∘ {F = ∀∀ F} = cong ∀∀ (≡tran (cong (λ σ → F [ σ ]f) liftₜσ-∘) []f-∘)
-  R[] : {σ : Subt Δₜ Γₜ} → {t u : Tm Γₜ} → (r t u) [ σ ]f ≡ r (t [ σ ]t) (u [ σ ]t)
-  R[] = refl
-  lem3 : {α : Subt Γₜ Δₜ} → {β : Subt Ξₜ Γₜ} → α ∘ₜ (wkₜσt β) ≡ wkₜσt (α ∘ₜ β)
-  lem3 {α = εₜ} = refl
-  lem3 {α = α ,ₜ var tv} = cong₂ _,ₜ_ (lem3 {α = α}) (≡sym (wkₜσt-wkₜt {tv = tv}))
-  wk[,] : {t : Tm Γₜ}{u : Tm Δₜ}{β : Subt Δₜ Γₜ} → (wkₜt t) [ β ,ₜ u ]t ≡ t [ β ]t
-  wk[,] {t = var tvzero} = refl
-  wk[,] {t = var (tvnext tv)} = refl
-  wk∘, : {α : Subt Γₜ Δₜ}{β : Subt Ξₜ Γₜ}{t : Tm Ξₜ} → (wkₜσt α) ∘ₜ (β ,ₜ t) ≡ (α ∘ₜ β)
-  wk∘, {α = εₜ} = refl
-  wk∘, {α = α ,ₜ t} {β = β} = cong₂ _,ₜ_ (wk∘, {α = α}) (wk[,] {t = t} {β = β})
-  σ-idl : {α : Subt Δₜ Γₜ} → idₜ ∘ₜ α ≡ α
-  σ-idl {α = εₜ} = refl
-  σ-idl {α = α ,ₜ x} = cong₂ _,ₜ_ (≡tran wk∘, σ-idl) refl
-  σ-idr : {α : Subt Δₜ Γₜ} → α ∘ₜ idₜ ≡ α
-  σ-idr {α = εₜ} = refl
-  σ-idr {α = α ,ₜ x} = cong₂ _,ₜ_ σ-idr []t-id
+  
+  -- Weakenings and liftings of substitutions
+  wkₜσₜ-∘ₜl : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → wkₜσₜ (β ∘ₜ α) ≡ (wkₜσₜ β ∘ₜ lfₜσₜ α)
+  wkₜσₜ-∘ₜl {β = εₜ} = refl
+  wkₜσₜ-∘ₜl {β = β ,ₜ t} = cong₂ _,ₜ_ wkₜσₜ-∘ₜl (wkₜ[]t {t = t})
+  wkₜσₜ-∘ₜr : {α : Subt Γₜ Δₜ} → {β : Subt Ξₜ Γₜ} → α ∘ₜ (wkₜσₜ β) ≡ wkₜσₜ (α ∘ₜ β)
+  wkₜσₜ-∘ₜr {α = εₜ} = refl
+  wkₜσₜ-∘ₜr {α = α ,ₜ var tv} = cong₂ _,ₜ_ (wkₜσₜ-∘ₜr {α = α}) (≡sym (wkₜ[]t {t = var tv}))
+  lfₜσₜ-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → lfₜσₜ (β ∘ₜ α) ≡ (lfₜσₜ β) ∘ₜ (lfₜσₜ α)
+  lfₜσₜ-∘ {α = α} {β = εₜ} = refl
+  lfₜσₜ-∘ {α = α} {β = β ,ₜ t} = cong₂ _,ₜ_ (cong₂ _,ₜ_ wkₜσₜ-∘ₜl (wkₜ[]t {t = t})) refl
+
+  -- Cancelling a weakening with a ,ₜ
+  wkₜ[,]t : {t : Tm Γₜ}{u : Tm Δₜ}{β : Subt Δₜ Γₜ} → (wkₜt t) [ β ,ₜ u ]t ≡ t [ β ]t
+  wkₜ[,]t {t = var tvzero} = refl
+  wkₜ[,]t {t = var (tvnext tv)} = refl
+  wkₜ∘ₜ,ₜ : {α : Subt Γₜ Δₜ}{β : Subt Ξₜ Γₜ}{t : Tm Ξₜ} → (wkₜσₜ α) ∘ₜ (β ,ₜ t) ≡ (α ∘ₜ β)
+  wkₜ∘ₜ,ₜ {α = εₜ} = refl
+  wkₜ∘ₜ,ₜ {α = α ,ₜ t} {β = β} = cong₂ _,ₜ_ (wkₜ∘ₜ,ₜ {α = α}) (wkₜ[,]t {t = t} {β = β})
+  
+  -- Categorical rules are respected by idₜ and ∘ₜ
+  idlₜ : {α : Subt Δₜ Γₜ} → idₜ ∘ₜ α ≡ α
+  idlₜ {α = εₜ} = refl
+  idlₜ {α = α ,ₜ x} = cong₂ _,ₜ_ (≡tran wkₜ∘ₜ,ₜ idlₜ) refl
+  idrₜ : {α : Subt Δₜ Γₜ} → α ∘ₜ idₜ ≡ α
+  idrₜ {α = εₜ} = refl
+  idrₜ {α = α ,ₜ x} = cong₂ _,ₜ_ idrₜ []t-id
   ∘ₜ-ass : {Γₜ Δₜ Ξₜ Ψₜ : Cont}{α : Subt Γₜ Δₜ}{β : Subt Δₜ Ξₜ}{γ : Subt Ξₜ Ψₜ} → (γ ∘ₜ β) ∘ₜ α ≡ γ ∘ₜ (β ∘ₜ α)
   ∘ₜ-ass {α = α} {β} {εₜ} = refl
   ∘ₜ-ass {α = α} {β} {γ ,ₜ x} = cong₂ _,ₜ_ ∘ₜ-ass (≡sym ([]t-∘ {t = x}))
-  []f-∀∀ : {A : For (Γₜ ▹t⁰)} → {σₜ : Subt Δₜ Γₜ} → (∀∀ A) [ σₜ ]f ≡ (∀∀ (A [ (σₜ ∘ₜ πₜ¹ idₜ) ,ₜ πₜ² idₜ ]f))
-  []f-∀∀ {A = A} = cong ∀∀ (cong (_[_]f A) (cong₂ _,ₜ_ (≡tran (cong wkₜσt (≡sym σ-idr)) (≡sym lem3)) refl))
+  
+  -- Unicity of the terminal morphism
   εₜ-u : {σₜ : Subt Γₜ ◇t} → σₜ ≡ εₜ
   εₜ-u {σₜ = εₜ} = refl
 
-  data Conp : Cont → Set₁ -- pu tit in Prop
+  -- Substitution for formulæ
+  []f-id : {F : For Γₜ} → F [ idₜ {Γₜ} ]f ≡ F
+  []f-id {F = R t u} = cong₂ R []t-id []t-id
+  []f-id {F = F ⇒ G} = cong₂ _⇒_ []f-id []f-id
+  []f-id {F = ∀∀ F} = cong ∀∀ []f-id
+  []f-∘ : {α : Subt Ξₜ Δₜ} → {β : Subt Δₜ Γₜ} → {F : For Γₜ} → F [ β ∘ₜ α ]f ≡ (F [ β ]f) [ α ]f
+  []f-∘ {α = α} {β = β} {F = R t u} = cong₂ R ([]t-∘ {α = α} {β = β} {t = t}) ([]t-∘ {α = α} {β = β} {t = u})
+  []f-∘ {F = F ⇒ G} = cong₂ _⇒_ []f-∘ []f-∘
+  []f-∘ {F = ∀∀ F} = cong ∀∀ (≡tran (cong (λ σ → F [ σ ]f) lfₜσₜ-∘) []f-∘)
+
+  -- Substitution for formulæ constructors
+  -- we omit []f-R and []f-⇒ as they are directly refl
+  []f-∀∀ : {A : For (Γₜ ▹t⁰)} → {σₜ : Subt Δₜ Γₜ} → (∀∀ A) [ σₜ ]f ≡ (∀∀ (A [ (σₜ ∘ₜ πₜ¹ idₜ) ,ₜ πₜ² idₜ ]f))
+  []f-∀∀ {A = A} = cong ∀∀ (cong (_[_]f A) (cong₂ _,ₜ_ (≡tran (cong wkₜσₜ (≡sym idrₜ)) (≡sym wkₜσₜ-∘ₜr)) refl))
+
+
+
+
+
+
+
+
+  -- We can now define proof contexts, which are indexed by a term context
+  -- i.e. we know which terms a proof context can use
+  data Conp : Cont → Set₁ where
+    ◇p : Conp Γₜ
+    _▹p⁰_ : Conp Γₜ → For Γₜ → Conp Γₜ
+  
   variable
     Γₚ Γₚ' : Conp Γₜ
     Δₚ Δₚ' : Conp Δₜ
     Ξₚ : Conp Ξₜ
-  
-  data Conp where
-    ◇p : Conp Γₜ
-    _▹p⁰_ : Conp Γₜ → For Γₜ → Conp Γₜ
     
   record Con : Set₁ where
     constructor con
@@ -166,10 +193,10 @@ module FFOLInitial where
                                      
                                               
   -- We can add term, that will not be used in the formulæ already present
-  -- (that's why we use wkₜσt)
+  -- (that's why we use wkₜσₜ)
   _▹tp : Conp Γₜ → Conp (Γₜ ▹t⁰)
   ◇p ▹tp = ◇p
-  (Γₚ ▹p⁰ A) ▹tp = (Γₚ ▹tp) ▹p⁰ (A [ wkₜσt idₜ ]f)
+  (Γₚ ▹p⁰ A) ▹tp = (Γₚ ▹tp) ▹p⁰ (A [ wkₜσₜ idₜ ]f)
   
   _▹t : Con → Con
   Γ ▹t = con ((Con.t Γ) ▹t⁰) (Con.p Γ ▹tp)
@@ -182,7 +209,7 @@ module FFOLInitial where
     var : {A : For (Con.t Γ)} → PfVar Γ A → Pf Γ A
     app : {A B : For (Con.t Γ)} → Pf Γ (A ⇒ B) → Pf Γ A → Pf Γ B
     lam : {A B : For (Con.t Γ)} → Pf (Γ ▹p A) B → Pf Γ (A ⇒ B)
-    p∀∀e : {A : For ((Con.t Γ) ▹t⁰)} → {t : Tm (Con.t Γ)} → Pf Γ (∀∀ A) → Pf Γ (A [ idₜ ,ₜ t ]f)
+    p∀∀e : {A : For (Con.t (Γ ▹t))} → {t : Tm (Con.t Γ)} → Pf Γ (∀∀ A) → Pf Γ (A [ idₜ ,ₜ t ]f)
     p∀∀i : {A : For (Con.t (Γ ▹t))} → Pf (Γ ▹t) A → Pf Γ (∀∀ A)
 
 
@@ -226,7 +253,7 @@ module FFOLInitial where
   refl∈ₚ* {Γₚ = ◇p} = zero∈ₚ*
   refl∈ₚ* {Γₚ = Γₚ ▹p⁰ x} = both∈ₚ* refl∈ₚ*
 
-  ∈ₚ▹tp : {A : For Δₜ} → PfVar (con Δₜ Δₚ) A → PfVar (con Δₜ Δₚ ▹t) (A [ wkₜσt idₜ ]f)
+  ∈ₚ▹tp : {A : For Δₜ} → PfVar (con Δₜ Δₚ) A → PfVar (con Δₜ Δₚ ▹t) (A [ wkₜσₜ idₜ ]f)
   ∈ₚ▹tp pvzero = pvzero
   ∈ₚ▹tp (pvnext x) = pvnext (∈ₚ▹tp x)
   ∈ₚ*▹tp : Γₚ ∈ₚ* Δₚ → (Γₚ ▹tp) ∈ₚ* (Δₚ ▹tp)
@@ -255,9 +282,9 @@ module FFOLInitial where
   wkₚσt : {Δₜ : Cont} {Δₚ Γₚ : Conp Δₜ}{A : For Δₜ} → Subp {Δₜ} Δₚ Γₚ → Subp {Δₜ} (Δₚ ▹p⁰ A) Γₚ
   wkₚσt εₚ = εₚ
   wkₚσt (σₚ ,ₚ pf) = (wkₚσt σₚ) ,ₚ wkₚp (right∈ₚ* refl∈ₚ*) pf
-  --wkₜσt-wkₜt : {tv : TmVar Γₜ} → {σ : Subt Δₜ Γₜ} → wkₜt (var tv [ σ ]t) ≡ var tv [ wkₜσt σ ]t
-  --wkₜσt-wkₜt {tv = tvzero} {σ = σ ,ₜ x} = refl
-  --wkₜσt-wkₜt {tv = tvnext tv} {σ = σ ,ₜ x} = wkₜσt-wkₜt {tv = tv} {σ = σ}
+  --wkₜt-wkₜσₜ : {tv : TmVar Γₜ} → {σ : Subt Δₜ Γₜ} → wkₜt (var tv [ σ ]t) ≡ var tv [ wkₜσₜ σ ]t
+  --wkₜt-wkₜσₜ {tv = tvzero} {σ = σ ,ₜ x} = refl
+  --wkₜt-wkₜσₜ {tv = tvnext tv} {σ = σ ,ₜ x} = wkₜt-wkₜσₜ {tv = tv} {σ = σ}
   
   -- From a substitution into n variables, we construct a substitution from n+1 variables to n+1 variables which maps it to itself
   -- i.e. 0 -> 0 and for all i ->(old) σ(i) we get i+1 -> σ(i)+1
@@ -276,11 +303,11 @@ module FFOLInitial where
 
 
 
-  lem7 : {σ : Subt Δₜ Γₜ} → ((Δₚ ▹tp) [ liftₜσ σ ]c) ≡ ((Δₚ [ σ ]c) ▹tp)
+  lem7 : {σ : Subt Δₜ Γₜ} → ((Δₚ ▹tp) [ lfₜσₜ σ ]c) ≡ ((Δₚ [ σ ]c) ▹tp)
   lem7 {Δₚ = ◇p} = refl
-  lem7 {Δₚ = Δₚ ▹p⁰ A} = cong₂ _▹p⁰_ lem7 (≡tran² (≡sym []f-∘) (cong (λ σ → A [ σ ]f) (≡tran² (≡sym wkₜσt-∘) (cong wkₜσt (≡tran σ-idl (≡sym σ-idr))) (≡sym lem3))) []f-∘)
-  lem8 : {σ : Subt Δₜ Γₜ} {t : Tm Γₜ} → ((wkₜσt σ ∘ₜ (idₜ ,ₜ (t [ σ ]t))) ,ₜ (t [ σ ]t)) ≡ ((idₜ ∘ₜ σ) ,ₜ (t [ σ ]t))
-  lem8 = cong₂ _,ₜ_ (≡tran² wk∘, σ-idr (≡sym σ-idl)) refl
+  lem7 {Δₚ = Δₚ ▹p⁰ A} = cong₂ _▹p⁰_ lem7 (≡tran² (≡sym []f-∘) (cong (λ σ → A [ σ ]f) (≡tran² (≡sym wkₜσₜ-∘ₜl) (cong wkₜσₜ (≡tran idlₜ (≡sym idrₜ))) (≡sym wkₜσₜ-∘ₜr))) []f-∘)
+  lem8 : {σ : Subt Δₜ Γₜ} {t : Tm Γₜ} → ((wkₜσₜ σ ∘ₜ (idₜ ,ₜ (t [ σ ]t))) ,ₜ (t [ σ ]t)) ≡ ((idₜ ∘ₜ σ) ,ₜ (t [ σ ]t))
+  lem8 = cong₂ _,ₜ_ (≡tran² wkₜ∘ₜ,ₜ idrₜ (≡sym idlₜ)) refl
 
   _[_]pvₜ : {A : For Δₜ} → PfVar (con Δₜ Δₚ) A → (σ : Subt Γₜ Δₜ) → PfVar (con Γₜ (Δₚ [ σ ]c)) (A [ σ ]f)
   _[_]pₜ : {A : For Δₜ} → Pf (con Δₜ Δₚ) A → (σ : Subt Γₜ Δₜ) → Pf (con Γₜ (Δₚ [ σ ]c)) (A [ σ ]f)
@@ -290,18 +317,18 @@ module FFOLInitial where
   app pf pf' [ σ ]pₜ = app (pf [ σ ]pₜ) (pf' [ σ ]pₜ)
   lam pf [ σ ]pₜ = lam (pf [ σ ]pₜ)
   _[_]pₜ {Δₚ = Δₚ} {Γₜ = Γₜ} (p∀∀e {A = A} {t = t} pf) σ = substP (λ F → Pf (con Γₜ (Δₚ [ σ ]c)) F) (≡tran² (≡sym []f-∘) (cong (λ σ → A [ σ ]f) (lem8 {t = t})) ([]f-∘)) (p∀∀e {t = t [ σ ]t} (pf [ σ ]pₜ))
-  _[_]pₜ {Γₜ = Γₜ} (p∀∀i pf) σ = p∀∀i (substP (λ Ξₚ → Pf (con (Γₜ ▹t⁰) (Ξₚ)) _) lem7 (pf [ liftₜσ σ ]pₜ))
+  _[_]pₜ {Γₜ = Γₜ} (p∀∀i pf) σ = p∀∀i (substP (λ Ξₚ → Pf (con (Γₜ ▹t⁰) (Ξₚ)) _) lem7 (pf [ lfₜσₜ σ ]pₜ))
   
   _[_]σₚ : Subp {Δₜ} Δₚ Δₚ' → (σ : Subt Γₜ Δₜ) → Subp {Γₜ} (Δₚ [ σ ]c) (Δₚ' [ σ ]c)
   εₚ [ σₜ ]σₚ = εₚ
   (σₚ ,ₚ pf) [ σₜ ]σₚ = (σₚ [ σₜ ]σₚ) ,ₚ (pf [ σₜ ]pₜ)
 
-  lem9 : (Δₚ [ wkₜσt idₜ ]c) ≡ (Δₚ ▹tp)
+  lem9 : (Δₚ [ wkₜσₜ idₜ ]c) ≡ (Δₚ ▹tp)
   lem9 {Δₚ = ◇p} = refl
   lem9 {Δₚ = Δₚ ▹p⁰ x} = cong₂ _▹p⁰_ lem9 refl
   wkₜσₚ : Subp {Δₜ} Δₚ' Δₚ → Subp {Δₜ ▹t⁰} (Δₚ' ▹tp) (Δₚ ▹tp)
   wkₜσₚ εₚ = εₚ
-  wkₜσₚ {Δₜ = Δₜ} (_,ₚ_ {A = A} σₚ pf) = (wkₜσₚ σₚ) ,ₚ substP (λ Ξₚ → Pf (con (Δₜ ▹t⁰) Ξₚ) (A [ wkₜσt idₜ ]f)) lem9 (_[_]pₜ {Γₜ = Δₜ ▹t⁰} pf (wkₜσt idₜ))
+  wkₜσₚ {Δₜ = Δₜ} (_,ₚ_ {A = A} σₚ pf) = (wkₜσₚ σₚ) ,ₚ substP (λ Ξₚ → Pf (con (Δₜ ▹t⁰) Ξₚ) (A [ wkₜσₜ idₜ ]f)) lem9 (_[_]pₜ {Γₜ = Δₜ ▹t⁰} pf (wkₜσₜ idₜ))
 
   _[_]p : {A : For Δₜ} → Pf (con Δₜ Δₚ) A → (σ : Subp {Δₜ} Δₚ' Δₚ) → Pf (con Δₜ Δₚ') A
   var pvzero [ σ ,ₚ pf ]p = pf
@@ -362,7 +389,7 @@ module FFOLInitial where
   _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
   sub αₜ αₚ ∘ sub βₜ βₚ = sub (αₜ ∘ₜ βₜ) (subst (Subp _) (≡sym []c-∘) (αₚ [ βₜ ]σₚ) ∘ₚ βₚ)
   idl : {Γ Δ : Con} {σ : Sub Γ Δ} →  (id {Δ}) ∘ σ ≡ σ
-  idl {Δ = Δ} {σ = sub σₜ σₚ} = cong₂' sub σ-idl (≡tran (substfpoly {α = ((Con.p Δ) [ idₜ ∘ₜ σₜ ]c)} {β = ((Con.p Δ) [ σₜ ]c)} {eq = cong (λ ξ → Con.p Δ [ ξ ]c) σ-idl} {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ σₚ}) (≡tran (cong₂ _∘ₚ_ (≡tran³ coecoe-coe (substfpoly {eq = []c-id} {f = λ {Ξₚ} ξ → _[_]σₚ {Δₚ = Con.p Δ} {Δₚ' = Ξₚ} ξ σₜ}) (cong (λ ξ → ξ [ σₜ ]σₚ) coeaba) idₚ[]) refl) idlₚ))
+  idl {Δ = Δ} {σ = sub σₜ σₚ} = cong₂' sub idlₜ (≡tran (substfpoly {α = ((Con.p Δ) [ idₜ ∘ₜ σₜ ]c)} {β = ((Con.p Δ) [ σₜ ]c)} {eq = cong (λ ξ → Con.p Δ [ ξ ]c) idlₜ} {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ σₚ}) (≡tran (cong₂ _∘ₚ_ (≡tran³ coecoe-coe (substfpoly {eq = []c-id} {f = λ {Ξₚ} ξ → _[_]σₚ {Δₚ = Con.p Δ} {Δₚ' = Ξₚ} ξ σₜ}) (cong (λ ξ → ξ [ σₜ ]σₚ) coeaba) idₚ[]) refl) idlₚ))
   lemK : {Γ Δ : Con}{σₜ : Subt (Con.t Γ) (Con.t Δ)}{σₚ : Subp (Con.p Γ [ idₜ ]c) ((Con.p Δ [ σₜ ]c)[ idₜ ]c)}
     {eq1 : Subp (Con.p Γ) ((Con.p Δ [ σₜ ]c) [ idₜ ]c) ≡ Subp (Con.p Γ) (Con.p Δ [ σₜ ]c)}
     {eq2 : Subp (Con.p Γ) (Con.p Γ) ≡ Subp (Con.p Γ) (Con.p Γ [ idₜ ]c)}
@@ -371,7 +398,7 @@ module FFOLInitial where
       ≡ (coe eq3 σₚ ∘ₚ idₚ)
   lemK {Γ}{Δ}{σₚ = σₚ}{eq1}{eq2}{eq3} = substP (λ X → coe eq1 (X ∘ₚ coe eq2 idₚ) ≡  (coe eq3 σₚ ∘ₚ idₚ)) (coeaba {eq1 = eq3}{eq2 = ≡sym eq3}) (coep∘ {p = λ {Γₚ}{Δₚ}{Ξₚ} x y → _∘ₚ_ {Δₚ = Γₚ} x y} {eq1 = refl}{eq2 = ≡sym []c-id}{eq3 = ≡sym []c-id})
   idr : {Γ Δ : Con} {σ : Sub Γ Δ} →  σ ∘ (id {Γ}) ≡ σ
-  idr {Γ} {Δ} {σ = sub σₜ σₚ} = cong₂' sub σ-idr (≡tran⁴ (cong (coe _) (≡sym (substfpoly {eq = ≡sym ([]c-∘ {α = σₜ} {β = idₜ}{Ξₚ = Con.p Δ})} {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ (coe (cong (Subp (Con.p Γ)) (≡sym []c-id)) idₚ)} {x = σₚ [ idₜ ]σₚ}))) coecoe-coe lemK idrₚ []σₚ-id)
+  idr {Γ} {Δ} {σ = sub σₜ σₚ} = cong₂' sub idrₜ (≡tran⁴ (cong (coe _) (≡sym (substfpoly {eq = ≡sym ([]c-∘ {α = σₜ} {β = idₜ}{Ξₚ = Con.p Δ})} {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ (coe (cong (Subp (Con.p Γ)) (≡sym []c-id)) idₚ)} {x = σₚ [ idₜ ]σₚ}))) coecoe-coe lemK idrₚ []σₚ-id)
   ∘ₚ-ass : {Γₚ Δₚ Ξₚ Ψₚ : Conp Γₜ}{αₚ : Subp Γₚ Δₚ}{βₚ : Subp Δₚ Ξₚ}{γₚ : Subp Ξₚ Ψₚ} → (γₚ ∘ₚ βₚ) ∘ₚ αₚ ≡ γₚ ∘ₚ (βₚ ∘ₚ αₚ)
   ∘ₚ-ass {γₚ = εₚ} = refl
   ∘ₚ-ass {αₚ = αₚ} {βₚ} {γₚ ,ₚ x} = cong (λ ξ → ξ ,ₚ (x [ βₚ ∘ₚ αₚ ]p)) ∘ₚ-ass
@@ -432,7 +459,7 @@ module FFOLInitial where
 
   lemA : {σₜ : Subt Γₜ Δₜ}{t : Tm Γₜ} → (Γₚ ▹tp) [ σₜ ,ₜ t ]c ≡  Γₚ [ σₜ ]c
   lemA {Γₚ = ◇p} = refl
-  lemA {Γₚ = Γₚ ▹p⁰ t} = cong₂ _▹p⁰_ lemA (≡tran (≡sym []f-∘) (cong (λ σ → t [ σ ]f) (≡tran wk∘, σ-idl)))
+  lemA {Γₚ = Γₚ ▹p⁰ t} = cong₂ _▹p⁰_ lemA (≡tran (≡sym []f-∘) (cong (λ σ → t [ σ ]f) (≡tran wkₜ∘ₜ,ₜ idlₜ)))
   πₜ¹* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Sub Δ Γ
   πₜ¹* (sub (σₜ ,ₜ t) σₚ) = sub σₜ (subst (Subp _) lemA σₚ)
   πₜ²* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Tm (Con.t Δ)
@@ -493,7 +520,7 @@ module FFOLInitial where
   
   lemC : {σₜ : Subt Δₜ Γₜ}{t : Tm Δₜ} → (Γₚ ▹tp) [ σₜ ,ₜ t ]c ≡ Γₚ [ σₜ ]c
   lemC {Γₚ = ◇p} = refl
-  lemC {Γₚ = Γₚ ▹p⁰ x} = cong₂ _▹p⁰_ lemC (≡tran (≡sym []f-∘) (cong (λ σ → x [ σ ]f) (≡tran wk∘, σ-idl)))
+  lemC {Γₚ = Γₚ ▹p⁰ x} = cong₂ _▹p⁰_ lemC (≡tran (≡sym []f-∘) (cong (λ σ → x [ σ ]f) (≡tran wkₜ∘ₜ,ₜ idlₜ)))
 
   lemD : {A : For (Con.t Γ)}{σ : Sub Δ (Γ ▹p A)} → Sub.t (πₚ¹* σ) ≡ Sub.t σ
   lemD {σ = sub σₜ (σₚ ,ₚ pf)} = refl
@@ -527,7 +554,7 @@ module FFOLInitial where
     ; _[_]f = λ A σ → A [ Sub.t σ ]f
     ; []f-id = []f-id
     ; []f-∘ = []f-∘
-    ; R = r
+    ; R = R
     ; R[] = refl
     ; _⊢_ = Pf
     ; _[_]p = λ pf σ → (pf [ Sub.t σ ]pₜ) [ Sub.p σ ]p
