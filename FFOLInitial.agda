@@ -190,18 +190,12 @@ module FFOLInitial where
   -- We can also add a term that will not be used in the formulæ already present
   -- (that's why we use wkₜσₜ)
   _▹tp : Conp Γₜ → Conp (Γₜ ▹t⁰)
-  ◇p ▹tp = ◇p
-  (Γₚ ▹p⁰ A) ▹tp = (Γₚ ▹tp) ▹p⁰ (A [ wkₜσₜ idₜ ]f)
+  Γ ▹tp = Γ [ wkₜσₜ idₜ ]c
   -- We show how it interacts with ,ₜ and lfₜσₜ
-  lem9 : (Δₚ [ wkₜσₜ idₜ ]c) ≡ (Δₚ ▹tp)
-  lem9 {Δₚ = ◇p} = refl
-  lem9 {Δₚ = Δₚ ▹p⁰ x} = cong₂ _▹p⁰_ lem9 refl
   ▹tp,ₜ : {σₜ : Subt Γₜ Δₜ}{t : Tm Γₜ} → (Γₚ ▹tp) [ σₜ ,ₜ t ]c ≡  Γₚ [ σₜ ]c
-  ▹tp,ₜ {Γₚ = ◇p} = refl
-  ▹tp,ₜ {Γₚ = Γₚ ▹p⁰ t} = cong₂ _▹p⁰_ ▹tp,ₜ (≡tran (≡sym []f-∘) (cong (λ σ → t [ σ ]f) (≡tran wkₜ∘ₜ,ₜ idlₜ)))
+  ▹tp,ₜ {Γₚ = Γₚ} = ≡tran (≡sym []c-∘) (cong (λ ξ → Γₚ [ ξ ]c) (≡tran wkₜ∘ₜ,ₜ idlₜ))
   ▹tp-lfₜ : {σ : Subt Δₜ Γₜ} → ((Δₚ ▹tp) [ lfₜσₜ σ ]c) ≡ ((Δₚ [ σ ]c) ▹tp)
-  ▹tp-lfₜ {Δₚ = ◇p} = refl
-  ▹tp-lfₜ {Δₚ = Δₚ ▹p⁰ A} = cong₂ _▹p⁰_ ▹tp-lfₜ (≡tran² (≡sym []f-∘) (cong (λ σ → A [ σ ]f) (≡tran² (≡sym wkₜσₜ-∘ₜl) (cong wkₜσₜ (≡tran idlₜ (≡sym idrₜ))) (≡sym wkₜσₜ-∘ₜr))) []f-∘)
+  ▹tp-lfₜ {Δₚ = Δₚ} = ≡tran² (≡sym []c-∘) (cong (λ ξ → Δₚ [ ξ ]c) (≡tran² (≡sym wkₜσₜ-∘ₜl) (cong wkₜσₜ (≡tran idlₜ (≡sym idrₜ))) (≡sym wkₜσₜ-∘ₜr))) []c-∘
 
 
 
@@ -310,7 +304,10 @@ module FFOLInitial where
 
   wkₜσₚ : Subp {Δₜ} Δₚ' Δₚ → Subp {Δₜ ▹t⁰} (Δₚ' ▹tp) (Δₚ ▹tp)
   wkₜσₚ εₚ = εₚ
-  wkₜσₚ {Δₜ = Δₜ} (_,ₚ_ {A = A} σₚ pf) = (wkₜσₚ σₚ) ,ₚ substP (λ Ξₚ → Pf (Δₜ ▹t⁰) Ξₚ (A [ wkₜσₜ idₜ ]f)) lem9 (_[_]pₜ {Γₜ = Δₜ ▹t⁰} pf (wkₜσₜ idₜ))
+  wkₜσₚ {Δₜ = Δₜ} (_,ₚ_ {A = A} σₚ pf) = (wkₜσₚ σₚ) ,ₚ substP (λ Ξₚ → Pf (Δₜ ▹t⁰) Ξₚ (A [ wkₜσₜ idₜ ]f)) refl (_[_]pₜ {Γₜ = Δₜ ▹t⁰} pf (wkₜσₜ idₜ))
+  wkₚ[] : {σₜ : Subt Γₜ Δₜ} {σₚ : Subp Δₚ Δₚ'} {A : For Δₜ} → (wkₚσₚ {A = A} σₚ) [ σₜ ]σₚ ≡ wkₚσₚ (σₚ [ σₜ ]σₚ)
+  wkₚ[] {σₚ = εₚ} = refl
+  wkₚ[] {σₚ = σₚ ,ₚ x} = cong (λ ξ → ξ ,ₚ _) (wkₚ[] {σₚ = σₚ})
 
   _[_]p : {A : For Δₜ} → Pf Δₜ Δₚ A → (σ : Subp {Δₜ} Δₚ' Δₚ) → Pf Δₜ Δₚ' A
   var pvzero [ σ ,ₚ pf ]p = pf
@@ -326,26 +323,85 @@ module FFOLInitial where
 
 
 
-
+  -- We can now define identity and composition on proof substitutions
   idₚ : Subp {Δₜ} Δₚ Δₚ
   idₚ {Δₚ = ◇p} = εₚ
   idₚ {Δₚ = Δₚ ▹p⁰ x} = lfₚσₚ (idₚ {Δₚ = Δₚ})
-
   _∘ₚ_ : {Γₚ Δₚ Ξₚ : Conp Δₜ} → Subp {Δₜ} Δₚ Ξₚ → Subp {Δₜ} Γₚ Δₚ → Subp {Δₜ} Γₚ Ξₚ
   εₚ ∘ₚ β = εₚ
   (α ,ₚ pf) ∘ₚ β = (α ∘ₚ β) ,ₚ (pf [ β ]p)
+
+  -- And now we have to show all their equalities
+  
+  idₚ[] : {σₜ : Subt Γₜ Δₜ} → ((idₚ {Δₜ} {Δₚ}) [ σₜ ]σₚ) ≡ idₚ {Γₜ} {Δₚ [ σₜ ]c}
+  idₚ[] {Δₚ = ◇p} = refl
+  idₚ[] {Δₚ = Δₚ ▹p⁰ A} = cong (λ ξ → ξ ,ₚ var pvzero) (≡tran wkₚ[] (cong wkₚσₚ idₚ[]))
+
+  -- Cancelling a wkₚσₚ with a ,ₚ
+  wkₚ∘, : {Δₜ : Cont}{Γₚ Δₚ Ξₚ : Conp Δₜ}{α : Subp {Δₜ} Γₚ Δₚ}{β : Subp {Δₜ} Ξₚ Γₚ}{A : For Δₜ}{pf : Pf Δₜ Ξₚ A} → (wkₚσₚ α) ∘ₚ (β ,ₚ pf) ≡ (α ∘ₚ β)
+  wkₚ∘, {α = εₚ} = refl
+  wkₚ∘, {α = α ,ₚ pf} {β = β} {pf = pf'} = cong (λ ξ → ξ ,ₚ (pf [ β ]p)) wkₚ∘,
+
+  -- Categorical rules
+  idlₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} → (idₚ {Δₚ = Δₚ}) ∘ₚ σₚ ≡ σₚ
+  idlₚ {Δₚ = ◇p} {εₚ} = refl
+  idlₚ {Δₚ = Δₚ ▹p⁰ pf} {σₚ ,ₚ pf'} = cong (λ ξ → ξ ,ₚ pf') (≡tran wkₚ∘, (idlₚ {σₚ = σₚ}))
+  idrₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} →  σₚ ∘ₚ (idₚ {Δₚ = Γₚ}) ≡ σₚ
+  idrₚ {σₚ = εₚ} = refl
+  idrₚ {σₚ = σₚ ,ₚ prf} = cong (λ X → X ,ₚ prf) (idrₚ {σₚ = σₚ})
   ∘ₚ-ass : {Γₚ Δₚ Ξₚ Ψₚ : Conp Γₜ}{αₚ : Subp Γₚ Δₚ}{βₚ : Subp Δₚ Ξₚ}{γₚ : Subp Ξₚ Ψₚ} → (γₚ ∘ₚ βₚ) ∘ₚ αₚ ≡ γₚ ∘ₚ (βₚ ∘ₚ αₚ)
   ∘ₚ-ass {γₚ = εₚ} = refl
   ∘ₚ-ass {αₚ = αₚ} {βₚ} {γₚ ,ₚ x} = cong (λ ξ → ξ ,ₚ (x [ βₚ ∘ₚ αₚ ]p)) ∘ₚ-ass
-  lemG' :
+
+  -- Unicity of the terminal morphism
+  εₚ-u : {Γₚ : Conp Γₜ} → {σ : Subp Γₚ ◇p} → σ ≡ εₚ {Δₚ = Γₚ}
+  εₚ-u {σ = εₚ} = refl
+
+  -- Term substitution for proof substitutions
+  []σₚ-id : {σₚ : Subp {Δₜ} Δₚ Δₚ'} → coe (cong₂ Subp []c-id []c-id) (σₚ [ idₜ ]σₚ) ≡ σₚ
+  []σₚ-id {σₚ = εₚ} = εₚ-u
+  []σₚ-id {Δₜ}{Δₚ}{Δₚ' ▹p⁰ A} {σₚ = σₚ ,ₚ x} =
+    substP (λ ξ → coe (cong₂ Subp []c-id []c-id) (ξ ,ₚ (x [ idₜ ]pₜ)) ≡ (σₚ ,ₚ x))
+    (≡sym (coeshift []σₚ-id))
+    (≡sym (coeshift {eq = cong₂ Subp (≡sym []c-id) (≡sym []c-id)}
+    (substfpoly⁴
+      {A = ((Conp Δₜ) × (Conp Δₜ)) × (For Δₜ)}
+      {P = λ W → Subp (proj×₁ (proj×₁ W)) ((proj×₂ (proj×₁ W)) ▹p⁰ (proj×₂ W))}
+      {R = λ W → Subp (proj×₁ (proj×₁ W)) (proj×₂ (proj×₁ W))}
+      {Q = λ W → Pf Δₜ (proj×₁ (proj×₁ W)) (proj×₂ W)}
+      {α = (Δₚ ,× Δₚ') ,× A}
+      {eq = ×≡ (×≡ (≡sym []c-id) (≡sym []c-id)) (≡sym []f-id)}
+      {f = λ {W} ξ pf → _,ₚ_ ξ pf}{x = σₚ}{y = x}
+    )))
+    
+  []σₚ-∘ : {Ξₚ Ξₚ' : Conp Ξₜ}{α : Subt Δₜ Ξₜ} {β : Subt Γₜ Δₜ} {σₚ : Subp {Ξₜ} Ξₚ Ξₚ'}
+    → coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) ((σₚ [ α ]σₚ) [ β ]σₚ) ≡ σₚ [ α ∘ₜ β ]σₚ 
+  []σₚ-∘ {σₚ = εₚ} = εₚ-u
+  []σₚ-∘ {Ξₜ}{Δₜ}{Γₜ}{Ξₚ}{Δₚ' ▹p⁰ A}{α}{β}{σₚ = σₚ ,ₚ pf} =
+    substP (λ ξ → coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) (ξ ,ₚ ((pf [ α ]pₜ) [ β ]pₜ)) ≡ ((σₚ [ α ∘ₜ β ]σₚ) ,ₚ (pf [ α ∘ₜ β ]pₜ))) (≡sym (coeshift []σₚ-∘))
+    (≡sym (coeshift {eq = cong₂ Subp []c-∘ []c-∘}
+    (substfpoly⁴
+      {A = ((Conp Γₜ) × (Conp Γₜ)) × (For Γₜ)}
+      {P = λ W → Subp (proj×₁ (proj×₁ W)) ((proj×₂ (proj×₁ W)) ▹p⁰ (proj×₂ W))}
+      {R = λ W → Subp (proj×₁ (proj×₁ W)) (proj×₂ (proj×₁ W))}
+      {Q = λ W → Pf Γₜ (proj×₁ (proj×₁ W)) (proj×₂ W)}
+      {eq = ×≡ (×≡ []c-∘ []c-∘) []f-∘}
+      {f = λ {W} ξ pf → _,ₚ_ ξ pf}{x = σₚ [ α ∘ₜ β ]σₚ}{y = pf [ α ∘ₜ β ]pₜ})
+    ))
+
+
+
+
+  -- How ∘ₚ and ∘ₜ interact to make associativity (to be proven later for Sub)
+  
+  ∘ₚₜ-ass⁰ :
     {Γₜ Δₜ : Cont}{Γₚ : Conp Γₜ}{Δₚ : Conp Δₜ}{Ξₚ : Conp Δₜ}{Ψₚ : Conp Δₜ}
     {αₜ : Subt Γₜ Δₜ}{γₚ : Subp Ξₚ Ψₚ}{βₚ : Subp Δₚ Ξₚ}{αₚ : Subp Γₚ (Δₚ [ αₜ ]c)}
     → ((γₚ ∘ₚ βₚ) [ αₜ ]σₚ) ∘ₚ αₚ ≡ (γₚ [ αₜ ]σₚ) ∘ₚ ((βₚ [ αₜ ]σₚ) ∘ₚ αₚ)
-  lemG' {γₚ = εₚ} = refl
-  lemG' {αₜ = αₜ}{γₚ ,ₚ x}{βₚ}{αₚ} = cong (λ ξ → ξ ,ₚ (((x [ βₚ ]p) [ αₜ ]pₜ) [ αₚ ]p)) (lemG' {γₚ = γₚ})
-  ε-u : {Γₚ : Conp Γₜ} → {σ : Subp Γₚ ◇p} → σ ≡ εₚ {Δₚ = Γₚ}
-  ε-u {σ = εₚ} = refl
-  lemG : 
+  ∘ₚₜ-ass⁰ {γₚ = εₚ} = refl
+  ∘ₚₜ-ass⁰ {αₜ = αₜ}{γₚ ,ₚ x}{βₚ}{αₚ} = cong (λ ξ → ξ ,ₚ (((x [ βₚ ]p) [ αₜ ]pₜ) [ αₚ ]p)) (∘ₚₜ-ass⁰ {γₚ = γₚ})
+  
+  ∘ₚₜ-ass : 
     {Γₜ Δₜ Ξₜ Ψₜ : Cont}{Γₚ : Conp Γₜ}{Δₚ : Conp Δₜ}{Ξₚ : Conp Ξₜ}{Ψₚ : Conp Ψₜ}
     {αₜ : Subt Γₜ Δₜ}{βₜ : Subt Δₜ Ξₜ}{γₜ : Subt Ξₜ Ψₜ}{γₚ : Subp Ξₚ (Ψₚ [ γₜ ]c)}{βₚ : Subp Δₚ (Ξₚ [ βₜ ]c)}{αₚ : Subp Γₚ (Δₚ [ αₜ ]c)}
     {eq₁ : Subp Γₚ (Ψₚ [ (γₜ ∘ₜ βₜ) ∘ₜ αₜ ]c) ≡ Subp Γₚ (Ψₚ [ γₜ ∘ₜ (βₜ ∘ₜ αₜ) ]c)}
@@ -354,37 +410,7 @@ module FFOLInitial where
     {eq₄ : Subp (Δₚ [ αₜ ]c) ((Ξₚ [ βₜ ]c) [ αₜ ]c) ≡ Subp (Δₚ [ αₜ ]c) (Ξₚ [ βₜ ∘ₜ αₜ ]c)}
     {eq₅ : Subp (Ξₚ [ βₜ ]c) ((Ψₚ [ γₜ ]c) [ βₜ ]c) ≡ Subp (Ξₚ [ βₜ ]c) (Ψₚ [ γₜ ∘ₜ βₜ ]c)}
     → coe eq₁ ((coe eq₂ (((coe eq₅ (γₚ [ βₜ ]σₚ)) ∘ₚ βₚ) [ αₜ ]σₚ)) ∘ₚ αₚ) ≡ (coe eq₃ (γₚ [ βₜ ∘ₜ αₜ ]σₚ)) ∘ₚ ((coe eq₄ (βₚ [ αₜ ]σₚ)) ∘ₚ αₚ)
-  lemK : {σₜ : Subt Γₜ Δₜ}{σₚ : Subp (Γₚ [ idₜ ]c) ((Δₚ [ σₜ ]c)[ idₜ ]c)}
-    {eq1 : Subp Γₚ ((Δₚ [ σₜ ]c) [ idₜ ]c) ≡ Subp Γₚ (Δₚ [ σₜ ]c)}
-    {eq2 : Subp Γₚ Γₚ ≡ Subp Γₚ (Γₚ [ idₜ ]c)}
-    {eq3 : Subp (Γₚ [ idₜ ]c) ((Δₚ [ σₜ ]c)[ idₜ ]c) ≡ Subp Γₚ (Δₚ [ σₜ ]c)}
-    → coe eq1 (σₚ ∘ₚ coe eq2 idₚ)
-      ≡ (coe eq3 σₚ ∘ₚ idₚ)
-  lemK {σₚ = σₚ}{eq1}{eq2}{eq3} = substP (λ X → coe eq1 (X ∘ₚ coe eq2 idₚ) ≡  (coe eq3 σₚ ∘ₚ idₚ)) (coeaba {eq1 = eq3}{eq2 = ≡sym eq3}) (coep∘ {p = λ {Γₚ}{Δₚ}{Ξₚ} x y → _∘ₚ_ {Δₚ = Γₚ} x y} {eq1 = refl}{eq2 = ≡sym []c-id}{eq3 = ≡sym []c-id})
-  lemJ : {Δₜ : Cont}{Δₚ : Conp Δₜ}{A : For Δₜ} → Pf Δₜ Δₚ A → (Pf Δₜ (Δₚ [ idₜ ]c) (A [ idₜ ]f))
-  lemJ {Δₜ}{Δₚ}{A} pf = substP (Pf Δₜ (Δₚ [ idₜ ]c)) (≡sym []f-id) (substP (λ Ξₚ → Pf Δₜ Ξₚ A) (≡sym []c-id) pf)
-  []σₚ-id : {σₚ : Subp {Δₜ} Δₚ Δₚ'} → coe (cong₂ Subp []c-id []c-id) (σₚ [ idₜ ]σₚ) ≡ σₚ
-  []σₚ-id {σₚ = εₚ} = ε-u
-  []σₚ-id {Δₜ}{Δₚ}{Δₚ' ▹p⁰ A} {σₚ = σₚ ,ₚ x} = substP (λ ξ → coe (cong₂ Subp []c-id []c-id) (ξ ,ₚ (x [ idₜ ]pₜ)) ≡ (σₚ ,ₚ x)) (≡sym (coeshift ([]σₚ-id)))
-    (≡sym (coeshift {eq = cong₂ Subp (≡sym []c-id) (≡sym []c-id)}
-    (substfpoly'' {A = (Conp Δₜ) × (Conp Δₜ)}{P = λ W F → Subp (proj×₁ W) ((proj×₂ W) ▹p⁰ F)}{R = λ W → Subp (proj×₁ W) (proj×₂ W)}{Q = λ W F → Pf Δₜ (proj×₁ W) F}{α = Δₚ ,× Δₚ'}{ε = A}{eq = ×≡ (≡sym []c-id) (≡sym []c-id)}{eq'' = ≡sym []f-id}{f = λ {W} {F} ξ pf → _,ₚ_ ξ pf}{x = σₚ}{y = x})))
-  []σₚ-∘ : {Ξₚ Ξₚ' : Conp Ξₜ}{α : Subt Δₜ Ξₜ} {β : Subt Γₜ Δₜ} {σₚ : Subp {Ξₜ} Ξₚ Ξₚ'}
-    --{eq₅ : Subp (Ξₚ [ βₜ ]c) ((Ψₚ [ γₜ ]c) [ βₜ ]c) ≡ Subp (Ξₚ [ βₜ ]c) (Ψₚ [ γₜ ∘ₜ βₜ ]c)}
-    → coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) ((σₚ [ α ]σₚ) [ β ]σₚ) ≡ σₚ [ α ∘ₜ β ]σₚ 
-  []σₚ-∘ {σₚ = εₚ} = ε-u
-  []σₚ-∘ {Ξₜ}{Δₜ}{Γₜ}{Ξₚ}{Δₚ' ▹p⁰ A}{α}{β}{σₚ = σₚ ,ₚ pf} =
-    substP (λ ξ → coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) (ξ ,ₚ ((pf [ α ]pₜ) [ β ]pₜ)) ≡ ((σₚ [ α ∘ₜ β ]σₚ) ,ₚ (pf [ α ∘ₜ β ]pₜ))) (≡sym (coeshift []σₚ-∘))
-    (≡sym (coeshift {eq = cong₂ Subp []c-∘ []c-∘}
-    (substfpoly''
-      {A = (Conp Γₜ) × (Conp Γₜ)}
-      {P = λ W F → Subp (proj×₁ W) ((proj×₂ W) ▹p⁰ F)}
-      {R = λ W → Subp (proj×₁ W) (proj×₂ W)}
-      {Q = λ W F → Pf Γₜ (proj×₁ W) F}
-      {eq = cong₂ _,×_ []c-∘ []c-∘}
-      {eq'' = []f-∘ {α = β} {β = α} {F = A}}
-      {f = λ {W} {F} ξ pf → _,ₚ_ ξ pf}{x = σₚ [ α ∘ₜ β ]σₚ}{y = pf [ α ∘ₜ β ]pₜ})
-    ))
-  lemG {Γₜ}{Δₜ}{Ξₜ}{Ψₜ}{Γₚ}{Δₚ}{Ξₚ}{Ψₚ}{αₜ = αₜ}{βₜ}{γₜ}{γₚ}{βₚ}{αₚ}{eq₁}{eq₂}{eq₃}{eq₄}{eq₅} =
+  ∘ₚₜ-ass {Γₜ}{Δₜ}{Ξₜ}{Ψₜ}{Γₚ}{Δₚ}{Ξₚ}{Ψₚ}{αₜ = αₜ}{βₜ}{γₜ}{γₚ}{βₚ}{αₚ}{eq₁}{eq₂}{eq₃}{eq₄}{eq₅} =
     substP (λ X → coe eq₁ ((coe eq₂ (((coe eq₅ (γₚ [ βₜ ]σₚ)) ∘ₚ βₚ) [ αₜ ]σₚ)) ∘ₚ αₚ) ≡ (coe eq₃ X) ∘ₚ ((coe eq₄ (βₚ [ αₜ ]σₚ)) ∘ₚ αₚ)) []σₚ-∘ (
     ≡tran⁵
     (cong (coe eq₁) (≡tran (
@@ -402,7 +428,7 @@ module FFOLInitial where
       )))
       ))
     (≡tran coecoe-coe coecoe-coe)
-    (cong (coe  (≡tran (cong (λ z → Subp Γₚ (z [ αₜ ]c)) (≡sym []c-∘)) (≡tran (cong (λ z → Subp Γₚ z) (≡sym []c-∘)) eq₁))) lemG')
+    (cong (coe  (≡tran (cong (λ z → Subp Γₚ (z [ αₜ ]c)) (≡sym []c-∘)) (≡tran (cong (λ z → Subp Γₚ z) (≡sym []c-∘)) eq₁))) ∘ₚₜ-ass⁰)
     (≡sym coecoe-coe)
     (cong (coe (cong (λ z → Subp Γₚ z) (≡sym []c-∘))) (substppoly
       {A = (Conp Γₜ) × (Conp Γₜ)}
@@ -418,63 +444,106 @@ module FFOLInitial where
       {f = λ {τ} ξ → (ξ ∘ₚ ((coe eq₄ (βₚ [ αₜ ]σₚ)) ∘ₚ αₚ))}
       {x = (coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) ((γₚ [ βₜ ]σₚ) [ αₜ ]σₚ))}
     ))
-  wkₚ∘, : {Δₜ : Cont}{Γₚ Δₚ Ξₚ : Conp Δₜ}{α : Subp {Δₜ} Γₚ Δₚ}{β : Subp {Δₜ} Ξₚ Γₚ}{A : For Δₜ}{pf : Pf Δₜ Ξₚ A} → (wkₚσₚ α) ∘ₚ (β ,ₚ pf) ≡ (α ∘ₚ β)
-  wkₚ∘, {α = εₚ} = refl
-  wkₚ∘, {α = α ,ₚ pf} {β = β} {pf = pf'} = cong (λ ξ → ξ ,ₚ (pf [ β ]p)) wkₚ∘,
-  idlₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} → (idₚ {Δₚ = Δₚ}) ∘ₚ σₚ ≡ σₚ
-  idlₚ {Δₚ = ◇p} {εₚ} = refl
-  idlₚ {Δₚ = Δₚ ▹p⁰ pf} {σₚ ,ₚ pf'} = cong (λ ξ → ξ ,ₚ pf') (≡tran wkₚ∘, (idlₚ {σₚ = σₚ}))
-  idrₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} →  σₚ ∘ₚ (idₚ {Δₚ = Γₚ}) ≡ σₚ
-  idrₚ {σₚ = εₚ} = refl
-  idrₚ {σₚ = σₚ ,ₚ prf} = cong (λ X → X ,ₚ prf) (idrₚ {σₚ = σₚ})
-  wkₚ[] : {σₜ : Subt Γₜ Δₜ} {σₚ : Subp Δₚ Δₚ'} {A : For Δₜ} → (wkₚσₚ {A = A} σₚ) [ σₜ ]σₚ ≡ wkₚσₚ (σₚ [ σₜ ]σₚ)
-  wkₚ[] {σₚ = εₚ} = refl
-  wkₚ[] {σₚ = σₚ ,ₚ x} = cong (λ ξ → ξ ,ₚ _) (wkₚ[] {σₚ = σₚ})
-  idₚ[] : {σₜ : Subt Γₜ Δₜ} → ((idₚ {Δₜ} {Δₚ}) [ σₜ ]σₚ) ≡ idₚ {Γₜ} {Δₚ [ σₜ ]c}
-  idₚ[] {Δₚ = ◇p} = refl
-  idₚ[] {Δₚ = Δₚ ▹p⁰ A} = cong (λ ξ → ξ ,ₚ var pvzero) (≡tran wkₚ[] (cong wkₚσₚ idₚ[]))
-  
 
+
+
+
+
+
+
+
+
+
+
+
+  -- We can now merge the two notions of contexts, substitutions, and everything
   record Con : Set₁ where
     constructor con
     field
       t : Cont
       p : Conp t
-
-  ◇ : Con
-  ◇ = con ◇t ◇p
-  _▹p_ : (Γ : Con) → For (Con.t Γ) → Con
-  Γ ▹p A = con (Con.t Γ) (Con.p Γ ▹p⁰ A)
-  
+      
   variable
     Γ Δ Ξ : Con
-  _▹t : Con → Con
-  Γ ▹t = con ((Con.t Γ) ▹t⁰) (Con.p Γ ▹tp)
+    
   record Sub (Γ : Con) (Δ : Con) : Set₁ where
     constructor sub
     field
       t : Subt (Con.t Γ) (Con.t Δ)
       p : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ t ]c)
+
+  -- (Con,Sub) is a category with an initial object
   id : Sub Γ Γ
   id {Γ} = sub idₜ (subst (Subp _) (≡sym []c-id) idₚ)
   _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
   sub αₜ αₚ ∘ sub βₜ βₚ = sub (αₜ ∘ₜ βₜ) (subst (Subp _) (≡sym []c-∘) (αₚ [ βₜ ]σₚ) ∘ₚ βₚ)
   idl : {Γ Δ : Con} {σ : Sub Γ Δ} →  (id {Δ}) ∘ σ ≡ σ
-  idl {Δ = Δ} {σ = sub σₜ σₚ} = cong₂' sub idlₜ (≡tran (substfpoly {α = ((Con.p Δ) [ idₜ ∘ₜ σₜ ]c)} {β = ((Con.p Δ) [ σₜ ]c)} {eq = cong (λ ξ → Con.p Δ [ ξ ]c) idlₜ} {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ σₚ}) (≡tran (cong₂ _∘ₚ_ (≡tran³ coecoe-coe (substfpoly {eq = []c-id} {f = λ {Ξₚ} ξ → _[_]σₚ {Δₚ = Con.p Δ} {Δₚ' = Ξₚ} ξ σₜ}) (cong (λ ξ → ξ [ σₜ ]σₚ) coeaba) idₚ[]) refl) idlₚ))
+  idl {Δ = Δ} {σ = sub σₜ σₚ} =
+    cong₂' sub idlₜ (≡tran²
+    (substfpoly
+      {α = ((Con.p Δ) [ idₜ ∘ₜ σₜ ]c)}
+      {β = ((Con.p Δ) [ σₜ ]c)}
+      {eq = cong (λ ξ → Con.p Δ [ ξ ]c) idlₜ}
+      {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ σₚ}
+    ) (
+    cong₂ _∘ₚ_ (≡tran³
+      coecoe-coe
+      (substfpoly
+        {eq = []c-id}
+        {f = λ {Ξₚ} ξ → _[_]σₚ {Δₚ = Con.p Δ} {Δₚ' = Ξₚ} ξ σₜ}
+      )
+      (cong (λ ξ → ξ [ σₜ ]σₚ) coeaba)
+      idₚ[]
+    ) refl)
+    idlₚ)
   idr : {Γ Δ : Con} {σ : Sub Γ Δ} →  σ ∘ (id {Γ}) ≡ σ
-  idr {Γ} {Δ} {σ = sub σₜ σₚ} = cong₂' sub idrₜ (≡tran⁴ (cong (coe _) (≡sym (substfpoly {eq = ≡sym ([]c-∘ {α = σₜ} {β = idₜ}{Ξₚ = Con.p Δ})} {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ (coe (cong (Subp (Con.p Γ)) (≡sym []c-id)) idₚ)} {x = σₚ [ idₜ ]σₚ}))) coecoe-coe lemK idrₚ []σₚ-id)
-
+  idr {Γ} {Δ} {σ = sub σₜ σₚ} =
+    cong₂' sub idrₜ (≡tran⁴
+      (cong (coe _) (≡sym (
+        substfpoly
+        {eq = ≡sym ([]c-∘ {α = σₜ} {β = idₜ}{Ξₚ = Con.p Δ})}
+        {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ (coe (cong (Subp (Con.p Γ)) (≡sym []c-id)) idₚ)}
+        {x = σₚ [ idₜ ]σₚ})))
+      coecoe-coe
+      (substP
+          (λ X → coe  (≡tran (cong (Subp (Con.p Γ)) (≡sym []c-∘))
+          (cong (λ z → Subp (Con.p Γ) (Con.p Δ [ z ]c)) idrₜ))
+          (X ∘ₚ coe (cong (Subp (Con.p Γ)) (≡sym []c-id)) idₚ)
+          ≡ (coe (cong₂ Subp []c-id []c-id) (σₚ [ idₜ ]σₚ) ∘ₚ idₚ))
+      ((coeaba {eq1 = (cong₂ Subp []c-id []c-id)}{eq2 = ≡sym (cong₂ Subp []c-id []c-id)}))
+      ((coep∘
+        {p = λ {Γₚ}{Δₚ}{Ξₚ} x y → _∘ₚ_ {Δₚ = Γₚ} x y}
+        {eq1 = refl}
+        {eq2 = ≡sym []c-id}
+        {eq3 = ≡sym []c-id}
+      )))
+      idrₚ
+      []σₚ-id)
   ∘-ass : {Γ Δ Ξ Ψ : Con}{α : Sub Γ Δ}{β : Sub Δ Ξ}{γ : Sub Ξ Ψ} → (γ ∘ β) ∘ α ≡ γ ∘ (β ∘ α)
-  ∘-ass {Γ}{Δ}{Ξ}{Ψ}{α = sub αₜ αₚ} {β = sub βₜ βₚ} {γ = sub γₜ γₚ} = cong₂' sub ∘ₜ-ass lemG
+  ∘-ass {Γ}{Δ}{Ξ}{Ψ}{α = sub αₜ αₚ} {β = sub βₜ βₚ} {γ = sub γₜ γₚ} = cong₂' sub ∘ₜ-ass ∘ₚₜ-ass
 
-  -- SUB-ization
+  ◇ : Con
+  ◇ = con ◇t ◇p
 
+
+  -- We have our two context extension operators
+  _▹t : Con → Con
+  Γ ▹t = con ((Con.t Γ) ▹t⁰) (Con.p Γ ▹tp)
+  _▹p_ : (Γ : Con) → For (Con.t Γ) → Con
+  Γ ▹p A = con (Con.t Γ) (Con.p Γ ▹p⁰ A)
+
+
+  
+
+  -- We define the access function from the algebra, but defined for fully-featured substitutions
+  -- For term substitutions
   πₜ¹* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Sub Δ Γ
   πₜ¹* (sub (σₜ ,ₜ t) σₚ) = sub σₜ (subst (Subp _) ▹tp,ₜ σₚ)
   πₜ²* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Tm (Con.t Δ)
   πₜ²* (sub (σₜ ,ₜ t) σₚ) = t
   _,ₜ*_ : {Γ Δ : Con} → Sub Δ Γ → Tm (Con.t Δ) → Sub Δ (Γ ▹t)
   (sub σₜ σₚ) ,ₜ* t = sub (σₜ ,ₜ t) (subst (Subp _) (≡sym ▹tp,ₜ) σₚ)
+  -- And the equations
   πₜ²∘,ₜ* : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm (Con.t Δ)} → πₜ²* (σ ,ₜ* t) ≡ t
   πₜ²∘,ₜ* = refl
   πₜ¹∘,ₜ* : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm (Con.t Δ)} → πₜ¹* (σ ,ₜ* t) ≡ σ
@@ -496,24 +565,36 @@ module FFOLInitial where
       {f = λ σₚ → σₚ [ δₜ ]σₚ}
       {x = σₚ})
 
+  -- And for proof substitutions
   πₚ¹* : {Γ Δ : Con} {A : For (Con.t Γ)} → Sub Δ (Γ ▹p A) → Sub Δ Γ
   πₚ¹* (sub σₜ (σₚ ,ₚ pf)) = sub σₜ σₚ
-  πₚ² : {Γ Δ : Con} {F : For (Con.t Γ)} (σ : Sub Δ (Γ ▹p F)) → Pf (Con.t Δ) (Con.p Δ) (F [ Sub.t (πₚ¹* σ) ]f)
-  πₚ² (sub σₜ (σₚ ,ₚ pf)) = pf
+  πₚ²* : {Γ Δ : Con} {F : For (Con.t Γ)} (σ : Sub Δ (Γ ▹p F)) → Pf (Con.t Δ) (Con.p Δ) (F [ Sub.t (πₚ¹* σ) ]f)
+  πₚ²* (sub σₜ (σₚ ,ₚ pf)) = pf
   _,ₚ*_ : {Γ Δ : Con} {F : For (Con.t Γ)} (σ : Sub Δ Γ) → Pf (Con.t Δ) (Con.p Δ) (F [ Sub.t σ ]f) → Sub Δ (Γ ▹p F)
   sub σₜ σₚ ,ₚ* pf = sub σₜ (σₚ ,ₚ pf)
-
-  ,ₚ∘πₚ : {Γ Δ : Con} → {F : For (Con.t Γ)} → {σ : Sub Δ (Γ ▹p F)} → (πₚ¹* σ) ,ₚ* (πₚ² σ) ≡ σ
+  -- And the equations
+  ,ₚ∘πₚ : {Γ Δ : Con} → {F : For (Con.t Γ)} → {σ : Sub Δ (Γ ▹p F)} → (πₚ¹* σ) ,ₚ* (πₚ²* σ) ≡ σ
   ,ₚ∘πₚ {σ = sub σₜ (σₚ ,ₚ p)} = refl
   ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For (Con.t Ξ)}{prf : Pf (Con.t Γ) (Con.p Γ) (F [ Sub.t σ ]f)}
       → (σ ,ₚ* prf) ∘ δ ≡ (σ ∘ δ) ,ₚ* (substP (λ F → Pf (Con.t Δ) (Con.p Δ) F) (≡sym []f-∘) ((prf [ Sub.t δ ]pₜ) [ Sub.p δ ]p))
-  ,ₚ∘ {Γ}{Δ}{Ξ}{σ = sub σₜ σₚ} {sub δₜ δₚ} {F = A} {prf} = cong (sub (σₜ ∘ₜ δₜ)) (cong (λ ξ → ξ ∘ₚ δₚ)
-    (substfpoly⁴ {P = λ W → Subp (Con.p Γ [ δₜ ]c) ((proj×₁ W) ▹p⁰ (proj×₂ W))}{R = λ W → Subp (Con.p Γ [ δₜ ]c) (proj×₁ W)}{Q = λ W → Pf (Con.t Δ) (Con.p Γ [ δₜ ]c) (proj×₂ W)}{α = ((Con.p Ξ [ σₜ ]c) [ δₜ ]c) ,× ((A [ σₜ ]f) [ δₜ ]f)}{eq = cong₂ _,×_ (≡sym []c-∘) (≡sym []f-∘)}{f = λ ξ p → ξ ,ₚ p} {x = σₚ [ δₜ ]σₚ}{y = prf [ δₜ ]pₜ})) -- 
+  ,ₚ∘ {Γ}{Δ}{Ξ}{σ = sub σₜ σₚ} {sub δₜ δₚ} {F = A} {prf} =
+    cong (λ ξ → sub (σₜ ∘ₜ δₜ) (ξ ∘ₚ δₚ)) (
+    substfpoly⁴
+      {P = λ W → Subp (Con.p Γ [ δₜ ]c) ((proj×₁ W) ▹p⁰ (proj×₂ W))}
+      {R = λ W → Subp (Con.p Γ [ δₜ ]c) (proj×₁ W)}
+      {Q = λ W → Pf (Con.t Δ) (Con.p Γ [ δₜ ]c) (proj×₂ W)}
+      {α = ((Con.p Ξ [ σₜ ]c) [ δₜ ]c) ,× ((A [ σₜ ]f) [ δₜ ]f)}
+      {eq = cong₂ _,×_ (≡sym []c-∘) (≡sym []f-∘)}
+      {f = λ ξ p → ξ ,ₚ p}
+      {x = σₚ [ δₜ ]σₚ}{y = prf [ δₜ ]pₜ}
+    ) 
   
   
   lemD : {A : For (Con.t Γ)}{σ : Sub Δ (Γ ▹p A)} → Sub.t (πₚ¹* σ) ≡ Sub.t σ
   lemD {σ = sub σₜ (σₚ ,ₚ pf)} = refl
 
+
+  -- and FINALLY, we compile everything into an implementation of the FFOL record
     
   imod : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}
   imod = record
@@ -526,7 +607,7 @@ module FFOLInitial where
     ; idr = idr
     ; ◇ = ◇
     ; ε = sub εₜ εₚ
-    ; ε-u = cong₂' sub εₜ-u ε-u
+    ; ε-u = cong₂' sub εₜ-u εₚ-u
     ; Tm = λ Γ → Tm (Con.t Γ)
     ; _[_]t = λ t σ → t [ Sub.t σ ]t
     ; []t-id = []t-id
@@ -549,7 +630,7 @@ module FFOLInitial where
     ; _[_]p = λ pf σ → (pf [ Sub.t σ ]pₜ) [ Sub.p σ ]p
     ; _▹ₚ_ = _▹p_
     ; πₚ¹ = πₚ¹*
-    ; πₚ² = πₚ²
+    ; πₚ² = πₚ²*
     ; _,ₚ_ = _,ₚ*_
     ; ,ₚ∘πₚ = ,ₚ∘πₚ
     ; πₚ¹∘,ₚ = refl

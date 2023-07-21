@@ -168,23 +168,10 @@ module PropUtil where
     → coe (cong P eq) (f {α} x y) ≡ f {β} (coe (cong R eq) x) (coe (cong Q eq) y)
   substppoly {eq = refl} {f}{x}{y} = ≡tran coerefl (cong₂ f (≡sym coerefl) (≡sym coerefl))
   
-  substfpoly' : {ℓ ℓ' ℓ'' : Level}{A B : Set ℓ}{P R : A → Set ℓ'}{Q : B → Prop ℓ''}{α β : A}{γ δ : B}
-    {eq : α ≡ β}{eq' : γ ≡ δ} {f : {ξ : A}{ι : B} → R ξ → Q ι → P ξ} {x : R α} {y : Q γ}
-    → coe (cong P eq) (f {α} {γ} x y) ≡ f {β} {δ} (coe (cong R eq) x) (substP Q eq' y)
-  substfpoly' {eq = refl} {refl} {f}{x}{y} = ≡tran² coerefl (cong (λ x → f x y) (≡sym coerefl)) refl
   substfpoly⁴ : {ℓ ℓ' ℓ'' : Level}{A : Set ℓ}{P R : A → Set ℓ'}{Q : A → Prop ℓ''}{α β : A}
     {eq : α ≡ β} {f : {ξ : A} → R ξ → Q ξ → P ξ} {x : R α} {y : Q α}
     → coe (cong P eq) (f {α} x y) ≡ f {β} (coe (cong R eq) x) (substP Q eq y)
   substfpoly⁴ {eq = refl} {f}{x}{y} = ≡tran² coerefl (cong (λ x → f x y) (≡sym coerefl)) refl
-  substfpoly³ : {ℓ ℓ' ℓ'' ℓ''' : Level}{A B C : Set ℓ}{R : A → Set ℓ'}{Q : B → Prop ℓ''}{P : C → Set ℓ'''}{α β : A}{γ δ : B}{ε φ : C}
-    {eq : α ≡ β}{eq' : γ ≡ δ}{eq'' : ε ≡ φ} {f : {ξ : A}{ι : B}{τ : C} → R ξ → Q ι → P τ} {x : R α} {y : Q γ}
-    → coe (cong P eq'') (f {α} {γ} {ε} x y) ≡ f {β} {δ} {φ} (coe (cong R eq) x) (substP Q eq' y)
-  substfpoly³ {eq = refl} {refl} {refl} {f}{x}{y} = ≡tran² coerefl (cong (λ x → f x y) (≡sym coerefl)) refl
-  substfpoly'' : {ℓ ℓ' ℓ'' : Level}{A C : Set ℓ}{P : A → C → Set ℓ'}{R : A → Set ℓ'}{Q : A → C → Prop ℓ''}{α β : A}{ε φ : C}
-    {eq : α ≡ β}{eq'' : ε ≡ φ} {f : {ξ : A}{κ : C} → R ξ → Q ξ κ → P ξ κ} {x : R α} {y : Q α ε}
-    → coe (cong₂ P eq eq'') (f {α} {ε} x y) ≡ f {β} {φ} (coe (cong R eq) x) (substP (λ X → Q X φ) eq (substP (Q α) eq'' y))
-  substfpoly'' {eq = refl} {refl} {f}{x}{y} = ≡tran² coerefl (cong (λ x → f x y) (≡sym coerefl)) refl
-
   substfgpoly : {ℓ ℓ' : Level}{A B : Set ℓ} {P Q : A → Set ℓ'} {R : B → Set ℓ'} {F : B → A} {α β : A} {ε φ : B}
        {eq₁ : α ≡ β} {eq₂ : F ε ≡ α} {eq₃ : F φ ≡ β} {eq₄ : ε ≡ φ}
        {g : {a : A} → Q a → P a} {f : {b : B} → R b → Q (F b)} {x : R ε}
