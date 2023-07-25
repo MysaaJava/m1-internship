@@ -13,7 +13,7 @@ module PropUtil where
   -- ⊥ is a data with no constructor
   -- ⊤ is a record with one always-available constructor
   data ⊥ : Prop where
-  record ⊤ : Prop where
+  record ⊤ : Prop ℓ where
     constructor tt
 
 
@@ -21,7 +21,7 @@ module PropUtil where
     inj₁ : {P Q : Prop} → P → P ∨ Q
     inj₂ : {P Q : Prop} → Q → P ∨ Q
 
-  record _∧_ (P Q : Prop) : Prop where
+  record _∧_ (P Q : Prop ℓ) : Prop ℓ where
     constructor ⟨_,_⟩
     field
       p : P
@@ -31,9 +31,9 @@ module PropUtil where
   infixr 11 _∨_
 
   -- ∧ elimination
-  proj₁ : {P Q : Prop} → P ∧ Q → P
+  proj₁ : {P Q : Prop ℓ} → P ∧ Q → P
   proj₁ pq = _∧_.p pq
-  proj₂ : {P Q : Prop} → P ∧ Q → Q
+  proj₂ : {P Q : Prop ℓ} → P ∧ Q → Q
   proj₂ pq = _∧_.q pq
 
   -- ∨ elimination

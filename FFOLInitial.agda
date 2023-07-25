@@ -200,7 +200,7 @@ module FFOLInitial where
 
 
   -- With those contexts, we have everything to define proofs
-  data PfVar : (Γₜ : Cont) → (Γₚ : Conp Γₜ) → For Γₜ → Set₁ where
+  data PfVar : (Γₜ : Cont) → (Γₚ : Conp Γₜ) → For Γₜ → Prop₁ where
     pvzero : {A : For Γₜ} → PfVar Γₜ (Γₚ ▹p⁰ A) A
     pvnext : {A B : For Γₜ} → PfVar Γₜ Γₚ A → PfVar Γₜ (Γₚ ▹p⁰ B) A
                                                                 
@@ -388,9 +388,6 @@ module FFOLInitial where
       {eq = ×≡ (×≡ []c-∘ []c-∘) []f-∘}
       {f = λ {W} ξ pf → _,ₚ_ ξ pf}{x = σₚ [ α ∘ₜ β ]σₚ}{y = pf [ α ∘ₜ β ]pₜ})
     ))
-
-
-
 
   -- How ∘ₚ and ∘ₜ interact to make associativity (to be proven later for Sub)
   
@@ -645,3 +642,45 @@ module FFOLInitial where
     ; ∀e = λ {Γ} {F} pf {t} → p∀∀e pf
     }
 
+
+  -- We define normal and neutral forms
+  data Ne : (Γₜ : Cont) → (Γₚ : Conp Γₜ) → For Γₜ → Prop₁
+  data Nf : (Γₜ : Cont) → (Γₚ : Conp Γₜ) → For Γₜ → Prop₁
+  data Ne where
+    var : {A : For Γₜ} → PfVar Γₜ Γₚ A → Ne Γₜ Γₚ A
+    app : {A B : For Γₜ} → Ne Γₜ Γₚ (A ⇒ B) → Nf Γₜ Γₚ A → Ne Γₜ Γₚ B
+    p∀∀e : {A : For (Γₜ ▹t⁰)} → {t : Tm Γₜ} → Ne Γₜ Γₚ (∀∀ A) → Ne Γₜ Γₚ (A [ idₜ ,ₜ t ]f)
+  data Nf where
+    R : {t u : Tm Γₜ} → Ne Γₜ Γₚ (R t u) → Nf Γₜ Γₚ (R t u)
+    lam : {A B : For Γₜ} → Nf Γₜ (Γₚ ▹p⁰ A) B → Nf Γₜ Γₚ (A ⇒ B)
+    p∀∀i : {A : For (Γₜ ▹t⁰)} → Nf (Γₜ ▹t⁰) (Γₚ ▹tp) A → Nf Γₜ Γₚ (∀∀ A)
+
+
+  Pf* : (Γₜ : Cont) → Conp Γₜ → Conp Γₜ → Prop₁
+  Pf* Γₜ Γₚ ◇p = ⊤
+  Pf* Γₜ Γₚ (Γₚ' ▹p⁰ A) = (Pf* Γₜ Γₚ Γₚ') ∧ (Pf Γₜ Γₚ A)
+
+  Sub→Pf* : {Γₜ : Cont} {Γₚ Γₚ' : Conp Γₜ} →  Subp {Γₜ} Γₚ Γₚ' → Pf* Γₜ Γₚ Γₚ'
+  Sub→Pf* εₚ = tt
+  Sub→Pf* (σₚ ,ₚ pf) = ⟨ (Sub→Pf* σₚ) , pf ⟩
+  Pf*-id : {Γₜ : Cont} {Γₚ : Conp Γₜ} → Pf* Γₜ Γₚ Γₚ
+  Pf*-id = Sub→Pf* idₚ
+
+  Pf*▹p : {Γₜ : Cont}{Γₚ Γₚ' : Conp Γₜ}{A : For Γₜ} → Pf* Γₜ Γₚ Γₚ' → Pf* Γₜ (Γₚ ▹p⁰ A) Γₚ'
+  Pf*▹p {Γₚ' = ◇p} s = tt
+  Pf*▹p {Γₚ' = Γₚ' ▹p⁰ x} s = ⟨ (Pf*▹p (proj₁ s)) , (wkᵣp (rightRen reflRen) (proj₂ s)) ⟩
+  Pf*▹tp : {Γₜ : Cont}{Γₚ Γₚ' : Conp Γₜ} → Pf* Γₜ Γₚ Γₚ' → Pf* (Γₜ ▹t⁰) (Γₚ ▹tp) (Γₚ' ▹tp)
+  Pf*▹tp {Γₚ' = ◇p} s = tt
+  Pf*▹tp {Γₚ' = Γₚ' ▹p⁰ A} s = ⟨ Pf*▹tp (proj₁ s) , (proj₂ s) [ wkₜσₜ idₜ ]pₜ ⟩
+
+  Pf*Pf : {Γₜ : Cont} {Γₚ Γₚ' : Conp Γₜ} {A : For Γₜ} → Pf* Γₜ Γₚ Γₚ' → Pf Γₜ Γₚ' A → Pf Γₜ Γₚ A
+  Pf*Pf s (var pvzero) = proj₂ s
+  Pf*Pf s (var (pvnext pv)) = Pf*Pf (proj₁ s) (var pv)
+  Pf*Pf s (app p p') = app (Pf*Pf s p) (Pf*Pf s p')
+  Pf*Pf s (lam p) = lam (Pf*Pf (⟨ (Pf*▹p s) , (var pvzero) ⟩) p)
+  Pf*Pf s (p∀∀e p) = p∀∀e (Pf*Pf s p)
+  Pf*Pf s (p∀∀i p) = p∀∀i (Pf*Pf (Pf*▹tp s) p)
+
+  Pf*-∘ : {Γₜ : Cont} {Γₚ Δₚ Ξₚ : Conp Γₜ} → Pf* Γₜ Δₚ Ξₚ → Pf* Γₜ Γₚ Δₚ → Pf* Γₜ Γₚ Ξₚ
+  Pf*-∘ {Ξₚ = ◇p} α β = tt
+  Pf*-∘ {Ξₚ = Ξₚ ▹p⁰ A} α β = ⟨ Pf*-∘ (proj₁ α) β , Pf*Pf β (proj₂ α) ⟩
