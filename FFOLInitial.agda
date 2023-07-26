@@ -593,8 +593,8 @@ module FFOLInitial where
 
   -- and FINALLY, we compile everything into an implementation of the FFOL record
     
-  imod : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}
-  imod = record
+  ffol : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}
+  ffol = record
     { Con = Con
     ; Sub = Sub
     ; _∘_ = _∘_
@@ -684,3 +684,119 @@ module FFOLInitial where
   Pf*-∘ : {Γₜ : Cont} {Γₚ Δₚ Ξₚ : Conp Γₜ} → Pf* Γₜ Δₚ Ξₚ → Pf* Γₜ Γₚ Δₚ → Pf* Γₜ Γₚ Ξₚ
   Pf*-∘ {Ξₚ = ◇p} α β = tt
   Pf*-∘ {Ξₚ = Ξₚ ▹p⁰ A} α β = ⟨ Pf*-∘ (proj₁ α) β , Pf*Pf β (proj₂ α) ⟩
+
+
+  module InitialMorphism (M : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}) where
+    {-# TERMINATING #-}
+    mCon : Con → (FFOL.Con M)
+    mFor : {Γ : Con} → (For (Con.t Γ)) → (FFOL.For M (mCon Γ))
+    mTm : {Γ : Con} → (Tm (Con.t Γ)) → (FFOL.Tm M (mCon Γ))
+    mSub : {Δ : Con}{Γ : Con} → Sub Δ Γ → (FFOL.Sub M (mCon Δ) (mCon Γ))
+    m⊢ : {Γ : Con} {A : For (Con.t Γ)} → Pf (Con.t Γ) (Con.p Γ) A → FFOL._⊢_ M (mCon Γ) (mFor A)
+    
+    e▹ₜ : {Γ : Con} → mCon (con (Con.t Γ ▹t⁰) (Con.p Γ [ wkₜσₜ idₜ ]c)) ≡ FFOL._▹ₜ M (mCon Γ)
+    e▹ₚ : {Γ : Con}{A : For (Con.t Γ)} → mCon (Γ ▹p A) ≡ FFOL._▹ₚ_ M (mCon Γ) (mFor A)
+    e[]f : {Γ Δ : Con}{A : For (Con.t Γ)}{σ : Sub Δ Γ} → mFor (A [ Sub.t σ ]f) ≡ FFOL._[_]f M (mFor A) (mSub σ)
+
+    mCon (con ◇t ◇p) = FFOL.◇ M
+    mCon (con (Γₜ ▹t⁰) ◇p) = FFOL._▹ₜ M (mCon (con Γₜ ◇p))
+    mCon (con Γₜ (Γₚ ▹p⁰ A)) = FFOL._▹ₚ_ M (mCon (con Γₜ Γₚ)) (mFor {con Γₜ Γₚ} A)
+    mSub {Γ = con ◇t ◇p} (sub εₜ εₚ) = FFOL.ε M
+    mSub {Γ = con (Γₜ ▹t⁰) ◇p} (sub (σₜ ,ₜ t) εₚ) = FFOL._,ₜ_ M (mSub (sub σₜ εₚ)) (mTm t)
+    mSub {Δ = Δ} {Γ = con Γₜ (Γₚ ▹p⁰ A)} (sub σₜ (σₚ ,ₚ pf)) = subst (FFOL.Sub M (mCon Δ)) (≡sym e▹ₚ) (FFOL._,ₚ_ M (mSub (sub σₜ σₚ)) (substP (FFOL._⊢_ M (mCon Δ)) e[]f (m⊢ pf)))
+
+    -- Zero is (πₜ² id)
+    mTm {con (Γₜ ▹t⁰) ◇p} (var tvzero) = FFOL.πₜ² M (FFOL.id M)
+    -- N+1 is wk[tm N]
+    mTm {con (Γₜ ▹t⁰) ◇p} (var (tvnext tv)) = (FFOL._[_]t M (mTm (var tv)) (FFOL.πₜ¹ M (FFOL.id M)))
+    -- If we have a formula in context, we proof-weaken the term (should not change a thing)
+    mTm {con (Γₜ ▹t⁰) (Γₚ ▹p⁰ A)} (var tv) = FFOL._[_]t M (mTm {con (Γₜ ▹t⁰) Γₚ} (var tv)) (FFOL.πₚ¹ M (FFOL.id M))
+    
+    mFor (R t u) = FFOL.R M (mTm t) (mTm u)
+    mFor (A ⇒ B) = FFOL._⇒_ M (mFor A) (mFor B)
+    mFor {Γ} (∀∀ A) = FFOL.∀∀ M (subst (FFOL.For M) (e▹ₜ {Γ = Γ}) (mFor {Γ = Γ ▹t} A))
+
+    e▹ₜ {con Γₜ ◇p} = refl
+    e▹ₜ {con Γₜ (Γₚ ▹p⁰ A)} = ≡tran²
+      (cong₂' (FFOL._▹ₚ_ M) (e▹ₜ {con Γₜ Γₚ}) (cong (subst (FFOL.For M) (e▹ₜ {Γ = con Γₜ Γₚ})) (e[]f {A = A}{σ = πₜ¹* id})))
+      (substP (λ X → (M FFOL.▹ₚ (M FFOL.▹ₜ) (mCon (con Γₜ Γₚ))) X ≡ (M FFOL.▹ₜ) ((M FFOL.▹ₚ mCon (con Γₜ Γₚ)) (mFor A)))
+        (≡tran
+          (coeshift {!!})
+          (cong (λ X → subst (FFOL.For M) _ (FFOL._[_]f M (mFor A) (mSub (sub (wkₜσₜ idₜ) X)))) (≡sym (coecoe-coe {eq1 = ?} {x = idₚ {Δₚ = Γₚ}}))))
+        {!!})
+      (cong (M FFOL.▹ₜ) (≡sym (e▹ₚ {con Γₜ Γₚ})))
+    -- substP (λ X → FFOL._▹ₚ_ M X (mFor {Γ = ?} (A [ wkₜσₜ idₜ ]f)) ≡ (FFOL._▹ₜ M (mCon (con Γₜ (Γₚ ▹p⁰ A))))) (≡sym (e▹ₜ {Γ = con Γₜ Γₚ})) ?
+    
+
+
+    {-
+    
+
+    m⊢ {Γ}{A}(var pvzero) = {!substP (λ X → FFOL._⊢_ M X (mFor A)) (≡sym e▹ₚ) ?!}
+    m⊢ (var (pvnext pv)) = {!!}
+    m⊢ (app pf pf') = FFOL.app M (m⊢ pf) (m⊢ pf')
+    m⊢ (lam pf) = FFOL.lam M {!m⊢ pf!}
+    m⊢ (p∀∀e pf) = {!FFOL.∀e M (m⊢ pf)!}
+    m⊢ {Γ}{∀∀ A}(p∀∀i pf) = FFOL.∀i M (substP (λ X → FFOL._⊢_ M X (subst (FFOL.For M) (≡sym e▹ₜ) (mFor A))) e▹ₜ {!m⊢ pf!})
+
+    e[]f = {!!}
+    
+
+    e∘ : {Γ Δ Ξ : Con}{δ : Sub Δ Ξ}{σ : Sub Γ Δ} → mSub (δ ∘ σ) ≡ FFOL._∘_ M (mSub δ) (mSub σ)
+    e∘ = {!!}
+    eid : {Γ : Con} → mSub (id {Γ}) ≡ FFOL.id M {mCon Γ}
+    eid = {!!}
+    e◇ : mCon ◇ ≡ FFOL.◇ M
+    e◇ = {!!}
+    eε : {Γ : Con} → mSub (sub (εₜ {Con.t Γ}) (εₚ {Con.t Γ} {Con.p Γ})) ≡ subst (FFOL.Sub M (mCon Γ)) (≡sym e◇) (FFOL.ε M {mCon Γ})
+    eε = {!!}
+    e[]t : {Γ Δ : Con}{t : Tm (Con.t Γ)}{σ : Sub Δ Γ} → mTm (t [ Sub.t σ ]t) ≡ FFOL._[_]t M (mTm t) (mSub σ)
+    e[]t = {!!}
+    eπₜ¹ : {Γ Δ : Con}{σ : Sub Δ (Γ ▹t)} → mSub (πₜ¹* σ) ≡ FFOL.πₜ¹ M (subst (FFOL.Sub M (mCon Δ)) e▹ₜ (mSub σ))
+    eπₜ¹ = {!!}
+    eπₜ² : {Γ Δ : Con}{σ : Sub Δ (Γ ▹t)} → mTm (πₜ²* σ) ≡ FFOL.πₜ² M (subst (FFOL.Sub M (mCon Δ)) e▹ₜ (mSub σ))
+    eπₜ² = {!!}
+    e,ₜ : {Γ Δ : Con}{σ : Sub Δ Γ}{t : Tm (Con.t Δ)} → mSub (σ ,ₜ* t) ≡ subst (FFOL.Sub M (mCon Δ)) (≡sym e▹ₜ) (FFOL._,ₜ_ M (mSub σ) (mTm t))
+    e,ₜ = {!!}
+    -- Proofs are in prop, so no equation needed
+    --[]p : {Γ Δ : Con}{A : For Γ}{pf : FFOL._⊢_ S Γ A}{σ : FFOL.Sub S Δ Γ} → m⊢ (FFOL._[_]p S pf σ) ≡ FFOL._[_]p M (m⊢ pf) (mSub σ)
+    e▹ₚ = {!!}
+    eπₚ¹ : {Γ Δ : Con}{A : For (Con.t Γ)}{σ : Sub Δ (Γ ▹p A)} → mSub (πₚ¹* σ) ≡ FFOL.πₚ¹ M (subst (FFOL.Sub M (mCon Δ)) e▹ₚ (mSub σ))
+    eπₚ¹ = {!!}
+    --πₚ² : {Γ Δ : Con}{A : For Γ}{σ : Sub Δ (Γ ▹p A)} → m⊢ (πₚ²* σ) ≡ FFOL.πₚ¹ M (subst (FFOL.Sub M (mCon Δ)) e▹ₚ (mSub σ))
+    e,ₚ : {Γ Δ : Con}{A : For (Con.t Γ)}{σ : Sub Δ Γ}{pf : Pf (Con.t Δ) (Con.p Δ) (A [ Sub.t σ ]f)}
+      → mSub (σ ,ₚ* pf) ≡ subst (FFOL.Sub M (mCon Δ)) (≡sym e▹ₚ) (FFOL._,ₚ_ M (mSub σ) (substP (FFOL._⊢_ M (mCon Δ)) e[]f (m⊢ pf)))
+    e,ₚ = {!!}
+    eR : {Γ : Con}{t u : Tm (Con.t Γ)} → mFor (R t u) ≡ FFOL.R M (mTm t) (mTm u)
+    eR = {!!}
+    e⇒ : {Γ : Con}{A B : For (Con.t Γ)} → mFor (A ⇒ B) ≡ FFOL._⇒_ M (mFor A) (mFor B)
+    e⇒ = {!!}
+    e∀∀ : {Γ : Con}{A : For ((Con.t Γ) ▹t⁰)} → mFor (∀∀ A) ≡ FFOL.∀∀ M (subst (FFOL.For M) e▹ₜ (mFor A))
+    e∀∀ = {!!}
+    -}
+    m : Mapping ffol M
+    m = record { mCon = mCon ; mSub = mSub ; mTm = mTm ; mFor = mFor ; m⊢ = m⊢ }
+    
+  --mor : (M : FFOL) → Morphism ffol M
+  --mor M = record {InitialMorphism M}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

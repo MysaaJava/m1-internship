@@ -134,6 +134,47 @@ module FFOL where
     ex5 = {!!}
     -}
 
+  record Mapping (S : FFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} {ℓ⁵}) (D : FFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} {ℓ⁵}) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ⁵)) where
+    field
+      
+      -- We first make the base category with its final object
+      mCon : (FFOL.Con S) → (FFOL.Con D)
+      mSub : {Δ : (FFOL.Con S)}{Γ : (FFOL.Con S)} → (FFOL.Sub S Δ Γ) → (FFOL.Sub D (mCon Δ) (mCon Γ))
+      mTm : {Γ : (FFOL.Con S)} → (FFOL.Tm S Γ) → (FFOL.Tm D (mCon Γ))
+      mFor : {Γ : (FFOL.Con S)} → (FFOL.For S Γ) → (FFOL.For D (mCon Γ))
+      m⊢ : {Γ : (FFOL.Con S)} {A : FFOL.For S Γ} → FFOL._⊢_ S Γ A → FFOL._⊢_ D (mCon Γ) (mFor A)
+
+
+  record Morphism (S : FFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} {ℓ⁵}) (D : FFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} {ℓ⁵}) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ⁵)) where
+    field m : Mapping S D
+    mCon = Mapping.mCon m
+    mSub = Mapping.mSub m
+    mTm  = Mapping.mTm  m
+    mFor = Mapping.mFor m
+    m⊢   = Mapping.m⊢ m
+    field
+      e∘ : {Γ Δ Ξ : FFOL.Con S}{δ : FFOL.Sub S Δ Ξ}{σ : FFOL.Sub S Γ Δ} → mSub (FFOL._∘_ S δ σ) ≡ FFOL._∘_ D (mSub δ) (mSub σ)
+      eid : {Γ : FFOL.Con S} → mSub (FFOL.id S {Γ}) ≡ FFOL.id D {mCon Γ}
+      e◇ : mCon (FFOL.◇ S) ≡ FFOL.◇ D
+      eε : {Γ : FFOL.Con S} → mSub (FFOL.ε S {Γ}) ≡ subst (FFOL.Sub D (mCon Γ)) (≡sym e◇) (FFOL.ε D {mCon Γ})
+      e[]t : {Γ Δ : FFOL.Con S}{t : FFOL.Tm S Γ}{σ : FFOL.Sub S Δ Γ} → mTm (FFOL._[_]t S t σ) ≡ FFOL._[_]t D (mTm t) (mSub σ)
+      e▹ₜ : {Γ : FFOL.Con S} → mCon (FFOL._▹ₜ S Γ) ≡ FFOL._▹ₜ D (mCon Γ)
+      eπₜ¹ : {Γ Δ : FFOL.Con S}{σ : FFOL.Sub S Δ (FFOL._▹ₜ S Γ)} → mSub (FFOL.πₜ¹ S σ) ≡ FFOL.πₜ¹ D (subst (FFOL.Sub D (mCon Δ)) e▹ₜ (mSub σ))
+      eπₜ² : {Γ Δ : FFOL.Con S}{σ : FFOL.Sub S Δ (FFOL._▹ₜ S Γ)} → mTm (FFOL.πₜ² S σ) ≡ FFOL.πₜ² D (subst (FFOL.Sub D (mCon Δ)) e▹ₜ (mSub σ))
+      e,ₜ : {Γ Δ : FFOL.Con S}{σ : FFOL.Sub S Δ Γ}{t : FFOL.Tm S Δ} → mSub (FFOL._,ₜ_ S σ t) ≡ subst (FFOL.Sub D (mCon Δ)) (≡sym e▹ₜ) (FFOL._,ₜ_ D (mSub σ) (mTm t))
+      e[]f : {Γ Δ : FFOL.Con S}{A : FFOL.For S Γ}{σ : FFOL.Sub S Δ Γ} → mFor (FFOL._[_]f S A σ) ≡ FFOL._[_]f D (mFor A) (mSub σ)
+      -- Proofs are in prop, so no equation needed
+      --[]p : {Γ Δ : FFOL.Con S}{A : FFOL.For S Γ}{pf : FFOL._⊢_ S Γ A}{σ : FFOL.Sub S Δ Γ} → m⊢ (FFOL._[_]p S pf σ) ≡ FFOL._[_]p D (m⊢ pf) (mSub σ)
+      e▹ₚ : {Γ : FFOL.Con S}{A : FFOL.For S Γ} → mCon (FFOL._▹ₚ_ S Γ A) ≡ FFOL._▹ₚ_ D (mCon Γ) (mFor A)
+      eπₚ¹ : {Γ Δ : FFOL.Con S}{A : FFOL.For S Γ}{σ : FFOL.Sub S Δ (FFOL._▹ₚ_ S Γ A)} → mSub (FFOL.πₚ¹ S σ) ≡ FFOL.πₚ¹ D (subst (FFOL.Sub D (mCon Δ)) e▹ₚ (mSub σ))
+      --πₚ² : {Γ Δ : FFOL.Con S}{A : FFOL.For S Γ}{σ : FFOL.Sub S Δ (FFOL._▹ₚ_ S Γ A)} → m⊢ (FFOL.πₚ² S σ) ≡ FFOL.πₚ¹ D (subst (FFOL.Sub D (mCon Δ)) ▹ₚ (mSub σ))
+      e,ₚ : {Γ Δ : FFOL.Con S}{A : FFOL.For S Γ}{σ : FFOL.Sub S Δ Γ}{pf : FFOL._⊢_ S Δ (FFOL._[_]f S A σ)}
+        → mSub (FFOL._,ₚ_ S σ pf) ≡ subst (FFOL.Sub D (mCon Δ)) (≡sym e▹ₚ) (FFOL._,ₚ_ D (mSub σ) (substP (FFOL._⊢_ D (mCon Δ)) e[]f (m⊢ pf)))
+      eR : {Γ : FFOL.Con S}{t u : FFOL.Tm S Γ} → mFor (FFOL.R S t u) ≡ FFOL.R D (mTm t) (mTm u)
+      e⇒ : {Γ : FFOL.Con S}{A B : FFOL.For S Γ} → mFor (FFOL._⇒_ S A B) ≡ FFOL._⇒_ D (mFor A) (mFor B)
+      e∀∀ : {Γ : FFOL.Con S}{A : FFOL.For S (FFOL._▹ₜ S Γ)} → mFor (FFOL.∀∀ S A) ≡ FFOL.∀∀ D (subst (FFOL.For D) e▹ₜ (mFor A))
+      -- No equation needed for lam, app, ∀i, ∀e as their output are in prop
+
   record Tarski : Set₁ where
     field
       TM : Set
