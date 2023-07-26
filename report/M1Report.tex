@@ -1,0 +1,57 @@
+% !TeX spellcheck = fr_FR
+\documentclass[10pt,a4paper]{article}
+
+\include{./header.tex}
+
+\title{Completeness Proof for different logical frameworks
+	\\[1ex] \large Notes on my 3 month internship at Faculty of Informatics (ELTE, Budapest)}
+\hypersetup{pdftitle={Completeness Proof for different kinds of logical frameworks}}
+\author{Samy Avrillon, supervised by
+	\\[1ex] Ambrus Kaposi (ELTE, Budapest)
+	\\[1ex] and Thorsten Altenkirsch (University of Notthingham, United Kingdom)}
+
+\begin{document}
+	
+	\doparttoc
+	\maketitle
+	
+	\hsep
+	
+	\tableofcontents
+	
+	\newpage
+	
+	\section{Introduction}
+		\subsection{Introduction to the problem}
+		\subsection{Motivation}
+		\subsection{Structure of this report}
+	\section{A first account of Completeness and Normalization}
+		\subsection{Normalization for ZOL}
+		\subsection{Normalization for IFOL}
+		\subsection{Merging the two proofs}
+	\section{Predicate Logic}
+		\subsection{SOGAT Presentation of FFOL}
+		\subsection{Turning a SOGAT Presentation into a GAT}
+	\section{Implementing the Syntax}
+		\subsection{Separated Contexts}
+		\subsection{Transport Hell}
+	%\section{Completeness and Normalization for FFOL}
+	
+	\section{Summary}
+	
+	
+	\section{Bibliography}
+	\begingroup
+	\renewcommand{\section}[2]{}%
+	\printbibliography
+	\endgroup
+	
+	\newpage
+	\addappheadtotoc
+	\appendix
+	\addtocontents{toc}{\protect\setcounter{tocdepth}{-1}}
+	\appendixpage
+	
+	\section{Agda Code}
+	
+\end{document} 

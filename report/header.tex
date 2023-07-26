@@ -1,0 +1,110 @@
+% Loading packages
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	filecolor=magenta,      
+	urlcolor=cyan
+}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbm}
+\usepackage{stmaryrd}
+\usepackage[main=english]{babel}
+\usepackage{csquotes}
+\usepackage{listings}
+\usepackage{lstautogobble}
+\usepackage{algorithm2e}
+\usepackage{svg}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{tcolorbox}
+\usepackage{mdframed}
+\usepackage{proof}
+\usepackage{biblatex}
+\usepackage{xparse}
+\usepackage{cprotect}
+\usepackage{titlesec}
+\usepackage{xpatch}
+\usepackage{enumitem}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+\usepackage[page,header]{appendix}
+\usepackage{minitoc}
+
+\usepackage{geometry}
+
+\usepackage{csquotes}
+\usepackage[lighttt]{lmodern}
+\usetikzlibrary{shapes.geometric,positioning}
+
+% Macros caractères globales
+\newcommand{\pgrph}{\P}
+\newcommand{\hsep}{\vspace{.2cm}\centerline{\rule{0.8\linewidth}{.05pt}}\vspace{.4cm}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\1}{\scalebox{1.2}{$\mathbbm{1}$}}
+\newcommand{\floor}[1]{\left\lfloor#1\right\rfloor}
+\newcommand{\littleO}{o}
+\newcommand{\bigO}{\mathcal{O}}
+\newcommand{\longdash}{\:\textrm{---}\:}
+\newcommand\hole{\left[\raisebox{-0.25ex}{\scalebox{1.2}{$\cdot$}}\right]}
+\newcommand\bracket[1]{\!\left[#1\right]}
+\newcommand{\ssi}{\quad\text{\underline{ssi}}\quad}
+\newcommand\eng[1]{\textit{\foreignlanguage{english}{#1}}}
+\newcommand\spacebar{\;|\;}
+\def\nDownarrow{\not\mspace{1mu}\Downarrow}
+\let\pprec\preccurlyeq
+
+\DeclareUnicodeCharacter{03BB}{$\lambda$}
+\DeclareUnicodeCharacter{03B1}{$\alpha$}
+\DeclareUnicodeCharacter{03C0}{$\pi$}
+
+% Création des environnement globaux
+\newtheorem{theorem}{Théorème}
+\newtheorem{definition}{Definition}
+\newtheorem{property}{Propriété}
+
+\newcounter{rule}
+\addto\extrasfrench{%
+	\renewcommand{\figureautorefname}{\textsc{Figure}}
+	\renewcommand{\sectionautorefname}{Section}
+	\renewcommand{\subsectionautorefname}{Sous-section}
+	\renewcommand{\appendixautorefname}{Annexe}
+	\renewcommand{\theoremautorefname}{Théorème}
+	\providecommand\propertyautorefname{Propriété}
+	\providecommand\ruleautorefname{règle}
+}
+
+% Commandes logiques globales
+\newcommand{\ifnullthenelse}[3]{
+	\ifnum\value{#1}=0
+	#2
+	\else
+	#3
+	\fi
+}
+
+%%% Commande \newtag permettant de changer le label d'une equation
+\makeatletter
+\newcommand\newtag[2]{#1\def\@currentlabel{#1}\label{#2}}
+\makeatother
+
+
+% Macros caractères spécifiques au document
+
+% Création des environnements spécifiques au document
+
+
+%%% Subparaghaphs box
+\newtcbox{\subparaghaphbox}{nobeforeafter,tcbox raise base, arc=9pt, outer arc=9pt, boxsep=2pt,left=2pt,right=2pt,top=2pt,bottom=2pt,boxrule=1pt,colback=white!85!orange}
+\newcommand{\subparaghaphboxedcontent}[1]{\subparaghaphbox{#1}\newline}
+%\titleclass{\mathcases}{straight}[\subparagraph]
+\titleformat{\subparagraph}[runin]{\normalfont\normalsize\bfseries}{}{0em}{\subparaghaphboxedcontent}
+\titlespacing*{\subparagraph}{0pt}{3.25ex plus 1ex minus .2ex}{0.5em}
+
+
+\addbibresource{Bilibibio.bib}
