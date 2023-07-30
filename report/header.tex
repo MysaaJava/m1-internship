@@ -1,6 +1,5 @@
-% Loading packages
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
+% Loading packages 
+\usepackage{autofe}
 \usepackage{hyperref}
 \hypersetup{
 	colorlinks=true,
@@ -16,7 +15,6 @@
 \usepackage{csquotes}
 \usepackage{listings}
 \usepackage{lstautogobble}
-\usepackage{algorithm2e}
 \usepackage{svg}
 \usepackage{tikz}
 \usepackage{multirow}
@@ -34,6 +32,7 @@
 \usepackage{mathtools}
 \usepackage[page,header]{appendix}
 \usepackage{minitoc}
+\usepackage{mathtools}
 
 \usepackage{geometry}
 
@@ -59,9 +58,6 @@
 \def\nDownarrow{\not\mspace{1mu}\Downarrow}
 \let\pprec\preccurlyeq
 
-\DeclareUnicodeCharacter{03BB}{$\lambda$}
-\DeclareUnicodeCharacter{03B1}{$\alpha$}
-\DeclareUnicodeCharacter{03C0}{$\pi$}
 
 % Création des environnement globaux
 \newtheorem{theorem}{Théorème}
@@ -95,7 +91,46 @@
 
 
 % Macros caractères spécifiques au document
+\newcommand\Tm{\operatorname{Tm}}
+\newcommand\Set{\operatorname{Set}}
+\newcommand\For{\operatorname{For}}
+\newcommand\Prop{\operatorname{Prop}}
+\newcommand\R{\operatorname{R}}
+\newcommand\lam{\operatorname{lam}}
+\newcommand\app{\operatorname{app}}
+\newcommand\foralli{\operatorname{\operatorname{\forall i}}}
+\newcommand\foralle{\operatorname{\operatorname{\forall e}}}
+\newcommand\Pf{\operatorname{Pf}\;}
 
+% Agda Config
+\usepackage{agda}
+\usepackage{newunicodechar}
+\newunicodechar{∘}{\ensuremath{\mathnormal{\circ}}}
+\newunicodechar{≡}{\ensuremath{\mathnormal{\equiv}}}
+\newunicodechar{◇}{\ensuremath{\mathnormal{\diamond}}}
+\newunicodechar{α}{\ensuremath{\mathnormal{\alpha}}}
+\newunicodechar{β}{\ensuremath{\mathnormal{\beta}}}
+\newunicodechar{γ}{\ensuremath{\mathnormal{\gamma}}}
+\newunicodechar{δ}{\ensuremath{\mathnormal{\delta}}}
+\newunicodechar{ε}{\ensuremath{\mathnormal{\varepsilon}}}
+\newunicodechar{σ}{\ensuremath{\mathnormal{\sigma}}}
+\newunicodechar{π}{\ensuremath{\mathnormal{\pi}}}
+\newunicodechar{▹}{\ensuremath{\mathnormal{\triangleright}}}
+\newunicodechar{⊢}{\ensuremath{\mathnormal{\vdash}}}
+\newunicodechar{⇒}{\ensuremath{\mathnormal{\Rightarrow}}}
+\newunicodechar{∀}{\ensuremath{\mathnormal{\forall}}}
+\newunicodechar{≈}{\ensuremath{\mathnormal{\approx}}}
+\newunicodechar{ₜ}{\ensuremath{{}_t}}
+\newunicodechar{ₚ}{\ensuremath{{}_p}}
+\newunicodechar{⁰}{\ensuremath{{}^0}}
+
+
+\newcommand\agda[1]{
+	\small
+	\begin{code}
+		\input{#1}
+	\end{code}
+}
 % Création des environnements spécifiques au document
 
 

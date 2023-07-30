@@ -1,3 +1,4 @@
+\begin{code}
 {-# OPTIONS --prop --rewriting #-}
 
 open import PropUtil
@@ -219,8 +220,8 @@ module FFOLInitial where
   
 
   -- We now can create Renamings, a subcategory from (Conp,Subp) that
-  -- A renaming from a context Γₚ to a context Δₚ means that when they are seen as lists,
-  -- that every element of Γₚ is an element of Δₚ
+  -- A renaming from a context Γₚ to a context Δₚ means when they are seen
+  -- as lists, that every element of Γₚ is an element of Δₚ
   -- In other words, we can prove Γₚ from Δₚ using only proof variables (var)
   data Ren : Conp Γₜ → Conp Γₜ → Set₁ where
     zeroRen : Ren ◇p Γₚ
@@ -722,24 +723,26 @@ module FFOLInitial where
       (substP (λ X → (M FFOL.▹ₚ (M FFOL.▹ₜ) (mCon (con Γₜ Γₚ))) X ≡ (M FFOL.▹ₜ) ((M FFOL.▹ₚ mCon (con Γₜ Γₚ)) (mFor A)))
         (≡tran
           (coeshift {!!})
-          (cong (λ X → subst (FFOL.For M) _ (FFOL._[_]f M (mFor A) (mSub (sub (wkₜσₜ idₜ) X)))) (≡sym (coecoe-coe {eq1 = ?} {x = idₚ {Δₚ = Γₚ}}))))
+          (cong (λ X → subst (FFOL.For M) _ (FFOL._[_]f M (mFor A) (mSub (sub (wkₜσₜ idₜ) X)))) (≡sym (coecoe-coe {eq1 = {!!}} {x = idₚ {Δₚ = Γₚ}}))))
         {!!})
       (cong (M FFOL.▹ₜ) (≡sym (e▹ₚ {con Γₜ Γₚ})))
     -- substP (λ X → FFOL._▹ₚ_ M X (mFor {Γ = ?} (A [ wkₜσₜ idₜ ]f)) ≡ (FFOL._▹ₜ M (mCon (con Γₜ (Γₚ ▹p⁰ A))))) (≡sym (e▹ₜ {Γ = con Γₜ Γₚ})) ?
     
-
-
-    {-
-    
-
     m⊢ {Γ}{A}(var pvzero) = {!substP (λ X → FFOL._⊢_ M X (mFor A)) (≡sym e▹ₚ) ?!}
     m⊢ (var (pvnext pv)) = {!!}
     m⊢ (app pf pf') = FFOL.app M (m⊢ pf) (m⊢ pf')
     m⊢ (lam pf) = FFOL.lam M {!m⊢ pf!}
     m⊢ (p∀∀e pf) = {!FFOL.∀e M (m⊢ pf)!}
     m⊢ {Γ}{∀∀ A}(p∀∀i pf) = FFOL.∀i M (substP (λ X → FFOL._⊢_ M X (subst (FFOL.For M) (≡sym e▹ₜ) (mFor A))) e▹ₜ {!m⊢ pf!})
-
+    
     e[]f = {!!}
+    e▹ₚ = {!!}
+
+
+    {-
+    
+
+
     
 
     e∘ : {Γ Δ Ξ : Con}{δ : Sub Δ Ξ}{σ : Sub Γ Δ} → mSub (δ ∘ σ) ≡ FFOL._∘_ M (mSub δ) (mSub σ)
@@ -779,7 +782,7 @@ module FFOLInitial where
     
   --mor : (M : FFOL) → Morphism ffol M
   --mor M = record {InitialMorphism M}
-
+\end{code}
 
 
 

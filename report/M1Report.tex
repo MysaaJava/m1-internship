@@ -1,4 +1,4 @@
-% !TeX spellcheck = fr_FR
+% !TeX spellcheck = en_US
 \documentclass[10pt,a4paper]{article}
 
 \include{./header.tex}
@@ -21,8 +21,17 @@
 	
 	\newpage
 	
+	
 	\section{Introduction}
+	
+		In the first place, i was supposed to do this internship in Nottingham (UK) with Thorsten Altenkirsh. But, because of administrative issues, i was not able to go there, and Thorsten Altenkirsh contacted Ambrus Kaposi in Budapest, whose university agreed to accept me. Therefore, i went to Budapest and i did the internship under the physical supervision of Ambrus Kaposi, and the remote supervision of Thorsten Altenkirsch.
+		
+		The original subject of the internship was \enquote{Developping a simplified account of normalization by evaluation using the theory of categories with families}. But there was a lot to do, starting with learning how to use Agda.
+		
 		\subsection{Introduction to the problem}
+			What i do call a \enquote{logic} is a set of definitions containing formulæ and a notion of provability of those formulæ, plus a set of operators/equalities to construct or reduce these rules. I have studied the most common logical frameworks, that is, Propositional Logic, First-order logic with infinitary predicates, and Predicate Logic. For each of those logics, one can define a notion of \emph{model}. A model of a certain kind of logic is something that implements all of the logic's definitions, operators and equalities. From all of those models, one can extract the \emph{initial model}, also called \emph{syntax}. It is the smallest of all models, which means that from any model of that logic, we have a morphism from the syntax to that model.
+			
+			Then, our goal is for each logic to prove the completeness of a specific class of models. Completeness can be stated as such: \enquote{For any formula that is \emph{true} in all models of the specified class, then the formula has a proof in the syntax}. By being true in the model, one can understand that the formula has a proof from the model.
 		\subsection{Motivation}
 		\subsection{Structure of this report}
 	\section{A first account of Completeness and Normalization}
@@ -31,11 +40,158 @@
 		\subsection{Merging the two proofs}
 	\section{Predicate Logic}
 		\subsection{SOGAT Presentation of FFOL}
+		
+		\begin{tcolorbox}
+			\[
+			\begin{array}{lcl}
+				\Tm & : & \Set^+ \\
+				\\
+				\For & : & \Set \\
+				- \implies - & : & \For \rightarrow \For \rightarrow \For\\
+				\forall & : & (\Tm \rightarrow \For) \rightarrow \For \\
+				\R & : & \Tm \rightarrow \Tm \rightarrow \For\\
+				\\
+				\Pf & : & \For \rightarrow \Prop^+ \\
+				\lam & : & (\Pf A \rightarrow \Pf B) \rightarrow \Pf (A \implies B)\\
+				\app & : & \Pf (A \implies B) \rightarrow (\Pf A \rightarrow \Pf B)\\
+				\foralli & : & (t : \Tm \rightarrow^+ A\;t) \rightarrow \Pf (\forall A)\\
+				\foralle & : & \Pf (\forall A) \rightarrow (t : \Tm) \rightarrow \Pf (A\;t)\\
+			\end{array}
+			\]
+		\end{tcolorbox}
+	
 		\subsection{Turning a SOGAT Presentation into a GAT}
+			\begin{tcolorbox}
+				\agda{agda/Con.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/Tm.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/Tm+.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/For.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/Pf.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/Pf+.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/R.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/Imp.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/Forall.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/LamApp.tex}
+			\end{tcolorbox}
+	
+			\begin{tcolorbox}
+				\agda{agda/ForallR.tex}
+			\end{tcolorbox}
+			
 	\section{Implementing the Syntax}
 		\subsection{Separated Contexts}
+		
+			\begin{tcolorbox}
+				\agda{agda/ICont.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/IFor.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISubt.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ITm.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISubtT.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISubTF.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/IIdCompT.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/IConp.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISubtC.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/IConpTp.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/IPf.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/IRen.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISubp.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISubtP.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISubtS.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISubpP.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/IIdCompP.tex}
+			\end{tcolorbox}
+			\begin{tcolorbox}
+				\agda{agda/ICon.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ISub.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/IIdComp.tex}
+			\end{tcolorbox}
+		
+			\begin{tcolorbox}
+				\agda{agda/ICExt.tex}
+			\end{tcolorbox}
+		
 		\subsection{Transport Hell}
-	%\section{Completeness and Normalization for FFOL}
 	
 	\section{Summary}
 	

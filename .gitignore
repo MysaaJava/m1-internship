@@ -4,3 +4,6 @@
 .\#*
 *.kate-swp
 /report/build/
+/report/agda/
+/report/agda.sty
+/latex
