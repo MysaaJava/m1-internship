@@ -18,7 +18,7 @@ agda-tex-FIni: latex/FFOLInitial.tex
 	mkdir -p report/agda
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ICont.tex,'Term\\ contexts\\ are\\ isomorphic\\ to\\ Nat','\\>\[0\]\\<')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ITm.tex,'A\\ term\\ variable\\ is\\ a\\ de-bruijn','\\>\[0\]\\<')
-	@$(call extract,latex/FFOLInitial.tex,report/agda/IFor.tex,'Now\\ we\\ can\\ define\\ formul','\\>\[0\]\\<')
+	@$(call extract,latex/FFOLInitial.tex,report/agda/IFor.tex,'Now\\ we\\ can\\ define\\ formul','\\AgdaEmptyExtraSkip')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubt.tex,'Then\\ we\\ define\\ term\\ substitutions','\\>\[0\]\\<')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubtT.tex,'We\\ now\\ define\\ the\\ action\\ of\\ term\\ substitutions','\\>\[0\]\\<')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubtF.tex,'We\\ can\\ now\\ subst\\ on\\ formul','\\AgdaEmptyExtraSkip')
@@ -31,11 +31,11 @@ agda-tex-FIni: latex/FFOLInitial.tex
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubp.tex,'But\\ we\\ need\\ something\\ stronger\\ than\\ just\\ renamings','They\\ are\\ indeed\\ stronger\\ than\\ renamings')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubtP.tex,'\\>\[2\]\\AgdaOperator{\\AgdaFunction{\\AgdaUnderscore{}\[\\AgdaUnderscore{}\]pv','\\>\[0\]\\<')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubtS.tex,'\\>\[2\]\\AgdaOperator{\\AgdaFunction{\\AgdaUnderscore{}\[\\AgdaUnderscore{}\]σ','\\AgdaEmptyExtraSkip')
-	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubpP.tex,'\\>\[2\]\\AgdaOperator{\\AgdaFunction{\\AgdaUnderscore{}\[\\AgdaUnderscore{}\]p}}','\\>\[0\]\\<')
+	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubpP.tex,'\\>\[2\]\\AgdaOperator{\\AgdaFunction{\\AgdaUnderscore{}\[\\AgdaUnderscore{}\]p}}','\\AgdaEmptyExtraSkip')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/IIdCompP.tex,'We\\ can\\ now\\ define\\ identity\\ and\\ composition\\ on\\ proof\\ substitutions','\\AgdaEmptyExtraSkip')
 	@cat latex/FFOLInitial.tex | grep -A5000 -m1 'We\\ can\\ now\\ merge\\ the\\ two\\ notions\\ of\\ contexts,\\ substitutions,\\ and\\ everything' | grep -B5000 -m1 '\\>\[0\]\\<' > report/agda/ICon.tex
 	@cat latex/FFOLInitial.tex | grep -A5000 -B1 -m1 '\\AgdaRecord{Sub}\\AgdaSpace{}%' | grep -B5000 -m1 '\\AgdaEmptyExtraSkip' > report/agda/ISub.tex
-	@$(call extract,latex/FFOLInitial.tex,report/agda/IIdComp.tex,'(Con,Sub)\\ is\\ a\\ category\\ with\\ an\\ initial\\ object','\\>\[2\]\\AgdaOperator{\\AgdaFunction{\\AgdaUnderscore{}')
+	@$(call extract,latex/FFOLInitial.tex,report/agda/IIdComp.tex,'(Con,Sub)\\ is\\ a\\ category\\ with\\ an\\ initial\\ object','\\>\[2\]\\AgdaFunction{idl}\\AgdaSpace{}')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ICExt.tex,'We\\ have\\ our\\ two\\ context\\ extension\\ operators','\\AgdaEmptyExtraSkip')
 
 agda-tex-FFOL: latex/FFOL.tex

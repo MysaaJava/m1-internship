@@ -213,6 +213,20 @@ module FFOLInitial where
     p∀∀i : {A : For (Γₜ ▹t⁰)} → Pf (Γₜ ▹t⁰) (Γₚ ▹tp) A → Pf Γₜ Γₚ (∀∀ A)
 
 
+  -- The action on Cont's morphisms of Pf functor
+  _[_]pvₜ : {A : For Δₜ}→ PfVar Δₜ Δₚ A → (σ : Subt Γₜ Δₜ)→ PfVar Γₜ (Δₚ [ σ ]c) (A [ σ ]f)
+  pvzero [ σ ]pvₜ = pvzero
+  pvnext pv [ σ ]pvₜ = pvnext (pv [ σ ]pvₜ)
+  _[_]pₜ : {A : For Δₜ} → Pf Δₜ Δₚ A → (σ : Subt Γₜ Δₜ) → Pf Γₜ (Δₚ [ σ ]c) (A [ σ ]f)
+  var pv [ σ ]pₜ = var (pv [ σ ]pvₜ)
+  app pf pf' [ σ ]pₜ = app (pf [ σ ]pₜ) (pf' [ σ ]pₜ)
+  lam pf [ σ ]pₜ = lam (pf [ σ ]pₜ)
+  _[_]pₜ {Δₚ = Δₚ} {Γₜ = Γₜ} (p∀∀e {A = A} {t = t} pf) σ =
+    substP (λ F → Pf Γₜ (Δₚ [ σ ]c) F) (≡tran² (≡sym []f-∘) (cong (λ σ → A [ σ ]f)
+    (cong₂ _,ₜ_ (≡tran² wkₜ∘ₜ,ₜ idrₜ (≡sym idlₜ)) refl)) ([]f-∘))
+    (p∀∀e {t = t [ σ ]t} (pf [ σ ]pₜ))
+  _[_]pₜ {Γₜ = Γₜ} (p∀∀i pf) σ
+    = p∀∀i (substP (λ Ξₚ → Pf (Γₜ ▹t⁰) (Ξₚ) _) ▹tp-lfₜ (pf [ lfₜσₜ σ ]pₜ))
   
 
 
@@ -266,6 +280,12 @@ module FFOLInitial where
   data Subp : {Δₜ : Cont} → Conp Δₜ → Conp Δₜ → Set₁ where
     εₚ : Subp Δₚ ◇p
     _,ₚ_ : {A : For Δₜ} → (σ : Subp Δₚ Δₚ') → Pf Δₜ Δₚ A → Subp Δₚ (Δₚ' ▹p⁰ A)
+
+  -- The action of Cont's morphisms on Subp
+  _[_]σₚ : Subp {Δₜ} Δₚ Δₚ' → (σ : Subt Γₜ Δₜ) → Subp {Γₜ} (Δₚ [ σ ]c) (Δₚ' [ σ ]c)
+  εₚ [ σₜ ]σₚ = εₚ
+  (σₚ ,ₚ pf) [ σₜ ]σₚ = (σₚ [ σₜ ]σₚ) ,ₚ (pf [ σₜ ]pₜ)
+  
   -- They are indeed stronger than renamings
   Ren→Sub : Ren Δₚ Δₚ' → Subp {Δₜ} Δₚ' Δₚ
   Ren→Sub zeroRen = εₚ
@@ -289,19 +309,7 @@ module FFOLInitial where
 
 
 
-  _[_]pvₜ : {A : For Δₜ} → PfVar Δₜ Δₚ A → (σ : Subt Γₜ Δₜ) → PfVar Γₜ (Δₚ [ σ ]c) (A [ σ ]f)
-  pvzero [ σ ]pvₜ = pvzero
-  pvnext pv [ σ ]pvₜ = pvnext (pv [ σ ]pvₜ)
-  _[_]pₜ : {A : For Δₜ} → Pf Δₜ Δₚ A → (σ : Subt Γₜ Δₜ) → Pf Γₜ (Δₚ [ σ ]c) (A [ σ ]f)
-  var pv [ σ ]pₜ = var (pv [ σ ]pvₜ)
-  app pf pf' [ σ ]pₜ = app (pf [ σ ]pₜ) (pf' [ σ ]pₜ)
-  lam pf [ σ ]pₜ = lam (pf [ σ ]pₜ)
-  _[_]pₜ {Δₚ = Δₚ} {Γₜ = Γₜ} (p∀∀e {A = A} {t = t} pf) σ = substP (λ F → Pf Γₜ (Δₚ [ σ ]c) F) (≡tran² (≡sym []f-∘) (cong (λ σ → A [ σ ]f) (cong₂ _,ₜ_ (≡tran² wkₜ∘ₜ,ₜ idrₜ (≡sym idlₜ)) refl)) ([]f-∘)) (p∀∀e {t = t [ σ ]t} (pf [ σ ]pₜ))
-  _[_]pₜ {Γₜ = Γₜ} (p∀∀i pf) σ = p∀∀i (substP (λ Ξₚ → Pf (Γₜ ▹t⁰) (Ξₚ) _) ▹tp-lfₜ (pf [ lfₜσₜ σ ]pₜ))
   
-  _[_]σₚ : Subp {Δₜ} Δₚ Δₚ' → (σ : Subt Γₜ Δₜ) → Subp {Γₜ} (Δₚ [ σ ]c) (Δₚ' [ σ ]c)
-  εₚ [ σₜ ]σₚ = εₚ
-  (σₚ ,ₚ pf) [ σₜ ]σₚ = (σₚ [ σₜ ]σₚ) ,ₚ (pf [ σₜ ]pₜ)
 
   wkₜσₚ : Subp {Δₜ} Δₚ' Δₚ → Subp {Δₜ ▹t⁰} (Δₚ' ▹tp) (Δₚ ▹tp)
   wkₜσₚ εₚ = εₚ
