@@ -277,7 +277,7 @@ module FFOLInitial where
   -- They are basicly a list of proofs for the formulæ contained in
   -- the goal context.
   -- It is not defined between all contexts, only those with the same term context
-  data Subp : {Δₜ : Cont} → Conp Δₜ → Conp Δₜ → Set₁ where
+  data Subp : {Δₜ : Cont} → Conp Δₜ → Conp Δₜ → Prop₁ where
     εₚ : Subp Δₚ ◇p
     _,ₚ_ : {A : For Δₜ} → (σ : Subp Δₚ Δₚ') → Pf Δₜ Δₚ A → Subp Δₚ (Δₚ' ▹p⁰ A)
 
@@ -314,9 +314,11 @@ module FFOLInitial where
   wkₜσₚ : Subp {Δₜ} Δₚ' Δₚ → Subp {Δₜ ▹t⁰} (Δₚ' ▹tp) (Δₚ ▹tp)
   wkₜσₚ εₚ = εₚ
   wkₜσₚ {Δₜ = Δₜ} (_,ₚ_ {A = A} σₚ pf) = (wkₜσₚ σₚ) ,ₚ substP (λ Ξₚ → Pf (Δₜ ▹t⁰) Ξₚ (A [ wkₜσₜ idₜ ]f)) refl (_[_]pₜ {Γₜ = Δₜ ▹t⁰} pf (wkₜσₜ idₜ))
+  {-
   wkₚ[] : {σₜ : Subt Γₜ Δₜ} {σₚ : Subp Δₚ Δₚ'} {A : For Δₜ} → (wkₚσₚ {A = A} σₚ) [ σₜ ]σₚ ≡ wkₚσₚ (σₚ [ σₜ ]σₚ)
   wkₚ[] {σₚ = εₚ} = refl
   wkₚ[] {σₚ = σₚ ,ₚ x} = cong (λ ξ → ξ ,ₚ _) (wkₚ[] {σₚ = σₚ})
+  -}
 
   _[_]p : {A : For Δₜ} → Pf Δₜ Δₚ A → (σ : Subp {Δₜ} Δₚ' Δₚ) → Pf Δₜ Δₚ' A
   var pvzero [ σ ,ₚ pf ]p = pf
@@ -341,17 +343,21 @@ module FFOLInitial where
   (α ,ₚ pf) ∘ₚ β = (α ∘ₚ β) ,ₚ (pf [ β ]p)
 
   -- And now we have to show all their equalities
-  
+  {-
   idₚ[] : {σₜ : Subt Γₜ Δₜ} → ((idₚ {Δₜ} {Δₚ}) [ σₜ ]σₚ) ≡ idₚ {Γₜ} {Δₚ [ σₜ ]c}
   idₚ[] {Δₚ = ◇p} = refl
   idₚ[] {Δₚ = Δₚ ▹p⁰ A} = cong (λ ξ → ξ ,ₚ var pvzero) (≡tran wkₚ[] (cong wkₚσₚ idₚ[]))
+  -}
 
   -- Cancelling a wkₚσₚ with a ,ₚ
+  {-
   wkₚ∘, : {Δₜ : Cont}{Γₚ Δₚ Ξₚ : Conp Δₜ}{α : Subp {Δₜ} Γₚ Δₚ}{β : Subp {Δₜ} Ξₚ Γₚ}{A : For Δₜ}{pf : Pf Δₜ Ξₚ A} → (wkₚσₚ α) ∘ₚ (β ,ₚ pf) ≡ (α ∘ₚ β)
   wkₚ∘, {α = εₚ} = refl
   wkₚ∘, {α = α ,ₚ pf} {β = β} {pf = pf'} = cong (λ ξ → ξ ,ₚ (pf [ β ]p)) wkₚ∘,
+  -}
 
   -- Categorical rules
+  {-
   idlₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} → (idₚ {Δₚ = Δₚ}) ∘ₚ σₚ ≡ σₚ
   idlₚ {Δₚ = ◇p} {εₚ} = refl
   idlₚ {Δₚ = Δₚ ▹p⁰ pf} {σₚ ,ₚ pf'} = cong (λ ξ → ξ ,ₚ pf') (≡tran wkₚ∘, (idlₚ {σₚ = σₚ}))
@@ -365,7 +371,7 @@ module FFOLInitial where
   -- Unicity of the terminal morphism
   εₚ-u : {Γₚ : Conp Γₜ} → {σ : Subp Γₚ ◇p} → σ ≡ εₚ {Δₚ = Γₚ}
   εₚ-u {σ = εₚ} = refl
-
+  
   -- Term substitution for proof substitutions
   []σₚ-id : {σₚ : Subp {Δₜ} Δₚ Δₚ'} → coe (cong₂ Subp []c-id []c-id) (σₚ [ idₜ ]σₚ) ≡ σₚ
   []σₚ-id {σₚ = εₚ} = εₚ-u
@@ -450,7 +456,7 @@ module FFOLInitial where
       {f = λ {τ} ξ → (ξ ∘ₚ ((coe eq₄ (βₚ [ αₜ ]σₚ)) ∘ₚ αₚ))}
       {x = (coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) ((γₚ [ βₜ ]σₚ) [ αₜ ]σₚ))}
     ))
-
+  -}
 
 
 
@@ -477,57 +483,25 @@ module FFOLInitial where
     field
       t : Subt (Con.t Γ) (Con.t Δ)
       p : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ t ]c)
+  sub= : {Γ Δ : Con}{σₜ σₜ' : Subt (Con.t Γ) (Con.t Δ)} →
+    σₜ ≡ σₜ' →
+    {σₚ : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ σₜ ]c)}
+    {σₚ' : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ σₜ' ]c)} → 
+    sub σₜ σₚ ≡ sub σₜ' σₚ'
+  sub= refl = refl 
 
   -- (Con,Sub) is a category with an initial object
   id : Sub Γ Γ
-  id {Γ} = sub idₜ (subst (Subp _) (≡sym []c-id) idₚ)
+  id {Γ} = sub idₜ (substP (Subp _) (≡sym []c-id) idₚ)
   _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
-  sub αₜ αₚ ∘ sub βₜ βₚ = sub (αₜ ∘ₜ βₜ) (subst (Subp _) (≡sym []c-∘) (αₚ [ βₜ ]σₚ) ∘ₚ βₚ)
+  sub αₜ αₚ ∘ sub βₜ βₚ = sub (αₜ ∘ₜ βₜ) (substP (Subp _) (≡sym []c-∘) (αₚ [ βₜ ]σₚ) ∘ₚ βₚ)
   idl : {Γ Δ : Con} {σ : Sub Γ Δ} →  (id {Δ}) ∘ σ ≡ σ
-  idl {Δ = Δ} {σ = sub σₜ σₚ} =
-    cong₂' sub idlₜ (≡tran²
-    (substfpoly
-      {α = ((Con.p Δ) [ idₜ ∘ₜ σₜ ]c)}
-      {β = ((Con.p Δ) [ σₜ ]c)}
-      {eq = cong (λ ξ → Con.p Δ [ ξ ]c) idlₜ}
-      {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ σₚ}
-    ) (
-    cong₂ _∘ₚ_ (≡tran³
-      coecoe-coe
-      (substfpoly
-        {eq = []c-id}
-        {f = λ {Ξₚ} ξ → _[_]σₚ {Δₚ = Con.p Δ} {Δₚ' = Ξₚ} ξ σₜ}
-      )
-      (cong (λ ξ → ξ [ σₜ ]σₚ) coeaba)
-      idₚ[]
-    ) refl)
-    idlₚ)
+  idl = sub= idlₜ
   idr : {Γ Δ : Con} {σ : Sub Γ Δ} →  σ ∘ (id {Γ}) ≡ σ
-  idr {Γ} {Δ} {σ = sub σₜ σₚ} =
-    cong₂' sub idrₜ (≡tran⁴
-      (cong (coe _) (≡sym (
-        substfpoly
-        {eq = ≡sym ([]c-∘ {α = σₜ} {β = idₜ}{Ξₚ = Con.p Δ})}
-        {f = λ {Ξₚ} ξ → _∘ₚ_ {Ξₚ = Ξₚ} ξ (coe (cong (Subp (Con.p Γ)) (≡sym []c-id)) idₚ)}
-        {x = σₚ [ idₜ ]σₚ})))
-      coecoe-coe
-      (substP
-          (λ X → coe  (≡tran (cong (Subp (Con.p Γ)) (≡sym []c-∘))
-          (cong (λ z → Subp (Con.p Γ) (Con.p Δ [ z ]c)) idrₜ))
-          (X ∘ₚ coe (cong (Subp (Con.p Γ)) (≡sym []c-id)) idₚ)
-          ≡ (coe (cong₂ Subp []c-id []c-id) (σₚ [ idₜ ]σₚ) ∘ₚ idₚ))
-      ((coeaba {eq1 = (cong₂ Subp []c-id []c-id)}{eq2 = ≡sym (cong₂ Subp []c-id []c-id)}))
-      ((coep∘
-        {p = λ {Γₚ}{Δₚ}{Ξₚ} x y → _∘ₚ_ {Δₚ = Γₚ} x y}
-        {eq1 = refl}
-        {eq2 = ≡sym []c-id}
-        {eq3 = ≡sym []c-id}
-      )))
-      idrₚ
-      []σₚ-id)
+  idr = sub= idrₜ
   ∘-ass : {Γ Δ Ξ Ψ : Con}{α : Sub Γ Δ}{β : Sub Δ Ξ}{γ : Sub Ξ Ψ} → (γ ∘ β) ∘ α ≡ γ ∘ (β ∘ α)
-  ∘-ass {Γ}{Δ}{Ξ}{Ψ}{α = sub αₜ αₚ} {β = sub βₜ βₚ} {γ = sub γₜ γₚ} = cong₂' sub ∘ₜ-ass ∘ₚₜ-ass
-
+  ∘-ass = sub= ∘ₜ-ass
+    
   ◇ : Con
   ◇ = con ◇t ◇p
 
@@ -538,42 +512,30 @@ module FFOLInitial where
   _▹p_ : (Γ : Con) → For (Con.t Γ) → Con
   Γ ▹p A = con (Con.t Γ) (Con.p Γ ▹p⁰ A)
 
-
-  
-
   -- We define the access function from the algebra, but defined for fully-featured substitutions
   -- For term substitutions
   πₜ¹* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Sub Δ Γ
-  πₜ¹* (sub (σₜ ,ₜ t) σₚ) = sub σₜ (subst (Subp _) ▹tp,ₜ σₚ)
+  πₜ¹* (sub (σₜ ,ₜ t) σₚ) = sub σₜ (substP (Subp _) ▹tp,ₜ σₚ)
   πₜ²* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Tm (Con.t Δ)
   πₜ²* (sub (σₜ ,ₜ t) σₚ) = t
   _,ₜ*_ : {Γ Δ : Con} → Sub Δ Γ → Tm (Con.t Δ) → Sub Δ (Γ ▹t)
-  (sub σₜ σₚ) ,ₜ* t = sub (σₜ ,ₜ t) (subst (Subp _) (≡sym ▹tp,ₜ) σₚ)
+  (sub σₜ σₚ) ,ₜ* t = sub (σₜ ,ₜ t) (substP (Subp _) (≡sym ▹tp,ₜ) σₚ)
   -- And the equations
   πₜ²∘,ₜ* : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm (Con.t Δ)} → πₜ²* (σ ,ₜ* t) ≡ t
   πₜ²∘,ₜ* = refl
   πₜ¹∘,ₜ* : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t : Tm (Con.t Δ)} → πₜ¹* (σ ,ₜ* t) ≡ σ
-  πₜ¹∘,ₜ* {Γ}{Δ}{σ}{t} = cong (sub (Sub.t σ)) coeaba
+  πₜ¹∘,ₜ* {Γ}{Δ}{σ}{t} = sub= refl
   ,ₜ∘πₜ* : {Γ Δ : Con} → {σ : Sub Δ (Γ ▹t)} → (πₜ¹* σ) ,ₜ* (πₜ²* σ) ≡ σ
-  ,ₜ∘πₜ* {Γ} {Δ} {sub (σₜ ,ₜ t) σₚ} = cong (sub (σₜ ,ₜ t)) coeaba
+  ,ₜ∘πₜ* {Γ} {Δ} {sub (σₜ ,ₜ t) σₚ} = sub= refl
   ,ₜ∘* : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{t : Tm (Con.t Γ)} → (σ ,ₜ* t) ∘ δ ≡ (σ ∘ δ) ,ₜ* (t [ Sub.t δ ]t)
-  ,ₜ∘* {Γ} {Δ} {Ξ} {sub σₜ σₚ} {sub δₜ δₚ} {t} = cong (sub ((σₜ ∘ₜ δₜ) ,ₜ (t [ δₜ ]t)))
-    (substfgpoly
-      {P = Subp {Con.t Δ} (Con.p Δ)}
-      {Q = Subp {Con.t Δ} ((Con.p Γ) [ δₜ ]c)}
-      {R = Subp {Con.t Γ} (Con.p Γ)}
-      {F = λ X → X [ δₜ ]c}
-      {eq₁ = ≡sym ▹tp,ₜ}
-      {eq₂ = ≡sym []c-∘}
-      {eq₃ = ≡sym []c-∘}
-      {eq₄ = ≡sym ▹tp,ₜ}
-      {g = λ σₚ → σₚ ∘ₚ δₚ}
-      {f = λ σₚ → σₚ [ δₜ ]σₚ}
-      {x = σₚ})
+  ,ₜ∘* {Γ} {Δ} {Ξ} {sub σₜ σₚ} {sub δₜ δₚ} {t} = sub= refl
 
   -- And for proof substitutions
+  πₚ₁ : ∀{Γₜ}{Γₚ Δₚ : Conp Γₜ} {A : For Γₜ} → Subp Δₚ (Γₚ ▹p⁰ A) → Subp Δₚ Γₚ
+  πₚ₁ (σₚ ,ₚ pf) = σₚ
+
   πₚ¹* : {Γ Δ : Con} {A : For (Con.t Γ)} → Sub Δ (Γ ▹p A) → Sub Δ Γ
-  πₚ¹* (sub σₜ (σₚ ,ₚ pf)) = sub σₜ σₚ
+  πₚ¹* (sub σₜ σaₚ) = sub σₜ (πₚ₁ σaₚ)
   πₚ²* : {Γ Δ : Con} {F : For (Con.t Γ)} (σ : Sub Δ (Γ ▹p F)) → Pf (Con.t Δ) (Con.p Δ) (F [ Sub.t (πₚ¹* σ) ]f)
   πₚ²* (sub σₜ (σₚ ,ₚ pf)) = pf
   _,ₚ*_ : {Γ Δ : Con} {F : For (Con.t Γ)} (σ : Sub Δ Γ) → Pf (Con.t Δ) (Con.p Δ) (F [ Sub.t σ ]f) → Sub Δ (Γ ▹p F)
@@ -583,23 +545,8 @@ module FFOLInitial where
   ,ₚ∘πₚ {σ = sub σₜ (σₚ ,ₚ p)} = refl
   ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For (Con.t Ξ)}{prf : Pf (Con.t Γ) (Con.p Γ) (F [ Sub.t σ ]f)}
       → (σ ,ₚ* prf) ∘ δ ≡ (σ ∘ δ) ,ₚ* (substP (λ F → Pf (Con.t Δ) (Con.p Δ) F) (≡sym []f-∘) ((prf [ Sub.t δ ]pₜ) [ Sub.p δ ]p))
-  ,ₚ∘ {Γ}{Δ}{Ξ}{σ = sub σₜ σₚ} {sub δₜ δₚ} {F = A} {prf} =
-    cong (λ ξ → sub (σₜ ∘ₜ δₜ) (ξ ∘ₚ δₚ)) (
-    substfpoly⁴
-      {P = λ W → Subp (Con.p Γ [ δₜ ]c) ((proj×₁ W) ▹p⁰ (proj×₂ W))}
-      {R = λ W → Subp (Con.p Γ [ δₜ ]c) (proj×₁ W)}
-      {Q = λ W → Pf (Con.t Δ) (Con.p Γ [ δₜ ]c) (proj×₂ W)}
-      {α = ((Con.p Ξ [ σₜ ]c) [ δₜ ]c) ,× ((A [ σₜ ]f) [ δₜ ]f)}
-      {eq = cong₂ _,×_ (≡sym []c-∘) (≡sym []f-∘)}
-      {f = λ ξ p → ξ ,ₚ p}
-      {x = σₚ [ δₜ ]σₚ}{y = prf [ δₜ ]pₜ}
-    ) 
+  ,ₚ∘ {Γ}{Δ}{Ξ}{σ = sub σₜ σₚ} {sub δₜ δₚ} {F = A} {prf} = sub= refl
   
-  
-  lemD : {A : For (Con.t Γ)}{σ : Sub Δ (Γ ▹p A)} → Sub.t (πₚ¹* σ) ≡ Sub.t σ
-  lemD {σ = sub σₜ (σₚ ,ₚ pf)} = refl
-
-
   -- and FINALLY, we compile everything into an implementation of the FFOL record
     
   ffol : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}
@@ -607,13 +554,13 @@ module FFOLInitial where
     { Con = Con
     ; Sub = Sub
     ; _∘_ = _∘_
-    ; ∘-ass = ∘-ass
+    ; ∘-ass = λ {Γ}{Δ}{Ξ}{Ψ}{α}{β}{γ} → ∘-ass {Γ}{Δ}{Ξ}{Ψ}{α}{β}{γ}
     ; id = id
     ; idl = idl
     ; idr = idr
     ; ◇ = ◇
     ; ε = sub εₜ εₚ
-    ; ε-u = cong₂' sub εₜ-u εₚ-u
+    ; ε-u = sub= εₜ-u
     ; Tm = λ Γ → Tm (Con.t Γ)
     ; _[_]t = λ t σ → t [ Sub.t σ ]t
     ; []t-id = []t-id
@@ -623,9 +570,9 @@ module FFOLInitial where
     ; πₜ² = πₜ²*
     ; _,ₜ_ = _,ₜ*_
     ; πₜ²∘,ₜ = refl
-    ; πₜ¹∘,ₜ = πₜ¹∘,ₜ*
+    ; πₜ¹∘,ₜ = λ {Γ}{Δ}{σ}{t} → πₜ¹∘,ₜ* {Γ}{Δ}{σ}{t}
     ; ,ₜ∘πₜ = ,ₜ∘πₜ*
-    ; ,ₜ∘ = ,ₜ∘*
+    ; ,ₜ∘ = λ {Γ}{Δ}{Ξ}{σ}{δ}{t} → ,ₜ∘* {Γ}{Δ}{Ξ}{σ}{δ}{t}
     ; For = λ Γ → For (Con.t Γ)
     ; _[_]f = λ A σ → A [ Sub.t σ ]f
     ; []f-id = []f-id
@@ -640,12 +587,12 @@ module FFOLInitial where
     ; _,ₚ_ = _,ₚ*_
     ; ,ₚ∘πₚ = ,ₚ∘πₚ
     ; πₚ¹∘,ₚ = refl
-    ; ,ₚ∘ = λ {Γ}{Δ}{Ξ}{σ}{δ}{F}{prf} → ,ₚ∘ {prf = prf}
+    ; ,ₚ∘ = λ {Γ}{Δ}{Ξ}{σ}{δ}{F}{prf} → ,ₚ∘ {Γ}{Δ}{Ξ}{σ}{δ}{F}{prf}
     ; _⇒_ = _⇒_
     ; []f-⇒ = refl
     ; ∀∀ = ∀∀
     ; []f-∀∀ = []f-∀∀
-    ; lam = λ {Γ}{F}{G} pf → substP (λ H → Pf (Con.t Γ) (Con.p Γ) (F ⇒ H)) (≡tran (cong (_[_]f G) (lemD {σ = id})) []f-id) (lam pf)
+    ; lam = λ {Γ}{F}{G} pf → substP (λ H → Pf (Con.t Γ) (Con.p Γ) (F ⇒ H)) []f-id (lam pf)
     ; app = app
     ; ∀i = p∀∀i
     ; ∀e = λ {Γ} {F} pf {t} → p∀∀e pf
@@ -694,7 +641,7 @@ module FFOLInitial where
   Pf*-∘ {Ξₚ = ◇p} α β = tt
   Pf*-∘ {Ξₚ = Ξₚ ▹p⁰ A} α β = ⟨ Pf*-∘ (proj₁ α) β , Pf*Pf β (proj₂ α) ⟩
 
-
+{-
   module InitialMorphism (M : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}) where
     {-# TERMINATING #-}
     mCon : Con → (FFOL.Con M)
@@ -790,24 +737,5 @@ module FFOLInitial where
     
   --mor : (M : FFOL) → Morphism ffol M
   --mor M = record {InitialMorphism M}
+  -}
 \end{code}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
