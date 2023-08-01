@@ -314,11 +314,6 @@ module FFOLInitial where
   wkₜσₚ : Subp {Δₜ} Δₚ' Δₚ → Subp {Δₜ ▹t⁰} (Δₚ' ▹tp) (Δₚ ▹tp)
   wkₜσₚ εₚ = εₚ
   wkₜσₚ {Δₜ = Δₜ} (_,ₚ_ {A = A} σₚ pf) = (wkₜσₚ σₚ) ,ₚ substP (λ Ξₚ → Pf (Δₜ ▹t⁰) Ξₚ (A [ wkₜσₜ idₜ ]f)) refl (_[_]pₜ {Γₜ = Δₜ ▹t⁰} pf (wkₜσₜ idₜ))
-  {-
-  wkₚ[] : {σₜ : Subt Γₜ Δₜ} {σₚ : Subp Δₚ Δₚ'} {A : For Δₜ} → (wkₚσₚ {A = A} σₚ) [ σₜ ]σₚ ≡ wkₚσₚ (σₚ [ σₜ ]σₚ)
-  wkₚ[] {σₚ = εₚ} = refl
-  wkₚ[] {σₚ = σₚ ,ₚ x} = cong (λ ξ → ξ ,ₚ _) (wkₚ[] {σₚ = σₚ})
-  -}
 
   _[_]p : {A : For Δₜ} → Pf Δₜ Δₚ A → (σ : Subp {Δₜ} Δₚ' Δₚ) → Pf Δₜ Δₚ' A
   var pvzero [ σ ,ₚ pf ]p = pf
@@ -341,124 +336,6 @@ module FFOLInitial where
   _∘ₚ_ : {Γₚ Δₚ Ξₚ : Conp Δₜ} → Subp {Δₜ} Δₚ Ξₚ → Subp {Δₜ} Γₚ Δₚ → Subp {Δₜ} Γₚ Ξₚ
   εₚ ∘ₚ β = εₚ
   (α ,ₚ pf) ∘ₚ β = (α ∘ₚ β) ,ₚ (pf [ β ]p)
-
-  -- And now we have to show all their equalities
-  {-
-  idₚ[] : {σₜ : Subt Γₜ Δₜ} → ((idₚ {Δₜ} {Δₚ}) [ σₜ ]σₚ) ≡ idₚ {Γₜ} {Δₚ [ σₜ ]c}
-  idₚ[] {Δₚ = ◇p} = refl
-  idₚ[] {Δₚ = Δₚ ▹p⁰ A} = cong (λ ξ → ξ ,ₚ var pvzero) (≡tran wkₚ[] (cong wkₚσₚ idₚ[]))
-  -}
-
-  -- Cancelling a wkₚσₚ with a ,ₚ
-  {-
-  wkₚ∘, : {Δₜ : Cont}{Γₚ Δₚ Ξₚ : Conp Δₜ}{α : Subp {Δₜ} Γₚ Δₚ}{β : Subp {Δₜ} Ξₚ Γₚ}{A : For Δₜ}{pf : Pf Δₜ Ξₚ A} → (wkₚσₚ α) ∘ₚ (β ,ₚ pf) ≡ (α ∘ₚ β)
-  wkₚ∘, {α = εₚ} = refl
-  wkₚ∘, {α = α ,ₚ pf} {β = β} {pf = pf'} = cong (λ ξ → ξ ,ₚ (pf [ β ]p)) wkₚ∘,
-  -}
-
-  -- Categorical rules
-  {-
-  idlₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} → (idₚ {Δₚ = Δₚ}) ∘ₚ σₚ ≡ σₚ
-  idlₚ {Δₚ = ◇p} {εₚ} = refl
-  idlₚ {Δₚ = Δₚ ▹p⁰ pf} {σₚ ,ₚ pf'} = cong (λ ξ → ξ ,ₚ pf') (≡tran wkₚ∘, (idlₚ {σₚ = σₚ}))
-  idrₚ : {Γₚ Δₚ : Conp Γₜ} {σₚ : Subp Γₚ Δₚ} →  σₚ ∘ₚ (idₚ {Δₚ = Γₚ}) ≡ σₚ
-  idrₚ {σₚ = εₚ} = refl
-  idrₚ {σₚ = σₚ ,ₚ prf} = cong (λ X → X ,ₚ prf) (idrₚ {σₚ = σₚ})
-  ∘ₚ-ass : {Γₚ Δₚ Ξₚ Ψₚ : Conp Γₜ}{αₚ : Subp Γₚ Δₚ}{βₚ : Subp Δₚ Ξₚ}{γₚ : Subp Ξₚ Ψₚ} → (γₚ ∘ₚ βₚ) ∘ₚ αₚ ≡ γₚ ∘ₚ (βₚ ∘ₚ αₚ)
-  ∘ₚ-ass {γₚ = εₚ} = refl
-  ∘ₚ-ass {αₚ = αₚ} {βₚ} {γₚ ,ₚ x} = cong (λ ξ → ξ ,ₚ (x [ βₚ ∘ₚ αₚ ]p)) ∘ₚ-ass
-
-  -- Unicity of the terminal morphism
-  εₚ-u : {Γₚ : Conp Γₜ} → {σ : Subp Γₚ ◇p} → σ ≡ εₚ {Δₚ = Γₚ}
-  εₚ-u {σ = εₚ} = refl
-  
-  -- Term substitution for proof substitutions
-  []σₚ-id : {σₚ : Subp {Δₜ} Δₚ Δₚ'} → coe (cong₂ Subp []c-id []c-id) (σₚ [ idₜ ]σₚ) ≡ σₚ
-  []σₚ-id {σₚ = εₚ} = εₚ-u
-  []σₚ-id {Δₜ}{Δₚ}{Δₚ' ▹p⁰ A} {σₚ = σₚ ,ₚ x} =
-    substP (λ ξ → coe (cong₂ Subp []c-id []c-id) (ξ ,ₚ (x [ idₜ ]pₜ)) ≡ (σₚ ,ₚ x))
-    (≡sym (coeshift []σₚ-id))
-    (≡sym (coeshift {eq = cong₂ Subp (≡sym []c-id) (≡sym []c-id)}
-    (substfpoly⁴
-      {A = ((Conp Δₜ) × (Conp Δₜ)) × (For Δₜ)}
-      {P = λ W → Subp (proj×₁ (proj×₁ W)) ((proj×₂ (proj×₁ W)) ▹p⁰ (proj×₂ W))}
-      {R = λ W → Subp (proj×₁ (proj×₁ W)) (proj×₂ (proj×₁ W))}
-      {Q = λ W → Pf Δₜ (proj×₁ (proj×₁ W)) (proj×₂ W)}
-      {α = (Δₚ ,× Δₚ') ,× A}
-      {eq = ×≡ (×≡ (≡sym []c-id) (≡sym []c-id)) (≡sym []f-id)}
-      {f = λ {W} ξ pf → _,ₚ_ ξ pf}{x = σₚ}{y = x}
-    )))
-    
-  []σₚ-∘ : {Ξₚ Ξₚ' : Conp Ξₜ}{α : Subt Δₜ Ξₜ} {β : Subt Γₜ Δₜ} {σₚ : Subp {Ξₜ} Ξₚ Ξₚ'}
-    → coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) ((σₚ [ α ]σₚ) [ β ]σₚ) ≡ σₚ [ α ∘ₜ β ]σₚ 
-  []σₚ-∘ {σₚ = εₚ} = εₚ-u
-  []σₚ-∘ {Ξₜ}{Δₜ}{Γₜ}{Ξₚ}{Δₚ' ▹p⁰ A}{α}{β}{σₚ = σₚ ,ₚ pf} =
-    substP (λ ξ → coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) (ξ ,ₚ ((pf [ α ]pₜ) [ β ]pₜ)) ≡ ((σₚ [ α ∘ₜ β ]σₚ) ,ₚ (pf [ α ∘ₜ β ]pₜ))) (≡sym (coeshift []σₚ-∘))
-    (≡sym (coeshift {eq = cong₂ Subp []c-∘ []c-∘}
-    (substfpoly⁴
-      {A = ((Conp Γₜ) × (Conp Γₜ)) × (For Γₜ)}
-      {P = λ W → Subp (proj×₁ (proj×₁ W)) ((proj×₂ (proj×₁ W)) ▹p⁰ (proj×₂ W))}
-      {R = λ W → Subp (proj×₁ (proj×₁ W)) (proj×₂ (proj×₁ W))}
-      {Q = λ W → Pf Γₜ (proj×₁ (proj×₁ W)) (proj×₂ W)}
-      {eq = ×≡ (×≡ []c-∘ []c-∘) []f-∘}
-      {f = λ {W} ξ pf → _,ₚ_ ξ pf}{x = σₚ [ α ∘ₜ β ]σₚ}{y = pf [ α ∘ₜ β ]pₜ})
-    ))
-
-  -- How ∘ₚ and ∘ₜ interact to make associativity (to be proven later for Sub)
-  
-  ∘ₚₜ-ass⁰ :
-    {Γₜ Δₜ : Cont}{Γₚ : Conp Γₜ}{Δₚ : Conp Δₜ}{Ξₚ : Conp Δₜ}{Ψₚ : Conp Δₜ}
-    {αₜ : Subt Γₜ Δₜ}{γₚ : Subp Ξₚ Ψₚ}{βₚ : Subp Δₚ Ξₚ}{αₚ : Subp Γₚ (Δₚ [ αₜ ]c)}
-    → ((γₚ ∘ₚ βₚ) [ αₜ ]σₚ) ∘ₚ αₚ ≡ (γₚ [ αₜ ]σₚ) ∘ₚ ((βₚ [ αₜ ]σₚ) ∘ₚ αₚ)
-  ∘ₚₜ-ass⁰ {γₚ = εₚ} = refl
-  ∘ₚₜ-ass⁰ {αₜ = αₜ}{γₚ ,ₚ x}{βₚ}{αₚ} = cong (λ ξ → ξ ,ₚ (((x [ βₚ ]p) [ αₜ ]pₜ) [ αₚ ]p)) (∘ₚₜ-ass⁰ {γₚ = γₚ})
-  
-  ∘ₚₜ-ass : 
-    {Γₜ Δₜ Ξₜ Ψₜ : Cont}{Γₚ : Conp Γₜ}{Δₚ : Conp Δₜ}{Ξₚ : Conp Ξₜ}{Ψₚ : Conp Ψₜ}
-    {αₜ : Subt Γₜ Δₜ}{βₜ : Subt Δₜ Ξₜ}{γₜ : Subt Ξₜ Ψₜ}{γₚ : Subp Ξₚ (Ψₚ [ γₜ ]c)}{βₚ : Subp Δₚ (Ξₚ [ βₜ ]c)}{αₚ : Subp Γₚ (Δₚ [ αₜ ]c)}
-    {eq₁ : Subp Γₚ (Ψₚ [ (γₜ ∘ₜ βₜ) ∘ₜ αₜ ]c) ≡ Subp Γₚ (Ψₚ [ γₜ ∘ₜ (βₜ ∘ₜ αₜ) ]c)}
-    {eq₂ : Subp (Δₚ [ αₜ ]c) ((Ψₚ [ γₜ ∘ₜ βₜ ]c) [ αₜ ]c) ≡ Subp (Δₚ [ αₜ ]c) (Ψₚ [ (γₜ ∘ₜ βₜ) ∘ₜ αₜ ]c)}
-    {eq₃ : Subp (Ξₚ [ βₜ ∘ₜ αₜ ]c) ((Ψₚ [ γₜ ]c) [ βₜ ∘ₜ αₜ ]c) ≡ Subp (Ξₚ [ βₜ ∘ₜ αₜ ]c) (Ψₚ [ γₜ ∘ₜ (βₜ ∘ₜ αₜ) ]c)}
-    {eq₄ : Subp (Δₚ [ αₜ ]c) ((Ξₚ [ βₜ ]c) [ αₜ ]c) ≡ Subp (Δₚ [ αₜ ]c) (Ξₚ [ βₜ ∘ₜ αₜ ]c)}
-    {eq₅ : Subp (Ξₚ [ βₜ ]c) ((Ψₚ [ γₜ ]c) [ βₜ ]c) ≡ Subp (Ξₚ [ βₜ ]c) (Ψₚ [ γₜ ∘ₜ βₜ ]c)}
-    → coe eq₁ ((coe eq₂ (((coe eq₅ (γₚ [ βₜ ]σₚ)) ∘ₚ βₚ) [ αₜ ]σₚ)) ∘ₚ αₚ) ≡ (coe eq₃ (γₚ [ βₜ ∘ₜ αₜ ]σₚ)) ∘ₚ ((coe eq₄ (βₚ [ αₜ ]σₚ)) ∘ₚ αₚ)
-  ∘ₚₜ-ass {Γₜ}{Δₜ}{Ξₜ}{Ψₜ}{Γₚ}{Δₚ}{Ξₚ}{Ψₚ}{αₜ = αₜ}{βₜ}{γₜ}{γₚ}{βₚ}{αₚ}{eq₁}{eq₂}{eq₃}{eq₄}{eq₅} =
-    substP (λ X → coe eq₁ ((coe eq₂ (((coe eq₅ (γₚ [ βₜ ]σₚ)) ∘ₚ βₚ) [ αₜ ]σₚ)) ∘ₚ αₚ) ≡ (coe eq₃ X) ∘ₚ ((coe eq₄ (βₚ [ αₜ ]σₚ)) ∘ₚ αₚ)) []σₚ-∘ (
-    ≡tran⁵
-    (cong (coe eq₁) (≡tran (
-      ≡sym (substfpoly
-        {R = λ X → Subp (Δₚ [ αₜ ]c) X}
-        {eq = ≡sym []c-∘}
-        {f = λ ξ → ξ ∘ₚ αₚ}
-        {x = ((coe eq₅ (γₚ [ βₜ ]σₚ)) ∘ₚ βₚ) [ αₜ ]σₚ}))
-      (cong (coe (cong (λ z → Subp Γₚ z) (≡sym []c-∘)))
-      (≡sym (substfpoly
-        {R = λ X → Subp (Ξₚ [ βₜ ]c) X}
-        {eq = ≡sym []c-∘}
-        {f = λ ξ → ((ξ ∘ₚ βₚ) [ αₜ ]σₚ) ∘ₚ αₚ}
-        {x = γₚ [ βₜ ]σₚ}
-      )))
-      ))
-    (≡tran coecoe-coe coecoe-coe)
-    (cong (coe  (≡tran (cong (λ z → Subp Γₚ (z [ αₜ ]c)) (≡sym []c-∘)) (≡tran (cong (λ z → Subp Γₚ z) (≡sym []c-∘)) eq₁))) ∘ₚₜ-ass⁰)
-    (≡sym coecoe-coe)
-    (cong (coe (cong (λ z → Subp Γₚ z) (≡sym []c-∘))) (substppoly
-      {A = (Conp Γₜ) × (Conp Γₜ)}
-      {R = λ W → Subp (proj×₁ W) (proj×₂ W)}
-      {Q = λ W → Subp (Δₚ [ αₜ ]c) (proj×₁ W)}
-      {eq = ×≡ (≡sym []c-∘) (≡sym []c-∘)}
-      {f = λ x y → x ∘ₚ (y ∘ₚ αₚ)}
-      {x = (γₚ [ βₜ ]σₚ) [ αₜ ]σₚ}
-      {y = βₚ [ αₜ ]σₚ}
-    ))(substfpoly
-      {R = λ X → Subp (Ξₚ [ βₜ ∘ₜ αₜ ]c) X}
-      {eq = ≡sym []c-∘}
-      {f = λ {τ} ξ → (ξ ∘ₚ ((coe eq₄ (βₚ [ αₜ ]σₚ)) ∘ₚ αₚ))}
-      {x = (coe (cong₂ Subp (≡sym []c-∘) (≡sym []c-∘)) ((γₚ [ βₜ ]σₚ) [ αₜ ]σₚ))}
-    ))
-  -}
-
-
 
 
 
@@ -483,6 +360,8 @@ module FFOLInitial where
     field
       t : Subt (Con.t Γ) (Con.t Δ)
       p : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ t ]c)
+
+  -- We need this to apply term-substitution theorems to global substitutions
   sub= : {Γ Δ : Con}{σₜ σₜ' : Subt (Con.t Γ) (Con.t Δ)} →
     σₜ ≡ σₜ' →
     {σₚ : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ σₜ ]c)}
@@ -495,16 +374,7 @@ module FFOLInitial where
   id {Γ} = sub idₜ (substP (Subp _) (≡sym []c-id) idₚ)
   _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
   sub αₜ αₚ ∘ sub βₜ βₚ = sub (αₜ ∘ₜ βₜ) (substP (Subp _) (≡sym []c-∘) (αₚ [ βₜ ]σₚ) ∘ₚ βₚ)
-  idl : {Γ Δ : Con} {σ : Sub Γ Δ} →  (id {Δ}) ∘ σ ≡ σ
-  idl = sub= idlₜ
-  idr : {Γ Δ : Con} {σ : Sub Γ Δ} →  σ ∘ (id {Γ}) ≡ σ
-  idr = sub= idrₜ
-  ∘-ass : {Γ Δ Ξ Ψ : Con}{α : Sub Γ Δ}{β : Sub Δ Ξ}{γ : Sub Ξ Ψ} → (γ ∘ β) ∘ α ≡ γ ∘ (β ∘ α)
-  ∘-ass = sub= ∘ₜ-ass
     
-  ◇ : Con
-  ◇ = con ◇t ◇p
-
 
   -- We have our two context extension operators
   _▹t : Con → Con
@@ -554,11 +424,11 @@ module FFOLInitial where
     { Con = Con
     ; Sub = Sub
     ; _∘_ = _∘_
-    ; ∘-ass = λ {Γ}{Δ}{Ξ}{Ψ}{α}{β}{γ} → ∘-ass {Γ}{Δ}{Ξ}{Ψ}{α}{β}{γ}
+    ; ∘-ass = sub= ∘ₜ-ass
     ; id = id
-    ; idl = idl
-    ; idr = idr
-    ; ◇ = ◇
+    ; idl = sub= idlₜ
+    ; idr = sub= idrₜ
+    ; ◇ = con ◇t ◇p
     ; ε = sub εₜ εₚ
     ; ε-u = sub= εₜ-u
     ; Tm = λ Γ → Tm (Con.t Γ)

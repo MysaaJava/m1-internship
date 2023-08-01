@@ -293,6 +293,7 @@
 			\begin{tcolorbox}
 				\vspace{-2ex}
 				\agda{agda/IIdComp.tex}
+				\vspace{-3ex}
 				\agdasep
 				\agda{agda/ICExt.tex}
 				\vspace{-7.5ex}
@@ -301,6 +302,39 @@
 		\subsection{Transport Hell}
 		
 			\label{sec:transport-hell}
+			
+			In order for you to understand the code, i have to explain what are transport. I'll do this with the example of the definition of \AgdaFunction{id}.
+			To construct it, we will use \AgdaFunction{idₜ} and \AgdaFunction{id${}ₚ$}, merged together with the constructor \AgdaInductiveConstructor{sub}. Here are the types of the different elements in an array.
+			
+			\begin{center}
+			\renewcommand{\arraystretch}{1.2}
+			\begin{tabular}{l|l}
+				\AgdaFunction{id} & \AgdaRecord{Sub} (\AgdaInductiveConstructor{con} Γₜ Γₚ) (\AgdaInductiveConstructor{con} Γₜ Γₚ) \\\hline
+				\AgdaFunction{idₜ} & \AgdaDatatype{Subt} Γₜ Γₜ \\
+				\AgdaFunction{idₚ} & \AgdaDatatype{Subp} Γₚ Γₚ \\
+				\AgdaInductiveConstructor{sub} & (σ : \AgdaDatatype{Subt} Γₜ Δₜ) \\
+				 & \AgdaSymbol{$\rightarrow$} \AgdaDatatype{Subp} Γₚ (Δₚ[σ]c) \\
+				 & \AgdaSymbol{$\rightarrow$} \AgdaRecord{Sub} (\AgdaInductiveConstructor{con} Γₜ Γₚ) (\AgdaInductiveConstructor{con} Δₜ Δₚ) \\
+			\end{tabular}
+			\end{center}
+		
+			But if we try to construct \AgdaFunction{id}, then we will eventually end up with the following goal:
+			
+			\begin{center}
+			\AgdaFunction{id} = \AgdaInductiveConstructor{sub} \AgdaFunction{idₜ} \textbf{?} $\implies$ \textbf{?} : \AgdaDatatype{Subp} Γₚ (Γₚ[\AgdaFunction{idₜ}]c)
+			\end{center}
+			
+			But then agda will complain if we give it as a goal the expression \enquote{\AgdaFunction{idₚ}}. Indeed, it is not trivial for them that \AgdaDatatype{Subp} Γₚ (Γₚ[\AgdaFunction{idₜ}]c) is the same as \AgdaDatatype{Subp} Γₚ Γₚ. Even if we can easily prove the equality between those two elements of \AgdaPrimitive{Prop} (the proof of the equality is derived from the fact that Conp is a functor from $\textbf{Cont}$ to $\bSet$, and therefore it has to respect the identity of $\textbf{Conp}$).
+			
+			That's where transports comes in. Its definition is as follows:
+			
+			\begin{center}
+				\AgdaFunction{substP} : \{A : \AgdaPrimitive{Set}\}(P : A → \AgdaPrimitive{Prop})\{a a' : A\} → a ≡ a' → P a → P a'
+			\end{center}
+		
+			This is exactly the thing that will solve our problem. With the equality between the two elements of \AgdaPrimitive{Prop}, we can now convert \AgdaFunction{idₚ} to something that will correctly match the goal required by Agda.
+			
+			This section is called \enquote{Transport Hell} because those transports between equal sets can get really annoying. In former version of the syntax, the \AgdaDatatype{Subp} were \AgdaPrimitive{Set}s instead of \AgdaPrimitive{Prop}s. And that created a lot of equalities related to polymorphic functions (quite all \AgdaDatatype{Subp}'s related functions were then polymorphic, as they would depend on proof contexts). And to solve those equalities, you have to extract what are precisely the polymorphic functions you are working with. You can see those proofs on \href{https://github.com/MysaaJava/m1-internship/commit/2728c60633a80631ed7b61bbfae5c81a1e0e193a#diff-99bc55bebd36ad0afbae3c6448793992086091c5b6b25973f73dd779690d7dd2}{former versions of the syntax}, they are really long and not interesting (as it is basically trying to tweak our equation so that Agda understands that two types are equal).
 	
 	\section{Summary}
 	

@@ -35,7 +35,7 @@ agda-tex-FIni: latex/FFOLInitial.tex
 	@$(call extract,latex/FFOLInitial.tex,report/agda/IIdCompP.tex,'We\\ can\\ now\\ define\\ identity\\ and\\ composition\\ on\\ proof\\ substitutions','\\AgdaEmptyExtraSkip')
 	@cat latex/FFOLInitial.tex | grep -A5000 -m1 'We\\ can\\ now\\ merge\\ the\\ two\\ notions\\ of\\ contexts,\\ substitutions,\\ and\\ everything' | grep -B5000 -m1 '\\>\[0\]\\<' > report/agda/ICon.tex
 	@cat latex/FFOLInitial.tex | grep -A5000 -B1 -m1 '\\AgdaRecord{Sub}\\AgdaSpace{}%' | grep -B5000 -m1 '\\AgdaEmptyExtraSkip' > report/agda/ISub.tex
-	@$(call extract,latex/FFOLInitial.tex,report/agda/IIdComp.tex,'(Con,Sub)\\ is\\ a\\ category\\ with\\ an\\ initial\\ object','\\>\[2\]\\AgdaFunction{idl}\\AgdaSpace{}')
+	@$(call extract,latex/FFOLInitial.tex,report/agda/IIdComp.tex,'(Con,Sub)\\ is\\ a\\ category\\ with\\ an\\ initial\\ object','\\AgdaEmptyExtraSkip')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ICExt.tex,'We\\ have\\ our\\ two\\ context\\ extension\\ operators','\\AgdaEmptyExtraSkip')
 
 agda-tex-FFOL: latex/FFOL.tex
