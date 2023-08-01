@@ -16,7 +16,7 @@ module FFOL where
     infixr 5 _⊢_
     field
       
-      -- We first make the base category with its final object
+      -- We first make the base category with its terminal object
       Con : Set ℓ¹
       Sub : Con → Con → Set ℓ⁵ -- It makes a category
       _∘_ : {Γ Δ Ξ : Con} → Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
