@@ -3,12 +3,163 @@ git s\begin{code}
 
 open import PropUtil
 
-module FFOLInitial where
+module FFOLInitial2 where
 
   open import FFOL
   open import Agda.Primitive
   open import ListUtil
 
+  data Con : Set₁
+  data TmVar : Con → Set₁
+  data Tm  : Con → Set₁
+  data For : Con → Set₁
+  data Con where
+    ◇ : Con
+    _▹ₜ : Con → Con
+    _▹ₚ_ : (Γ : Con) → For Γ → Con
+
+  variable
+    Γ Δ Ξ : Con
+    
+  -- A term variable is a de-bruijn variable, TmVar n ≈ ⟦0,n-1⟧
+  data TmVar where
+    tvzero : TmVar (Γ ▹ₜ)
+    tvnext : TmVar Γ → TmVar (Γ ▹ₜ)
+
+  -- For now, we only have term variables (no function symbol)
+  data Tm where
+    var : TmVar Γ → Tm Γ
+    
+  -- Now we can define formulæ
+  data For where
+    R : Tm Γ → Tm Γ → For Γ
+    _⇒_ : For Γ → For Γ → For Γ
+    ∀∀  : For (Γ ▹ₜ) → For Γ
+
+  -------------------------------------------------------------------
+
+
+  -------------------------------------------------------------------
+  
+  data Sub : Con → Con → Set₁
+  data Ren : Con → Con → Set₁
+  id : Sub Γ Γ
+  idᵣ : Ren Γ Γ
+  _∘_ : {Γ Δ Ξ : Con} → Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
+  _∘ᵣ_ : {Γ Δ Ξ : Con} → Ren Δ Ξ → Ren Γ Δ → Ren Γ Ξ
+  _[_]t : Tm Γ → Sub Δ Γ → Tm Δ
+  _[_]f : For Γ → Sub Δ Γ → For Δ
+  _[_]tvᵣ : TmVar Γ → Ren Δ Γ → TmVar Δ
+  _[_]tᵣ : Tm Γ → Ren Δ Γ → Tm Δ
+  _[_]fᵣ : For Γ → Ren Δ Γ → For Δ
+  []f-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ}{β : Sub Δ Γ}{A : For Γ} → A [ β ∘ α ]f ≡ (A [ β ]f) [ α ]f
+  []t-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ}{β : Sub Δ Γ}{t : Tm Γ} → t [ β ∘ α ]t ≡ (t [ β ]t) [ α ]t
+  []fᵣ-∘ᵣ : {Γ Δ Ξ : Con} → {α : Ren Ξ Δ}{β : Ren Δ Γ}{A : For Γ} → A [ β ∘ᵣ α ]fᵣ ≡ (A [ β ]fᵣ) [ α ]fᵣ
+  []tᵣ-∘ᵣ : {Γ Δ Ξ : Con} → {α : Ren Ξ Δ}{β : Ren Δ Γ}{t : Tm Γ} → t [ β ∘ᵣ α ]tᵣ ≡ (t [ β ]tᵣ) [ α ]tᵣ
+  data PfVar : (Γ : Con) → For Γ → Prop₁
+  data Pf : (Γ : Con) → For Γ → Prop₁
+  πₜ¹ : Sub Δ (Γ ▹ₜ) → Sub Δ Γ
+  πₜ² : Sub Δ (Γ ▹ₜ) → Tm Δ
+  πₚ¹ : {Γ Δ : Con} {A : For Γ} → Sub Δ (Γ ▹ₚ A) → Sub Δ Γ
+  πₚ² : {Γ Δ : Con} {A : For Γ} → (σ : Sub Δ (Γ ▹ₚ A)) → Pf Δ (A [ πₚ¹ σ ]f)
+  _[_]p : {Γ Δ : Con} → {A : For Γ} → Pf Γ A → (σ : Sub Δ Γ) → Pf Δ (A [ σ ]f)
+  _[_]pvᵣ : {Γ Δ : Con} → {A : For Γ} → PfVar Γ A → (σ : Ren Δ Γ) → PfVar Δ (A [ σ ]fᵣ)
+ 
+  data Sub where
+    ε : Sub Γ ◇
+    _,ₜ_ : Sub Δ Γ → Tm Δ → Sub Δ (Γ ▹ₜ)
+    _,ₚ_ : {A : For Γ} → (σ : Sub Δ Γ) → Pf Δ (A [ σ ]f) → Sub Δ (Γ ▹ₚ A)
+
+  πₜ¹ (σ ,ₜ t) = σ
+  πₜ² (σ ,ₜ t) = t
+  πₚ¹ (σ ,ₚ pf) = σ
+  πₚ² (σ ,ₚ pf) = pf
+
+
+  data Ren where
+    εᵣ : Ren Γ ◇
+    _,ₜᵣ_ : Ren Δ Γ → TmVar Δ → Ren Δ (Γ ▹ₜ)
+    _,ₚᵣ_ : {A : For Γ} → (σ : Ren Δ Γ) → PfVar Δ (A [ σ ]fᵣ) → Ren Δ (Γ ▹ₚ A)
+
+  πₜ¹ᵣ : Ren Δ (Γ ▹ₜ) → Ren Δ Γ
+  πₜ²ᵣ : Ren Δ (Γ ▹ₜ) → TmVar Δ
+  πₚ¹ᵣ : {Γ Δ : Con} {A : For Γ} → Ren Δ (Γ ▹ₚ A) → Ren Δ Γ
+  πₚ²ᵣ : {Γ Δ : Con} {A : For Γ} → (σ : Ren Δ (Γ ▹ₚ A)) → PfVar Δ (A [ πₚ¹ᵣ σ ]fᵣ)
+  πₜ¹ᵣ (σ ,ₜᵣ t) = σ
+  πₜ²ᵣ (σ ,ₜᵣ t) = t
+  πₚ¹ᵣ (σ ,ₚᵣ pf) = σ
+  πₚ²ᵣ (σ ,ₚᵣ pf) = pf
+
+  liftᵣₜ : Ren Δ Γ → Ren (Δ ▹ₜ) (Γ ▹ₜ)
+  liftᵣₜ εᵣ = εᵣ ,ₜᵣ tvzero
+  liftᵣₜ (σ ,ₜᵣ t) = (liftᵣₜ σ) ,ₜᵣ tvzero
+  liftᵣₜ (σ ,ₚᵣ p) = {!!}
+  idᵣ {◇} = εᵣ
+  idᵣ {Γ ▹ₜ} = liftᵣₜ (idᵣ {Γ})
+  idᵣ {Γ ▹ₚ A} = {!!}
+  
+  εᵣ ∘ᵣ β = εᵣ
+  (α ,ₜᵣ t) ∘ᵣ β = (α ∘ᵣ β) ,ₜᵣ (t [ β ]tvᵣ)
+  (α ,ₚᵣ pf) ∘ᵣ β = (α ∘ᵣ β) ,ₚᵣ substP (PfVar _) (≡sym []fᵣ-∘ᵣ) (pf [ β ]pvᵣ)
+
+  tvzero [ _ ,ₜᵣ tv ]tvᵣ = tv
+  tvnext tv [ σ ,ₜᵣ _ ]tvᵣ = tv [ σ ]tvᵣ
+  var tv [ σ ]tᵣ = var (tv [ σ ]tvᵣ)
+  (R t u) [ σ ]fᵣ = R (t [ σ ]tᵣ) (u [ σ ]tᵣ)
+  (A ⇒ B) [ σ ]fᵣ = (A [ σ ]fᵣ) ⇒ (B [ σ ]fᵣ)
+  (∀∀ A) [ σ ]fᵣ = ∀∀ (A [ (σ ∘ᵣ πₜ¹ᵣ idᵣ) ,ₜᵣ (πₜ²ᵣ idᵣ) ]fᵣ)
+
+
+  {-
+  -- We now show how we can extend renamings
+  rightRen :{A : For Δₜ} → Ren Γₚ Δₚ → Ren Γₚ (Δₚ ▹p⁰ A)
+  rightRen zeroRen = zeroRen
+  rightRen (leftRen x h) = leftRen (pvnext x) (rightRen h)
+  bothRen : {A : For Γₜ} → Ren Γₚ Δₚ → Ren (Γₚ ▹p⁰ A) (Δₚ ▹p⁰ A)
+  bothRen zeroRen = leftRen pvzero zeroRen
+  bothRen (leftRen x h) = leftRen pvzero (leftRen (pvnext x) (rightRen h))
+  reflRen : Ren Γₚ Γₚ
+  reflRen {Γₚ = ◇p} = zeroRen
+  reflRen {Γₚ = Γₚ ▹p⁰ x} = bothRen reflRen
+  -}
+  
+  id = {!!}
+  ε ∘ β = ε
+  (α ,ₜ t) ∘ β = (α ∘ β) ,ₜ (t [ β ]t)
+  (α ,ₚ pf) ∘ β = (α ∘ β) ,ₚ substP (Pf _) (≡sym []f-∘) (pf [ β ]p)
+  
+  var tvzero [ σ ,ₜ t ]t = t
+  var (tvnext tv) [ σ ,ₜ t ]t = var tv [ σ ]t
+  (R t u) [ σ ]f = R (t [ σ ]t) (u [ σ ]t)
+  (A ⇒ B) [ σ ]f = (A [ σ ]f) ⇒ (B [ σ ]f)
+  (∀∀ A) [ σ ]f = ∀∀ (A [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f)
+
+  []t-∘ {β = β ,ₜ t} {t = var tvzero} = {!!}
+  []t-∘ {t = var (tvnext tv)} = {!!}
+  []f-∘ {A = R t u} = {!cong₂ R!}
+  []f-∘ {A = A ⇒ B} = {!!}
+  []f-∘ {A = ∀∀ A} = {!!}
+  
+
+
+  data PfVar where
+    pvzero : {A : For Γ} → PfVar (Γ ▹ₚ A) (A [ πₚ¹ id ]f)
+    pvnext : {A B : For Γ} → PfVar Γ A → PfVar (Γ ▹ₚ B) (A [ πₚ¹ id ]f)
+  data Pf where
+    var : {A : For Γ} → PfVar Γ A → Pf Γ A
+    app : {A B : For Γ} → Pf Γ (A ⇒ B) → Pf Γ A → Pf Γ B
+    lam : {A B : For Γ} → Pf (Γ ▹ₚ A) (B [ πₚ¹ id ]f) → Pf Γ (A ⇒ B)
+    p∀∀e : {A : For (Γ ▹ₜ)} → {t : Tm Γ} → Pf Γ (∀∀ A) → Pf Γ (A [ id ,ₜ t ]f)
+    p∀∀i : {A : For (Γ ▹ₜ)} → Pf (Γ ▹ₜ) A → Pf Γ (∀∀ A)
+
+  var pvzero [ σ ,ₚ pf ]p = {!pf!}
+  var (pvnext pv) [ σ ]p = {!!}
+  app pf pf' [ σ ]p = {!!}
+  lam pf [ σ ]p = {!!}
+  p∀∀e pf [ σ ]p = {!!}
+  p∀∀i pf [ σ ]p = {!!}
+  
+  {-
   {-- TERM CONTEXTS - TERMS - FORMULAE - TERM SUBSTITUTIONS --}
 
   -- Term contexts are isomorphic to Nat
@@ -19,34 +170,13 @@ module FFOLInitial where
   variable
     Γₜ Δₜ Ξₜ : Cont
 
-  -- A term variable is a de-bruijn variable, TmVar n ≈ ⟦0,n-1⟧
-  data TmVar : Cont → Set₁ where
-    tvzero : TmVar (Γₜ ▹t⁰)
-    tvnext : TmVar Γₜ → TmVar (Γₜ ▹t⁰)
-
-  -- For now, we only have term variables (no function symbol)
-  data Tm : Cont → Set₁ where
-    var : TmVar Γₜ → Tm Γₜ
-    
-  -- Now we can define formulæ
-  data For : Cont → Set₁ where
-    R : Tm Γₜ → Tm Γₜ → For Γₜ
-    _⇒_ : For Γₜ → For Γₜ → For Γₜ
-    ∀∀  : For (Γₜ ▹t⁰) → For Γₜ
 
 
 
 
   -- Then we define term substitutions
-  data Subt : Cont → Cont → Set₁ where
-    εₜ : Subt Γₜ ◇t
-    _,ₜ_ : Subt Δₜ Γₜ → Tm Δₜ → Subt Δₜ (Γₜ ▹t⁰)
     
   -- We write down the access functions from the algebra, in restricted versions
-  πₜ¹ : Subt Δₜ (Γₜ ▹t⁰) → Subt Δₜ Γₜ
-  πₜ¹ (σₜ ,ₜ t) = σₜ
-  πₜ² : Subt Δₜ (Γₜ ▹t⁰) → Tm Δₜ
-  πₜ² (σₜ ,ₜ t) = t
   -- And their equalities (the fact that there are reciprocical)
   πₜ²∘,ₜ : {σₜ : Subt Δₜ Γₜ} → {t : Tm Δₜ} → πₜ² (σₜ ,ₜ t) ≡ t
   πₜ²∘,ₜ = refl
@@ -57,9 +187,6 @@ module FFOLInitial where
 
     
   -- We now define the action of term substitutions on terms
-  _[_]t : Tm Γₜ → Subt Δₜ Γₜ → Tm Δₜ
-  var tvzero [ σ ,ₜ t ]t = t
-  var (tvnext tv) [ σ ,ₜ t ]t = var tv [ σ ]t
   
   -- We define weakenings of the term-context for terms
   -- «A term of n variables can be seen as a term of n+1 variables»
@@ -82,10 +209,6 @@ module FFOLInitial where
   wkₜ[]t {α = α ,ₜ t} {var (tvnext tv)} = wkₜ[]t {t = var tv}
   
   -- We can now subst on formulæ
-  _[_]f : For Γₜ → Subt Δₜ Γₜ → For Δₜ
-  (R t u) [ σ ]f = R (t [ σ ]t) (u [ σ ]t)
-  (A ⇒ B) [ σ ]f = (A [ σ ]f) ⇒ (B [ σ ]f)
-  (∀∀ A) [ σ ]f = ∀∀ (A [ lfₜσₜ σ ]f)
 
 
 
@@ -201,16 +324,6 @@ module FFOLInitial where
 
 
   -- With those contexts, we have everything to define proofs
-  data PfVar : (Γₜ : Cont) → (Γₚ : Conp Γₜ) → For Γₜ → Prop₁ where
-    pvzero : {A : For Γₜ} → PfVar Γₜ (Γₚ ▹p⁰ A) A
-    pvnext : {A B : For Γₜ} → PfVar Γₜ Γₚ A → PfVar Γₜ (Γₚ ▹p⁰ B) A
-                                                                
-  data Pf : (Γₜ : Cont) → (Γₚ : Conp Γₜ) → For Γₜ → Prop₁ where
-    var : {A : For Γₜ} → PfVar Γₜ Γₚ A → Pf Γₜ Γₚ A
-    app : {A B : For Γₜ} → Pf Γₜ Γₚ (A ⇒ B) → Pf Γₜ Γₚ A → Pf Γₜ Γₚ B
-    lam : {A B : For Γₜ} → Pf Γₜ (Γₚ ▹p⁰ A) B → Pf Γₜ Γₚ (A ⇒ B)
-    p∀∀e : {A : For (Γₜ ▹t⁰)} → {t : Tm Γₜ} → Pf Γₜ Γₚ (∀∀ A) → Pf Γₜ Γₚ (A [ idₜ ,ₜ t ]f)
-    p∀∀i : {A : For (Γₜ ▹t⁰)} → Pf (Γₜ ▹t⁰) (Γₚ ▹tp) A → Pf Γₜ Γₚ (∀∀ A)
 
 
   -- The action on Cont's morphisms of Pf functor
@@ -237,20 +350,6 @@ module FFOLInitial where
   -- A renaming from a context Γₚ to a context Δₚ means when they are seen
   -- as lists, that every element of Γₚ is an element of Δₚ
   -- In other words, we can prove Γₚ from Δₚ using only proof variables (var)
-  data Ren : Conp Γₜ → Conp Γₜ → Set₁ where
-    zeroRen : Ren ◇p Γₚ
-    leftRen : {A : For Δₜ} → PfVar Δₜ Δₚ A → Ren Δₚ' Δₚ → Ren (Δₚ' ▹p⁰ A) Δₚ
-    
-  -- We now show how we can extend renamings
-  rightRen :{A : For Δₜ} → Ren Γₚ Δₚ → Ren Γₚ (Δₚ ▹p⁰ A)
-  rightRen zeroRen = zeroRen
-  rightRen (leftRen x h) = leftRen (pvnext x) (rightRen h)
-  bothRen : {A : For Γₜ} → Ren Γₚ Δₚ → Ren (Γₚ ▹p⁰ A) (Δₚ ▹p⁰ A)
-  bothRen zeroRen = leftRen pvzero zeroRen
-  bothRen (leftRen x h) = leftRen pvzero (leftRen (pvnext x) (rightRen h))
-  reflRen : Ren Γₚ Γₚ
-  reflRen {Γₚ = ◇p} = zeroRen
-  reflRen {Γₚ = Γₚ ▹p⁰ x} = bothRen reflRen
 
   -- We can extend renamings with term variables
   PfVar▹tp : {A : For Δₜ} → PfVar Δₜ Δₚ A → PfVar (Δₜ ▹t⁰) (Δₚ ▹tp) (A [ wkₜσₜ idₜ ]f)
@@ -279,13 +378,9 @@ module FFOLInitial where
   -- It is not defined between all contexts, only those with the same term context
   data Subp : {Δₜ : Cont} → Conp Δₜ → Conp Δₜ → Prop₁ where
     εₚ : Subp Δₚ ◇p
-    _,ₚ_ : {A : For Δₜ} → (σ : Subp Δₚ Δₚ') → Pf Δₜ Δₚ A → Subp Δₚ (Δₚ' ▹p⁰ A)
+
     
   -- We write down the access functions from the algebra, in restricted versions
-  πₚ¹ : ∀{Γₜ}{Γₚ Δₚ : Conp Γₜ} {A : For Γₜ} → Subp Δₚ (Γₚ ▹p⁰ A) → Subp Δₚ Γₚ
-  πₚ¹ (σₚ ,ₚ pf) = σₚ
-  πₚ² : ∀{Γₜ}{Γₚ Δₚ : Conp Γₜ} {A : For Γₜ} → Subp Δₚ (Γₚ ▹p⁰ A) → Pf Γₜ Δₚ A
-  πₚ² (σₚ ,ₚ pf) = pf
 
   -- The action of Cont's morphisms on Subp
   _[_]σₚ : Subp {Δₜ} Δₚ Δₚ' → (σ : Subt Γₜ Δₜ) → Subp {Γₜ} (Δₚ [ σ ]c) (Δₚ' [ σ ]c)
@@ -339,9 +434,6 @@ module FFOLInitial where
   idₚ : Subp {Δₜ} Δₚ Δₚ
   idₚ {Δₚ = ◇p} = εₚ
   idₚ {Δₚ = Δₚ ▹p⁰ x} = lfₚσₚ (idₚ {Δₚ = Δₚ})
-  _∘ₚ_ : {Γₚ Δₚ Ξₚ : Conp Δₜ} → Subp {Δₜ} Δₚ Ξₚ → Subp {Δₜ} Γₚ Δₚ → Subp {Δₜ} Γₚ Ξₚ
-  εₚ ∘ₚ β = εₚ
-  (α ,ₚ pf) ∘ₚ β = (α ∘ₚ β) ,ₚ (pf [ β ]p)
 
 
 
@@ -514,7 +606,9 @@ module FFOLInitial where
   Pf*-∘ : {Γₜ : Cont} {Γₚ Δₚ Ξₚ : Conp Γₜ} → Pf* Γₜ Δₚ Ξₚ → Pf* Γₜ Γₚ Δₚ → Pf* Γₜ Γₚ Ξₚ
   Pf*-∘ {Ξₚ = ◇p} α β = tt
   Pf*-∘ {Ξₚ = Ξₚ ▹p⁰ A} α β = ⟨ Pf*-∘ (proj₁ α) β , Pf*Pf β (proj₂ α) ⟩
+  -}
 
+  {-
   module InitialMorphism (M : FFOL {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero} {lsuc lzero}) where
     {-# TERMINATING #-}
 
@@ -665,5 +759,7 @@ module FFOLInitial where
     
   --mor : (M : FFOL) → Morphism ffol M
   --mor M = record {InitialMorphism M}
+
+  -}
   
 \end{code}

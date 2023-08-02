@@ -158,6 +158,11 @@ module PropUtil where
   congsubst : {ℓ ℓ' : Level}{A : Set ℓ}{P : A → Set ℓ'}{a a' : A}{e : a ≡ a}{p : P a}{p' : P a} → p ≡ p' → subst P e p ≡ subst P e p'
   congsubst {P = P} {e = refl} h = cong (subst P refl) h
 
+  substpoly : {ℓ ℓ' : Level}{A : Set ℓ}{P : A → Set ℓ'}{f : {ξ : A} → P ξ}
+    {α β : A}{eq : α ≡ β}
+    → subst P eq (f {α}) ≡ f {β}
+  substpoly {eq = refl} = coerefl
+
   substfpoly : {ℓ ℓ' : Level}{A : Set ℓ}{P R : A → Set ℓ'}{α β : A}
     {eq : α ≡ β} {f : {ξ : A} → R ξ → P ξ} {x : R α}
     → coe (cong P eq) (f {α} x) ≡ f (coe (cong R eq) x)

@@ -36,7 +36,44 @@
 		\subsection{Structure of this report}
 	\section{A first account of Completeness and Normalization}
 		\subsection{Normalization for Propositional Logic}
+		\begin{figure}
+			\begin{tcolorbox}
+				\[
+				\begin{array}{lcl}
+					\For & : & \Set \\
+					- \implies - & : & \For \rightarrow \For \rightarrow \For\\
+					ι & : & \For \\
+					\\
+					\Pf & : & \For \rightarrow \Prop^+ \\
+					\lam & : & (\Pf A \rightarrow^+ \Pf B) \rightarrow \Pf (A \implies B)\\
+					\app & : & \Pf (A \implies B) \rightarrow (\Pf A \rightarrow \Pf B)
+				\end{array}
+				\]
+			\end{tcolorbox}
+			\caption{ZOL Sogat Presentation}
+			\label{fig:zol-sogat}
+		\end{figure}
 		\subsection{Normalization for Infinitary First Order Logic}
+		\begin{figure}
+			\begin{tcolorbox}
+				\[
+				\begin{array}{lcl}
+					\For & : & \Set \\
+					- \implies - & : & \For \rightarrow \For \rightarrow \For\\
+					\forall & : & (\operatorname{TM} \rightarrow \For) \rightarrow \For \\
+					\R & : & \operatorname{TM} \rightarrow \operatorname{TM} \rightarrow \For\\
+					\\
+					\Pf & : & \For \rightarrow \Prop^+ \\
+					\lam & : & (\Pf A \rightarrow^+ \Pf B) \rightarrow \Pf (A \implies B)\\
+					\app & : & \Pf (A \implies B) \rightarrow (\Pf A \rightarrow \Pf B)\\
+					\foralli & : & (t : \operatorname{TM} \rightarrow A\;t) \rightarrow \Pf (\forall A)\\
+					\foralle & : & \Pf (\forall A) \rightarrow (t : \operatorname{TM}) \rightarrow \Pf (A\;t)\\
+				\end{array}
+				\]
+			\end{tcolorbox}
+			\caption{ZOL Sogat Presentation}
+			\label{fig:ifol-sogat}
+		\end{figure}
 		\subsection{Merging the two proofs}
 	\section{Predicate Logic}
 		\subsection{SOGAT Presentation of Predicate Logic}
