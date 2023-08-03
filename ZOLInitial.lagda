@@ -109,7 +109,7 @@ module ZOLInitial where
           ; app = app
           }
 
-  module InitialMorphism (M : ZOL {lzero} {lzero} {lzero} {lzero}) where
+  module InitialMorphism (M : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) where
   
       mCon : Con → (ZOL.Con M)
       mFor : {Γ : Con} → For → (ZOL.For M (mCon Γ))
@@ -156,7 +156,7 @@ module ZOLInitial where
         ; e⇒ = refl
         }
 
-  module InitialMorphismUniqueness {M : ZOL {lzero} {lzero} {lzero} {lzero}} {m : Morphism zol M} where
+  module InitialMorphismUniqueness {M : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}} {m : Morphism zol M} where
 
     open InitialMorphism M
     mCon≡ : {Γ : Con} → mCon Γ ≡ (Morphism.mCon m Γ)

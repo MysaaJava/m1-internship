@@ -244,6 +244,12 @@ module PropUtil where
       a : A
       b : B
 
+  record _×p_ (A : Prop ℓ) (B : A → Prop ℓ') : Prop (ℓ ⊔ ℓ') where
+    constructor _,×p_
+    field
+      a : A
+      b : B a
+
   record _×''_ (A : Set ℓ) (B : A → Prop ℓ') : Set (ℓ ⊔ ℓ') where
     constructor _,×''_
     field
@@ -266,6 +272,11 @@ module PropUtil where
   proj×'₁ p = _×'_.a p
   proj×'₂ : {ℓ ℓ' : Level}{A : Set ℓ}{B : Prop ℓ'} → (A ×' B) → B
   proj×'₂ p = _×'_.b p
+
+  proj×p₁ : {ℓ ℓ' : Level}{A : Prop ℓ}{B : A → Prop ℓ'} → (A ×p B) → A
+  proj×p₁ p = _×p_.a p
+  proj×p₂ : {ℓ ℓ' : Level}{A : Prop ℓ}{B : A → Prop ℓ'} → (p : A ×p B) → B (proj×p₁ p)
+  proj×p₂ p = _×p_.b p
 
   proj×''₁ : {ℓ ℓ' : Level}{A : Set ℓ}{B : A → Prop ℓ'} → (A ×'' B) → A
   proj×''₁ p = _×''_.a p

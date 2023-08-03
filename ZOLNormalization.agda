@@ -61,7 +61,8 @@ module ZOLNormalization (PV : Set) where
     u : {F : Form} → {Γ : Con} → Γ ⊢⁰ F → Γ ⊩ᶠ F
   
     u {Var x} h = h
-    u {F ⇒ F₁} h {Γ'} iq hF = u {F₁} (app {Γ'} {F} {F₁} (⊢tran iq h) (q hF))
+    u {F ⇒ F₁} h {Γ'} iq hF = {!!}
+    --u {F ⇒ F₁} h {Γ'} iq hF = u {F₁} (app {Γ'} {F} {F₁} (⊢tran iq h) (q hF))
     u {F ∧∧ G} h = ⟨ (u {F} (ande₁ h)) , (u {G} (ande₂ h)) ⟩
     u {⊤⊤} h = tt
     

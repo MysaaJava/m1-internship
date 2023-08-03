@@ -9,7 +9,8 @@ module ZOL2 where
   open import ListUtil
 
   variable
-    ℓ¹ ℓ² ℓ³ ℓ⁴ ℓ⁵ : Level
+    ℓ¹ ℓ² ℓ³ ℓ⁴ : Level
+    ℓ¹' ℓ²' ℓ³' ℓ⁴' : Level
     
   record ZOL : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴)) where
     infixr 10 _∘_
@@ -77,7 +78,7 @@ module ZOL2 where
       lam : {Γ : Con}{F G : For Γ} → Pf (Γ ▹ₚ F) (G [ πₚ¹ id ]f) → Pf Γ (F ⇒ G)
       app : {Γ : Con}{F G : For Γ} → Pf Γ (F ⇒ G) → Pf Γ F → Pf Γ G
 
-  record Mapping (S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) (D : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴)) where
+  record Mapping (S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) (D : ZOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'}) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
     field
       
       -- We first make the base category with its final object
@@ -87,7 +88,7 @@ module ZOL2 where
       mPf : {Γ : (ZOL.Con S)} {A : ZOL.For S Γ} → ZOL.Pf S Γ A → ZOL.Pf D (mCon Γ) (mFor A)
 
 
-  record Morphism (S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) (D : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴)) where
+  record Morphism (S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) (D : ZOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'}) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
     field m : Mapping S D
     mCon = Mapping.mCon m
     mSub = Mapping.mSub m
@@ -101,4 +102,16 @@ module ZOL2 where
       e⇒ : {Γ : ZOL.Con S}{A B : ZOL.For S Γ} → mFor (ZOL._⇒_ S A B) ≡ ZOL._⇒_ D (mFor A) (mFor B)
       -- No equation needed for lam, app, ∀i, ∀e as their output are in prop
 
+  record TrNat {S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}} {D : ZOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'}} (a : Mapping S D) (b : Mapping S D) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
+    field
+      f : (Γ : ZOL.Con S) → ZOL.Sub D (Mapping.mCon a Γ) (Mapping.mCon b Γ)
+      -- Unneeded because Sub are in prop
+      --eq : (Γ Δ : ZOL.Con S)(σ : ZOL.Sub S Γ Δ) → (ZOL._∘_ D (f Δ) (Mapping.mSub a σ)) ≡ (ZOL._∘_ D (Mapping.mSub b σ) (f Γ))
+
+  _∘TrNat_ : {S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}}{D : ZOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'}}{a b c : Mapping S D} → TrNat a b → TrNat b c → TrNat a c
+  _∘TrNat_ {D = D} α β = record { f = λ Γ → ZOL._∘_ D (TrNat.f β Γ) (TrNat.f α Γ) }
+
+  idTrNat : {S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}}{D : ZOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'}}{a : Mapping S D} → TrNat a a
+  idTrNat {D = D} = record { f = λ Γ → ZOL.id D }
+  
 \end{code}
