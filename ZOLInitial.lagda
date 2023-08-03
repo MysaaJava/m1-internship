@@ -1,4 +1,4 @@
-git s\begin{code}
+\begin{code}
 {-# OPTIONS --prop --rewriting #-}
 
 open import PropUtil

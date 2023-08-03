@@ -211,17 +211,14 @@ module PropUtil where
     {b₁ b₂ : B} {α γ : A b₁} {δ φ : A b₂}
         {eq0 : b₁ ≡ b₂}{eqa : subst A eq0 α ≡ δ}{eqb : subst A eq0 γ ≡ φ} → {a : R b₂ δ φ}{a' : R b₁ α γ} → coe (coep∘-helper {eq0 = eq0} {eqa = eqa} {eqb = eqb}) a ≡ a
   coep∘-helper-coe {eq0 = refl}{refl}{refl} = coerefl
-  {-coep∘' : {ℓ ℓ' ℓ'' : Level}{B : Set ℓ}{A : B → Set ℓ''} {R : (b : B) → A b → A b → Set ℓ'}
-      {b₁ b₂ : B} {α β γ : A b₁} {δ ε φ : A b₂}
-        {p : {b : B}{x y z : A b} → R b x y → R b z x → R b z y}{x : R b₁ β γ}{y : R b₁ α β}
-        {eq0 : b₁ ≡ b₂}{eq1 : subst A eq0 α ≡ δ} {eq2 : subst A eq0 β ≡ ε} {eq3 : subst A eq0 γ ≡ φ}
-        {eq4 : R b₂ δ φ ≡ R b₁ α γ}{eq5 : R b₂ ε φ ≡ R b₁ β γ}{eq6 : R b₂ δ ε ≡ R b₁ α β}
-        → coe eq4
-        (p {b₂} {ε} {φ} {δ} (coe (≡sym (eq5)) x) (coe (≡sym (
-        eq6
-        )) y)) ≡ p {b₁} {β} {γ} {α} x y
-  --coep∘' {p = p} {x} {y} {eq0 = refl} {refl} {refl} {refl} {eq4} = {!!}
-  -}
+
+
+  coefun : {ℓ : Level}{A B C : Set ℓ}{f : B → C}{eq : A ≡ B}
+    → f ≡ coe (cong (λ X → X → C) eq) (λ (x : A) → f (coe eq x))
+  coefun {f = f} {eq = refl} = ≡tran (≡fun (λ x → cong f (≡sym (coerefl {eq = refl})))) (≡sym (coerefl {eq = refl}))
+  coefun' : {ℓ : Level}{A B C : Set ℓ}{f : A → B}{eq : B ≡ C}
+    → (λ (x : A) → coe eq (f x)) ≡ coe (cong (λ X → A → X) eq) (λ (x : A) → f x)
+  coefun' {f = f} {eq = refl} = ≡tran (≡fun (λ x → coerefl)) (≡sym coerefl)
 
 
 
