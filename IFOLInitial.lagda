@@ -118,7 +118,7 @@ module IFOLInitial (TM : Set) where
           ; ∀e = ∀e
           }
 
-  module InitialMorphism (M : IFOL {lzero} {lzero} {lzero} {lzero} TM) where
+  module InitialMorphism (M : IFOL {ℓ¹}{ℓ²}{ℓ³}{ℓ⁴} TM) where
   
       mCon : Con → (IFOL.Con M)
       mFor : {Γ : Con} → For → (IFOL.For M (mCon Γ))

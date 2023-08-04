@@ -9,7 +9,8 @@ module IFOL2 where
   open import ListUtil
 
   variable
-    ℓ¹ ℓ² ℓ³ ℓ⁴ ℓ⁵ : Level
+    ℓ¹ ℓ² ℓ³ ℓ⁴ : Level
+    ℓ¹' ℓ²' ℓ³' ℓ⁴' : Level
     
   record IFOL (TM : Set) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴)) where
     infixr 10 _∘_
@@ -77,7 +78,7 @@ module IFOL2 where
       ∀i : {Γ : Con}{A : TM → For Γ} → ((t : TM) → Pf Γ (A t)) → Pf Γ (∀∀ A)
       ∀e : {Γ : Con}{A : TM → For Γ} → Pf Γ (∀∀ A) → (t : TM) → Pf Γ (A t)
 
-  record Mapping (TM : Set) (S : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM) (D : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴)) where
+  record Mapping (TM : Set) (S : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM) (D : IFOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'} TM) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
     field
       
       -- We first make the base category with its final object
@@ -87,7 +88,7 @@ module IFOL2 where
       mPf : {Γ : (IFOL.Con S)} {A : IFOL.For S Γ} → IFOL.Pf S Γ A → IFOL.Pf D (mCon Γ) (mFor A)
 
 
-  record Morphism (TM : Set)(S : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM) (D : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴)) where
+  record Morphism (TM : Set)(S : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM) (D : IFOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'} TM) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
     field m : Mapping TM S D
     mCon = Mapping.mCon m
     mSub = Mapping.mSub m
@@ -104,4 +105,16 @@ module IFOL2 where
       e⇒ : {Γ : IFOL.Con S}{A B : IFOL.For S Γ} → mFor (IFOL._⇒_ S A B) ≡ IFOL._⇒_ D (mFor A) (mFor B)
       e∀∀ : {Γ : IFOL.Con S}{A : TM → IFOL.For S Γ} → mFor (IFOL.∀∀ S A) ≡ IFOL.∀∀ D (λ t → (mFor (A t)))
       -- No equation needed for lam, app, ∀i, ∀e as their output are in prop
+
+  record TrNat {TM : Set}{S : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM} {D : IFOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'} TM} (a : Mapping TM S D) (b : Mapping TM S D) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
+    field
+      f : (Γ : IFOL.Con S) → IFOL.Sub D (Mapping.mCon a Γ) (Mapping.mCon b Γ)
+      -- Unneeded because Sub are in prop
+      --eq : (Γ Δ : IFOL.Con S)(σ : IFOL.Sub S Γ Δ) → (IFOL._∘_ D (f Δ) (Mapping.mSub a σ)) ≡ (IFOL._∘_ D (Mapping.mSub b σ) (f Γ))
+
+  _∘TrNat_ : {TM : Set}{S : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM}{D : IFOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'} TM}{a b c : Mapping TM S D} → TrNat a b → TrNat b c → TrNat a c
+  _∘TrNat_ {D = D} α β = record { f = λ Γ → IFOL._∘_ D (TrNat.f β Γ) (TrNat.f α Γ) }
+
+  idTrNat : {TM : Set}{S : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM}{D : IFOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'} TM}{a : Mapping TM S D} → TrNat a a
+  idTrNat {D = D} = record { f = λ Γ → IFOL.id D }
 \end{code}
