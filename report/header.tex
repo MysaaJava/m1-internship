@@ -92,22 +92,23 @@
 
 
 % Macros caractères spécifiques au document
-\newcommand\Tm{\operatorname{Tm}}
-\newcommand\Set{\operatorname{Set}}
-\newcommand\For{\operatorname{For}}
-\newcommand\Prop{\operatorname{Prop}}
+\newcommand\Tm{\ensuremath{\operatorname{Tm}}}
+\newcommand\Set{\AgdaPrimitive{Set}}
+\newcommand\For{\ensuremath{\operatorname{For}}}
+\newcommand\Prop{\AgdaPrimitive{Prop}}
 \newcommand\R{\operatorname{R}}
-\newcommand\lam{\operatorname{lam}}
+\newcommand\lam{\ensuremath{\operatorname{lam}}}
 \newcommand\app{\operatorname{app}}
 \newcommand\foralli{\operatorname{\operatorname{\forall i}}}
 \newcommand\foralle{\operatorname{\operatorname{\forall e}}}
-\newcommand\Pf{\operatorname{Pf}\;}
+\newcommand\Pf{\ensuremath{\operatorname{Pf}\;}}
 \newcommand\bCon{\textbf{Con}}
 \newcommand\bSet{\textbf{Set}}
 \newcommand\bProp{\textbf{Prop}}
 
 % Agda Config
 \usepackage{agda}
+%\AgdaNoSpaceAroundCode{}
 \usepackage{newunicodechar}
 \newunicodechar{∘}{\ensuremath{\mathnormal{\circ}}}
 \newunicodechar{≡}{\ensuremath{\mathnormal{\equiv}}}
@@ -124,6 +125,7 @@
 \newunicodechar{ι}{\textiota}
 \newunicodechar{π}{\textpi}
 \newunicodechar{λ}{\textlambda}
+\newunicodechar{ℓ}{\ensuremath{\ell}}
 \newunicodechar{▹}{\ensuremath{\mathnormal{\triangleright}}}
 \newunicodechar{⊢}{\ensuremath{\mathnormal{\vdash}}}
 \newunicodechar{⇒}{\ensuremath{\mathnormal{\Rightarrow}}}

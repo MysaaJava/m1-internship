@@ -2,24 +2,48 @@ define extract
 	cat $(1) | grep -A5000 -m1 $(3) | grep -B5000 -m1 $(4) | head -n -1 | sed 's/\\>\[6\]/\\>\[0\]/g' > $(2)
 endef
 
+define split
+	last=-1;i=1;for cur in $$(grep -n -e "--\\\\#" $(1) | cut -d':' -f1); do if [ ! "-1" -eq $$last ]; then dif=$$((cur-last-1));cat $(1) | head -n $$((cur-2)) | tail -n $$((dif-1)) > $(2)$$i$(3); i=$$((i+1)); fi; last=$$cur; done
+endef
+
 all: report/build/M1Report.pdf
 
 latex/FFOL.tex: FFOL.lagda
 	agda --latex $<
 	cp latex/agda.sty report/agda.sty
+latex/ZOL.tex: ZOL2.lagda
+	agda --latex $<
+	cp latex/agda.sty report/agda.sty
+	mv latex/ZOL2.tex latex/ZOL.tex
 latex/FFOLInitial.tex: FFOLInitial.lagda
 	agda --latex --allow-unsolved-metas $<
 	cp latex/agda.sty report/agda.sty
 
-report/build/M1Report.pdf: agda-tex-FFOL agda-tex-FIni
+report/build/M1Report.pdf: agda-tex-FFOL agda-tex-FIni agda-tex-ZOL
 	$(cd report/; latexmk -pdf -xelatex -silent -shell-escape -outdir=build/ -synctex=1 "M1Report")
 
 agda-tex-FIni: latex/FFOLInitial.tex
 	mkdir -p report/agda
-	@$(call extract,latex/FFOLInitial.tex,report/agda/ICont.tex,'Term\\ contexts\\ are\\ isomorphic\\ to\\ Nat','\\>\[0\]\\<')
-	@$(call extract,latex/FFOLInitial.tex,report/agda/ITm.tex,'A\\ term\\ variable\\ is\\ a\\ de-bruijn','\\>\[0\]\\<')
-	@$(call extract,latex/FFOLInitial.tex,report/agda/IFor.tex,'Now\\ we\\ can\\ define\\ formul','\\AgdaEmptyExtraSkip')
-	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubt.tex,'Then\\ we\\ define\\ term\\ substitutions','\\>\[0\]\\<')
+	1 Cont
+	--2
+	3 Tm
+	4 For
+	5 Subt
+	--6 Subt-accessors
+	7 SubtT
+	SubtF
+	IdComp
+	Conp
+	SubtC
+	ConpTp
+	Pf
+	Ren
+	Subp
+	SubtP
+	SubtS
+	SubpP
+	IdCompP
+	CExt
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubtT.tex,'We\\ now\\ define\\ the\\ action\\ of\\ term\\ substitutions','\\>\[0\]\\<')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/ISubtF.tex,'We\\ can\\ now\\ subst\\ on\\ formul','\\AgdaEmptyExtraSkip')
 	@$(call extract,latex/FFOLInitial.tex,report/agda/IIdCompT.tex,'We\\ now\\ can\\ define\\ identity\\ and\\ composition\\ of\\ term\\ substitutions','\\AgdaEmptyExtraSkip')
@@ -52,6 +76,10 @@ agda-tex-FFOL: latex/FFOL.tex
 	@$(call extract,latex/FFOL.tex,report/agda/LamApp.tex,'\\>\[6\]\\AgdaField{lam}',"AgdaEmptyExtraSkip")
 	@$(call extract,latex/FFOL.tex,report/agda/ForallR.tex,'\\>\[6\]\\AgdaField{∀i}',"AgdaEmptyExtraSkip")
 
-.PHONY: clean agda-tex agda-tex-FFOL
+agda-tex-ZOL: latex/ZOL.tex
+	mkdir -p report/agda
+	$(call split,"latex/ZOL.tex","report/agda/ZOL-",".tex")
+
+.PHONY: clean agda-tex agda-tex-FFOL agda-tex-ZOL agda-tex-FIni
 clean:
 	rm -fr *.agdai report/agda latex report/build

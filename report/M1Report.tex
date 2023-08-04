@@ -11,7 +11,6 @@
 	\\[1ex] and Thorsten Altenkirsch (University of Notthingham, United Kingdom)}
 
 \begin{document}
-	
 	\doparttoc
 	\maketitle
 	
@@ -33,26 +32,53 @@
 			
 			Then, our goal is for each logic to prove the completeness of a specific class of models. Completeness can be stated as such: \enquote{For any formula that is \emph{true} in all models of the specified class, then the formula has a proof in the syntax}. By being true in the model, one can understand that the formula has a proof from the model.
 		\subsection{Motivation}
+			Ambrus is currently studying Second Order Generalized Algebraic Theories (or SOGAT) and he is trying to state a better definition than that first defined in Taichi Uemura's thesis \cite{UemuraThesis2021}. He also wants to write a paper with examples to show why they are useful, and adding some examples for different frameworks of logic can help with that.
 		\subsection{Structure of this report}
 	\section{A first account of Completeness and Normalization}
-		\subsection{Normalization for Propositional Logic}
-		\begin{figure}
+		\subsection{Propositional Logic as a SOGAT}
+		
+			The first and most simple logical framework we can work with is that of Propositional Logic (refered as Zero Order Logic or ZOL in the code). We also have only one axiom rule for creating formulæ: the $\iota$ rule. Propositional Logic is usually done with a fixed set of propositional variables instead of only one that is fixed, but adding them does not make the construction more interesting, only more complicated.
+			
+			In order to state all the definition, functions and more importantly, all the equalities that a model of Propositional Logic has to verify, we will write down Propositional Logic as a SOGAT. It goes as described in \autoref{fig:zol-sogat}.
+			
+			\begin{figure}
+				\begin{tcolorbox}
+					\[
+					\begin{array}{lcl}
+						\For & : & \Set \\
+						- \implies - & : & \For \rightarrow \For \rightarrow \For\\
+						ι & : & \For \\
+						\\
+						\Pf & : & \For \rightarrow \Prop^+ \\
+						\lam & : & (\Pf A \rightarrow^+ \Pf B) \rightarrow \Pf (A \implies B)\\
+						\app & : & \Pf (A \implies B) \rightarrow (\Pf A \rightarrow \Pf B)
+					\end{array}
+					\]
+				\end{tcolorbox}
+				\caption{ZOL Sogat Presentation}
+				\label{fig:zol-sogat}
+			\end{figure}
+			
+			We can see that in this Sogat, we have two sorts (\For and \Pf), each of which have two constructors. Althrough Sogat can have equations in them, i won't use any in that report.
+			
+			A keen eye may have seen that there is a problem with the \lam constructor. Its type is indeed not strictly positive (i.e. the type \Pf appears to the left of an arrow in the arguments of the constructor). That's why we use a ${}^+$ on the arrow, and we use the same ${}^+$ on the sort of \Pf. These arrow means that \Pf should be \emph{locally representable}. It basically means that we have to use \emph{proof variables} to implement this Sogat.
+		
+		\subsection{From SOGAT to GAT}
+		
 			\begin{tcolorbox}
-				\[
-				\begin{array}{lcl}
-					\For & : & \Set \\
-					- \implies - & : & \For \rightarrow \For \rightarrow \For\\
-					ι & : & \For \\
-					\\
-					\Pf & : & \For \rightarrow \Prop^+ \\
-					\lam & : & (\Pf A \rightarrow^+ \Pf B) \rightarrow \Pf (A \implies B)\\
-					\app & : & \Pf (A \implies B) \rightarrow (\Pf A \rightarrow \Pf B)
-				\end{array}
-				\]
+				\agda{agda/ZOL-4.tex}
 			\end{tcolorbox}
-			\caption{ZOL Sogat Presentation}
-			\label{fig:zol-sogat}
-		\end{figure}
+			
+			Unfortunately, Agda cannot understand SOGATs directly (yet). So we have to convert this SOGAT into a GAT. I will describe the process in this section, each line of the SOGAT giving birth to a set of sorts, constructors and equations in the GAT.
+		
+			\begin{tcolorbox}
+				\begin{AgdaSuppressSpace}
+				%\agda{agda/ZOL-Con.tex}
+				\end{AgdaSuppressSpace}
+				\vspace{-5.5ex}
+			\end{tcolorbox}
+		
+		
 		\subsection{Normalization for Infinitary First Order Logic}
 		\begin{figure}
 			\begin{tcolorbox}

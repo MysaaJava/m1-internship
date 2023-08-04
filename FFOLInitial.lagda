@@ -578,6 +578,7 @@ module FFOLInitial where
     mForT∀∀ : {Γₜ : Cont}{A : For (Γₜ ▹t⁰)} → mForT {Γₜ} (∀∀ A) ≡ FFOL.∀∀ M (mForT {Γₜ ▹t⁰} A)
     mForT∀∀ = refl
     mForP∀∀ : {Γₜ : Cont}{Γₚ : Conp Γₜ}{A : For (Γₜ ▹t⁰)} → mForP {Γₜ} {Γₚ} (∀∀ A) ≡ FFOL.∀∀ M (subst (FFOL.For M) (e▹ₜP {Γₜ} {Γₚ}) (mForP {Γₜ ▹t⁰} {Γₚ ▹tp} A))
+    mForP∀∀ = ?
     -- mFor∀∀ : {Γ : Con}{A : For ((Con.t Γ) ▹t⁰)} → mFor {Γ} (∀∀ A) ≡ FFOL.∀∀ M (mFor {Γ ▹t} A)
 
     --mForL : {Γ : Con}{A : For (Con.t Γ ▹t⁰)}{t : Tm (Con.t Γ)} → FFOL._[_]f M (mFor {Γ = {!Γ ▹t!}} A) (FFOL._,ₜ_ M (FFOL.id M) (mTm {Γ = Γ} t)) ≡ mFor {Γ = Γ} (A [ idₜ ,ₜ t ]f)
