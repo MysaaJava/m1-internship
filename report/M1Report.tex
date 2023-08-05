@@ -71,13 +71,6 @@
 			
 			Unfortunately, Agda cannot understand SOGATs directly (yet). So we have to convert this SOGAT into a GAT. I will describe the process in this section, each line of the SOGAT giving birth to a set of sorts, constructors and equations in the GAT.
 		
-			\begin{tcolorbox}
-				\begin{AgdaSuppressSpace}
-				%\agda{agda/ZOL-Con.tex}
-				\end{AgdaSuppressSpace}
-				\vspace{-5.5ex}
-			\end{tcolorbox}
-		
 		
 		\subsection{Normalization for Infinitary First Order Logic}
 		\begin{figure}
@@ -141,22 +134,22 @@
 			
 			We will first define this category, its initial object, and every rule that these components should obey.
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/Con.tex}
-				\vspace{-7.5ex}
+				
+				\agda{agda/FFOL-1.tex}
+				
 			\end{tcolorbox}
 		
 			We can now define terms, formulæ and proofs, which are functors from $\bCon$ to $\bSet$ (and proofs are a more complex functor from $\bCon$ to XXXXX). For each of them, we define the action of the functors on morphisms, and we also write the equalities that describe the functionality.
 			
-			\def\agdasep{\vspace{-10.5ex}\begin{center}\rule{0.9\linewidth}{0.4pt}\end{center}\vspace{-3.5ex}}
+			\def\agdasep{\begin{center}\vspace{-2.5ex}\rule{0.9\linewidth}{0.4pt}\vspace{-1ex}\end{center}}
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/Tm.tex}
+				
+				\agda{agda/FFOL-2.tex}
 				\agdasep
-				\agda{agda/For.tex}
+				\agda{agda/FFOL-4.tex}
 				\agdasep
-				\agda{agda/Pf.tex}
-				\vspace{-7.5ex}
+				\agda{agda/FFOL-5.tex}
+				
 			\end{tcolorbox}
 		
 			Then we define our context extensions. We also have constructors for substitutions to extended contexts. This constructor should work as a product, which means that we have two \enquote{projections} that can revert the mapping. The constructor should finally be consistent with $\circ$.
@@ -164,14 +157,14 @@
 			Please ignore the \verb*|substP| for now, this notion will be explained in \autoref{sec:transport-hell}.
 		
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/Tm+.tex}
-				\vspace{-7.5ex}
+				
+				\agda{agda/FFOL-3.tex}
+				
 			\end{tcolorbox}
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/Pf+.tex}
-				\vspace{-7.5ex}
+				
+				\agda{agda/FFOL-7.tex}
+				
 			\end{tcolorbox}
 	
 			Finally, with those context extensions, we can define our operators on functions and proofs. Those operators have to commute with the images of substitutions (the equations are unneeded for proof operators, as they are in prop).
@@ -179,17 +172,17 @@
 			We can take a closer look at where our apparently strictly positive application should be ($\lam$ and $\foralli$). We can see that instead of an application, we only have a formula (or a proof) that goes from an extended context to a base contexts. This \enquote{removal} of the term variable stands for the strictly positive function that would have taken a term/proof as a parameter.
 	
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/R.tex}
+				
+				\agda{agda/FFOL-9.tex}
 				\agdasep
-				\agda{agda/Imp.tex}
+				\agda{agda/FFOL-10.tex}
 				\agdasep
-				\agda{agda/Forall.tex}
+				\agda{agda/FFOL-11.tex}
 				\agdasep
-				\agda{agda/LamApp.tex}
+				\agda{agda/FFOL-13.tex}
 				\agdasep
-				\agda{agda/ForallR.tex}
-				\vspace{-7.5ex}
+				\agda{agda/FFOL-14.tex}
+				
 			\end{tcolorbox}
 		
 			We now have a generalized algebraic theory that describes all the models of Predicate logic. A model is indeed an implementation of the agda record described above.
@@ -206,19 +199,19 @@
 		
 			So, we first define the term contexts, which simply describes how many terms they are in the context (therefore, it is isomorphic to Nat).
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/ICont.tex}
-				\vspace{-7.5ex}
+				
+				\agda{agda/FFOL-I-1.tex}
+				
 			\end{tcolorbox}
 		
 			Then, we can define terms (which can only be term variables in our simplified version), and formulæ (with only one binary relation). They are both indexed only on a term context, and we will need make them $\bCon \rightarrow \bSet$ rather than $\textbf{Cont} \rightarrow \bSet$. But this will be only a trivial extraction of the $\textbf{Cont}$ inside the $\bCon$, as we can notice that the terms and formulæ defined by a context doesn't depend on the proof variables available. We simply give the constructors described in the algebra.
 			
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/ITm.tex}
+				
+				\agda{agda/FFOL-I-3.tex}
 				\agdasep
-				\agda{agda/IFor.tex}
-				\vspace{-7.5ex}
+				\agda{agda/FFOL-I-4.tex}
+				
 			\end{tcolorbox}
 		
 			We now can define term substitutions. The algebra gives us two ways of constructing them: with $,_t$ and as a morphism from the initial object. That's how we make our constructor The two projections $\pi_t^1$ and $\pi_t^2$ are then simply obtained by destroying the $,_t$ constructor and getting the first or second term. The equalities between $\pi_t¹$, $\pi_t²$ and $,_t$ can be proven easily in that layout.
@@ -232,15 +225,15 @@
 			You can see we use some helper functions that are called $\operatorname{wk}_t$ and $\operatorname{lf}_t$. Those stands for weakening and lifting. I don't show their definitions here, because they are only helper functions, but $\operatorname{wk}_t$ means that from something going from a context $\Gamma$, we create something going from the context $\Gamma \triangleright_t$ that does not uses the added variable. $\operatorname{lf}_t$ means that we add one variable in the source, one variable in the goal, and that this variable is mapped to itself.
 			
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/ISubt.tex}
+				
+				\agda{agda/FFOL-I-5.tex}
 				\agdasep
-				\agda{agda/ISubtT.tex}
+				\agda{agda/FFOL-I-7.tex}
 				\agdasep
-				\agda{agda/ISubTF.tex}
+				\agda{agda/FFOL-I-9.tex}
 				\agdasep
-				\agda{agda/IIdCompT.tex}
-				\vspace{-7.5ex}
+				\agda{agda/FFOL-I-10.tex}
+				
 			\end{tcolorbox}
 		
 			We can now start creating the other category. For that, we can define the base set of the category like we did with term contexts. But this time, our extension constructor has another parameter: The formula the added proof proves. Therefore, we have a dependency of $\operatorname{Conp}$ on $\operatorname{Cont}$, because formula is defined in conp.
@@ -250,13 +243,13 @@
 			We will finally create another operator on $\textbf{Conp}$: $\triangleright tp$. This operator does a term extension of a proof context, which doesn't add any information to the proofs, it only adds one unused variable to them (we substitute all the proofs with $\operatorname{wk}_t \operatorname{id}_t$). It can be understood as the action of the general $\triangleright_t$ functor on $\textbf{Conp}$.
 		
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/IConp.tex}
+				
+				\agda{agda/FFOL-I-12.tex}
 				\agdasep
-				\agda{agda/ISubtC.tex}
+				\agda{agda/FFOL-I-14.tex}
 				\agdasep
-				\agda{agda/IConpTp.tex}
-				\vspace{-7.5ex}
+				\agda{agda/FFOL-I-16.tex}
+				
 			\end{tcolorbox}
 		
 			We now have everything we need to define proofs. As we are in the syntax, the only constructors for proofs will be those defined in the algebra, plus proof variables. These definitions are pretty straightforward as they are directly induced from the algebra. You can notice that we have separated term and proof contexts in the definitions, but it is only for the sake of readability, because operations on proofs will often modify the proof context without changing the term context.
@@ -264,11 +257,11 @@
 			We also define the action of term-substitutions on proofs (because Pf is a functor that is indexed by $\textbf{Cont}$). Terms substitutions does nothing to the proofs, they only affect formulæ and terms, which you cannot find inside a proof. So it is only changing the type of a proof from $\Pf Δ_t\;Δ_p\;A$ to $\Pf Γ_t\;Δ_p[σ]\; A[σ]$.
 		
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/IPf.tex}
+				
+				\agda{agda/FFOL-I-18.tex}
 				\agdasep
-				\agda{agda/ISubtP.tex}
-				\vspace{-7.5ex}
+				\agda{agda/FFOL-I-19.tex}
+				
 			\end{tcolorbox}
 		
 			Before we can define proof substitutions, we need to define a weaker version of them, that are called \emph{renamings}. A renaming from a proof context $Γ_p$ to a proof context $Δ_p$ that have the same term-context, is a way of re-ordering, duplicating or deleting the proofs contained inside of $Δ_p$. If we were to understand proof contexts as list of formulæ, then a renaming from $Γ_p$ to $Δ_p$ would be a witness that each formula in $Δ_p$ is contained at least one time in $Γ_p$. That's why we use $\operatorname{PfVar}$, as $\operatorname{PfVar} Γ_t Γ_p A$ is a witness that proof-context $Γ_p$ contains the formula $A$.
@@ -276,9 +269,9 @@
 			For these renamings, we make some constructors, for example the identity renaming, or the weakening of a renaming. We will finally make a operator that weakens a proof in $Γ_p$ with a renaming from $Γ_p$ to $Δ_p$ into a proof in $Δ_p$.
 			
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/IRen.tex}
-				\vspace{-7.5ex}
+				
+				\agda{agda/FFOL-I-20.tex}
+				
 			\end{tcolorbox}
 		
 			Now, we are defining a complete proof substitution, that can also be understood as a list a proofs of the formulæ described in the goal proof-context.
@@ -288,11 +281,11 @@
 			Again, these substitutions are a functor over the category $\textbf{Cont}$, so we have to construct the action on morphisms, which is simply applying the transformations to all the proofs contained in the substitution.
 			
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/ISubp.tex}
+				
+				\agda{agda/FFOL-I-22.tex}
 				\agdasep
-				\agda{agda/ISubtS.tex}
-				\vspace{-7.5ex}
+				\agda{agda/FFOL-I-24.tex}
+				
 			\end{tcolorbox}
 		
 			With this new kind of substitution, we can substitute on proofs (that's what they're for). In other words, we have to describe the action of the $\Pf$ functor on the morphisms of the category $\textbf{Conp}$.
@@ -302,9 +295,9 @@
 			Again, we have defined $\operatorname{wk}_p$ and $\operatorname{lf}_p$. The former will add an unused proof variable (an assumption) in a substitution, and the latter adds a formula in the goal which is proven using an assumption.
 		
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/ISubpP.tex}
-				\vspace{-7.5ex}
+				
+				\agda{agda/FFOL-I-26.tex}
+				
 			\end{tcolorbox}
 		
 			This definition of proof substitutions allows us to define the categorical operators for proof substitutions. 
@@ -314,9 +307,9 @@
 			The proofs of these laws contains a lot of transports, which will be described more precisely in \autoref{sec:transport-hell}.
 			
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/IIdCompP.tex}
-				\vspace{-7.5ex}
+				
+				\agda{agda/FFOL-I-27.tex}
+				
 			\end{tcolorbox}
 		
 			The last step is to merge our two kinds of contexts and substitutions in order to match the algebra.
@@ -324,13 +317,13 @@
 			For contexts, we simply have a record type. But for substitutions, we defined Subp to only describe substitutions between Conp{\footnotesize s} with \emph{the same Conp}. Our solution is to understand global substitutions as a sequence of substitutions, first on terms, and then on proofs. That's why the \enquote{proof} part of the substitution can only be applyed to proofs on $\Delta_p [t]p$, i.e. proofs that have already been term-substituted by the \enquote{term} part of the substitution. The definition of the algebra's substitution is given after, and you can see that substitutions works exactly as described, first, the proof and everything inside is substituted using the \enquote{term} part of the substitution, and only after that the \enquote{proof} part of the substitution is applied.
 		
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/ICon.tex}
+				
+				\agda{agda/FFOL-I-28.tex}
 				\agdasep
-				\agda{agda/ISub.tex}
-				\vspace{-13.5ex}
-				\begin{center}\rule{0.9\linewidth}{0.4pt}\end{center}
-				\vspace{-3ex}
+				\agda{agda/FFOL-I-30.tex}
+				
+				\agdasep
+				
 				\begin{code}
 					\>[4]\AgdaOperator{\AgdaField{\AgdaUnderscore{}[\AgdaUnderscore{}]p}}\AgdaSpace{}%
 					\AgdaSymbol{=}\AgdaSpace{}%
@@ -348,18 +341,18 @@
 					\AgdaBound{σ}\AgdaSpace{}%
 					\AgdaOperator{\AgdaFunction{]p}}\<%
 				\end{code}
-				\vspace{-5ex}
+				
 			\end{tcolorbox}
 		
 			And we can finally define our categorical operators for the merged version. They are only concatenation of the previously defined operators, so no hard logic here. Those constructions are obviously followed by equations needed for the algebra.
 			
 			\begin{tcolorbox}
-				\vspace{-2ex}
-				\agda{agda/IIdComp.tex}
-				\vspace{-3ex}
+				
+				\agda{agda/FFOL-I-32.tex}
+				
 				\agdasep
-				\agda{agda/ICExt.tex}
-				\vspace{-7.5ex}
+				\agda{agda/FFOL-I-33.tex}
+				
 			\end{tcolorbox}
 		
 		\subsection{Transport Hell}

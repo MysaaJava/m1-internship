@@ -16,7 +16,7 @@ module FFOL where
     infixr 5 _⊢_
     field
       
-      -- We first make the base category with its terminal object
+      --# We first make the base category with its terminal object
       Con : Set ℓ¹
       Sub : Con → Con → Set ℓ⁵ -- It makes a category
       _∘_ : {Γ Δ Ξ : Con} → Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
@@ -29,14 +29,14 @@ module FFOL where
       ε : {Γ : Con} → Sub Γ ◇ -- The morphism from any object to the terminal
       ε-u : {Γ : Con} → {σ : Sub Γ ◇} → σ ≡ ε {Γ}
 
-      -- Functor Con → Set called Tm
+      --# Functor Con → Set called Tm
       Tm : Con → Set ℓ²
       _[_]t : {Γ Δ : Con} → Tm Γ → Sub Δ Γ → Tm Δ -- Action on morphisms
       []t-id : {Γ : Con} → {x : Tm Γ} → x [ id {Γ} ]t ≡ x
       []t-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ}{β : Sub Δ Γ} → {t : Tm Γ}
         → t [ β ∘ α ]t ≡ (t [ β ]t) [ α ]t
 
-      -- Tm : Set⁺
+      --# Tm : Set⁺
       _▹ₜ : Con → Con
       πₜ¹ : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Sub Δ Γ
       πₜ² : {Γ Δ : Con} → Sub Δ (Γ ▹ₜ) → Tm Δ
@@ -47,28 +47,29 @@ module FFOL where
       ,ₜ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{t : Tm Γ}
         → (σ ,ₜ t) ∘ δ ≡ (σ ∘ δ) ,ₜ (t [ δ ]t)
 
-      -- Functor Con → Set called For
+      --# Functor Con → Set called For
       For : Con → Set ℓ³
       _[_]f : {Γ Δ : Con} → For Γ → Sub Δ Γ → For Δ -- Action on morphisms
       []f-id : {Γ : Con} → {F : For Γ} → F [ id {Γ} ]f ≡ F
       []f-∘ : {Γ Δ Ξ : Con} → {α : Sub Ξ Δ} → {β : Sub Δ Γ} → {F : For Γ}
         → F [ β ∘ α ]f ≡ (F [ β ]f) [ α ]f
 
-      -- Functor Con × For → Prop called Pf or ⊢
+      --# Functor Con × For → Prop called Pf or ⊢
       _⊢_ : (Γ : Con) → For Γ → Prop ℓ⁴
       -- Action on morphisms
       _[_]p : {Γ Δ : Con} → {F : For Γ} → Γ ⊢ F → (σ : Sub Δ Γ) → Δ ⊢ (F [ σ ]f)
-      -- Equalities below are useless because Γ ⊢ F is in prop
+      --# Equalities below are useless because Γ ⊢ F is in prop
       -- []p-id : {Γ : Con} → {F : For Γ} → {prf : Γ ⊢ F}
       --  → prf [ id {Γ} ]p ≡ prf
       -- []p-∘ : {Γ Δ Ξ : Con}{α : Sub Ξ Δ}{β : Sub Δ Γ}{F : For Γ}{prf : Γ ⊢ F}
       --  → prf [ α ∘ β ]p ≡ (prf [ β ]p) [ α ]p
 
-      -- → Prop⁺
+      --# → Prop⁺
       _▹ₚ_ : (Γ : Con) → For Γ → Con
       πₚ¹ : {Γ Δ : Con}{F : For Γ} → Sub Δ (Γ ▹ₚ F) → Sub Δ Γ
       πₚ² : {Γ Δ : Con}{F : For Γ} → (σ : Sub Δ (Γ ▹ₚ F)) → Δ ⊢ (F [ πₚ¹ σ ]f)
       _,ₚ_ : {Γ Δ : Con}{F : For Γ} → (σ : Sub Δ Γ) → Δ ⊢ (F [ σ ]f) → Sub Δ (Γ ▹ₚ F)
+      --# And its equalities
       ,ₚ∘πₚ : {Γ Δ : Con}{F : For Γ}{σ : Sub Δ (Γ ▹ₚ F)} → (πₚ¹ σ) ,ₚ (πₚ² σ) ≡ σ
       πₚ¹∘,ₚ : {Γ Δ : Con}{σ : Sub Δ Γ}{F : For Γ}{prf : Δ ⊢ (F [ σ ]f)}
         → πₚ¹ (σ ,ₚ prf) ≡ σ
@@ -80,34 +81,35 @@ module FFOL where
 
       
       {-- FORMULAE CONSTRUCTORS --}
-      -- Formulas with relation on terms
+      --# Formulas with relation on terms
       R : {Γ : Con} → (t u : Tm Γ) → For Γ
       R[] : {Γ Δ : Con} → {σ : Sub Δ Γ} → {t u : Tm Γ}
         → (R t u) [ σ ]f ≡ R (t [ σ ]t) (u [ σ ]t)
 
-      -- Implication
+      --# Implication
       _⇒_ : {Γ : Con} → For Γ → For Γ → For Γ
       []f-⇒ : {Γ Δ : Con} → {F G : For Γ} → {σ : Sub Δ Γ}
         → (F ⇒ G) [ σ ]f ≡ (F [ σ ]f) ⇒ (G [ σ ]f)
 
-      -- Forall
+      --# Forall
       ∀∀ : {Γ : Con} → For (Γ ▹ₜ) → For Γ
       []f-∀∀ : {Γ Δ : Con} → {F : For (Γ ▹ₜ)} → {σ : Sub Δ Γ}
         → (∀∀ F) [ σ ]f ≡ (∀∀ (F [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f))
 
+      --#
       {-- PROOFS CONSTRUCTORS --}
       -- Again, we don't have to write the _[_]p equalities as Proofs are in Prop
       
-      -- Lam & App
+      --# Lam & App
       lam : {Γ : Con}{F G : For Γ} → (Γ ▹ₚ F) ⊢ (G [ πₚ¹ id ]f) → Γ ⊢ (F ⇒ G)
       app : {Γ : Con}{F G : For Γ} → Γ ⊢ (F ⇒ G) → Γ ⊢ F → Γ ⊢ G
 
-      -- ∀i and ∀e
+      --# ∀i and ∀e
       ∀i : {Γ : Con}{F : For (Γ ▹ₜ)} → (Γ ▹ₜ) ⊢ F → Γ ⊢ (∀∀ F)
       ∀e : {Γ : Con}{F : For (Γ ▹ₜ)} → Γ ⊢ (∀∀ F) → {t : Tm Γ} → Γ ⊢ ( F [(id {Γ}) ,ₜ t ]f)
 
 
-    -- Examples
+    --# Examples
     -- Proof utils
     forall-in : {Γ Δ : Con} {σ : Sub Γ Δ} {A : For (Δ ▹ₜ)} → Γ ⊢ ∀∀ (A [ (σ ∘ πₜ¹ id) ,ₜ πₜ² id ]f) → Γ ⊢ (∀∀ A [ σ ]f)
     forall-in {Γ = Γ} f = substP (λ F → Γ ⊢ F) (≡sym ([]f-∀∀)) f

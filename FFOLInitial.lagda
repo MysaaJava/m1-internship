@@ -11,15 +11,16 @@ module FFOLInitial where
 
   {-- TERM CONTEXTS - TERMS - FORMULAE - TERM SUBSTITUTIONS --}
 
-  -- Term contexts are isomorphic to Nat
+  --# Term contexts are isomorphic to Nat
   data Cont : Set₁ where
     ◇t : Cont
     _▹t⁰ : Cont → Cont
-    
+
+  --#
   variable
     Γₜ Δₜ Ξₜ : Cont
 
-  -- A term variable is a de-bruijn variable, TmVar n ≈ ⟦0,n-1⟧
+  --# A term variable is a de-bruijn variable, TmVar n ≈ ⟦0,n-1⟧
   data TmVar : Cont → Set₁ where
     tvzero : TmVar (Γₜ ▹t⁰)
     tvnext : TmVar Γₜ → TmVar (Γₜ ▹t⁰)
@@ -28,7 +29,7 @@ module FFOLInitial where
   data Tm : Cont → Set₁ where
     var : TmVar Γₜ → Tm Γₜ
     
-  -- Now we can define formulæ
+  --# Now we can define formulæ
   data For : Cont → Set₁ where
     R : Tm Γₜ → Tm Γₜ → For Γₜ
     _⇒_ : For Γₜ → For Γₜ → For Γₜ
@@ -37,12 +38,12 @@ module FFOLInitial where
 
 
 
-  -- Then we define term substitutions
+  --# Then we define term substitutions
   data Subt : Cont → Cont → Set₁ where
     εₜ : Subt Γₜ ◇t
     _,ₜ_ : Subt Δₜ Γₜ → Tm Δₜ → Subt Δₜ (Γₜ ▹t⁰)
     
-  -- We write down the access functions from the algebra, in restricted versions
+  --# We write down the access functions from the algebra, in restricted versions
   πₜ¹ : Subt Δₜ (Γₜ ▹t⁰) → Subt Δₜ Γₜ
   πₜ¹ (σₜ ,ₜ t) = σₜ
   πₜ² : Subt Δₜ (Γₜ ▹t⁰) → Tm Δₜ
@@ -56,12 +57,12 @@ module FFOLInitial where
   ,ₜ∘πₜ {σₜ = σₜ ,ₜ t} = refl
 
     
-  -- We now define the action of term substitutions on terms
+  --# We now define the action of term substitutions on terms
   _[_]t : Tm Γₜ → Subt Δₜ Γₜ → Tm Δₜ
   var tvzero [ σ ,ₜ t ]t = t
   var (tvnext tv) [ σ ,ₜ t ]t = var tv [ σ ]t
   
-  -- We define weakenings of the term-context for terms
+  --# We define weakenings of the term-context for terms
   -- «A term of n variables can be seen as a term of n+1 variables»
   wkₜt : Tm Γₜ → Tm (Γₜ ▹t⁰)
   wkₜt (var tv) = var (tvnext tv)
@@ -81,7 +82,7 @@ module FFOLInitial where
   wkₜ[]t {α = α ,ₜ t} {var tvzero} = refl
   wkₜ[]t {α = α ,ₜ t} {var (tvnext tv)} = wkₜ[]t {t = var tv}
   
-  -- We can now subst on formulæ
+  --# We can now subst on formulæ
   _[_]f : For Γₜ → Subt Δₜ Γₜ → For Δₜ
   (R t u) [ σ ]f = R (t [ σ ]t) (u [ σ ]t)
   (A ⇒ B) [ σ ]f = (A [ σ ]f) ⇒ (B [ σ ]f)
@@ -90,7 +91,7 @@ module FFOLInitial where
 
 
 
-  -- We now can define identity and composition of term substitutions       
+  --# We now can define identity and composition of term substitutions       
   idₜ : Subt Γₜ Γₜ
   idₜ {◇t} = εₜ
   idₜ {Γₜ ▹t⁰} = lfₜσₜ (idₜ {Γₜ})
@@ -98,7 +99,7 @@ module FFOLInitial where
   εₜ ∘ₜ β = εₜ
   (α ,ₜ x) ∘ₜ β = (α ∘ₜ β) ,ₜ (x [ β ]t)
 
-  -- We now have to show all their equalities (idₜ and ∘ₜ respect []t, []f, wkₜ, lfₜ, categorical rules
+  --# We now have to show all their equalities (idₜ and ∘ₜ respect []t, []f, wkₜ, lfₜ, categorical rules
 
   -- Substitution for terms
   []t-id : {t : Tm Γₜ} → t [ idₜ {Γₜ} ]t ≡ t
@@ -164,22 +165,23 @@ module FFOLInitial where
 
 
 
-  -- We can now define proof contexts, which are indexed by a term context
+  --# We can now define proof contexts, which are indexed by a term context
   -- i.e. we know which terms a proof context can use
   data Conp : Cont → Set₁ where
     ◇p : Conp Γₜ
     _▹p⁰_ : Conp Γₜ → For Γₜ → Conp Γₜ
-  
+
+  --#
   variable
     Γₚ Γₚ' : Conp Γₜ
     Δₚ Δₚ' : Conp Δₜ
     Ξₚ Ξₚ' : Conp Ξₜ
 
-  -- The actions of Subt's is extended to contexts
+  --# The actions of Subt's is extended to contexts
   _[_]c : Conp Γₜ → Subt Δₜ Γₜ → Conp Δₜ
   ◇p [ σₜ ]c = ◇p
   (Γₚ ▹p⁰ A) [ σₜ ]c = (Γₚ [ σₜ ]c) ▹p⁰ (A [ σₜ ]f)
-  -- This Conp is indeed a functor
+  --# This Conp is indeed a functor
   []c-id : Γₚ [ idₜ ]c ≡ Γₚ
   []c-id {Γₚ = ◇p} = refl
   []c-id {Γₚ = Γₚ ▹p⁰ x} = cong₂ _▹p⁰_ []c-id []f-id
@@ -188,11 +190,11 @@ module FFOLInitial where
   []c-∘ {α = α} {β = β} {Ξₚ ▹p⁰ A} = cong₂ _▹p⁰_ []c-∘ []f-∘
 
 
-  -- We can also add a term that will not be used in the formulæ already present
+  --# We can also add a term that will not be used in the formulæ already present
   -- (that's why we use wkₜσₜ)
   _▹tp : Conp Γₜ → Conp (Γₜ ▹t⁰)
   Γ ▹tp = Γ [ wkₜσₜ idₜ ]c
-  -- We show how it interacts with ,ₜ and lfₜσₜ
+  --# We show how it interacts with ,ₜ and lfₜσₜ
   ▹tp,ₜ : {σₜ : Subt Γₜ Δₜ}{t : Tm Γₜ} → (Γₚ ▹tp) [ σₜ ,ₜ t ]c ≡  Γₚ [ σₜ ]c
   ▹tp,ₜ {Γₚ = Γₚ} = ≡tran (≡sym []c-∘) (cong (λ ξ → Γₚ [ ξ ]c) (≡tran wkₜ∘ₜ,ₜ idlₜ))
   ▹tp-lfₜ : {σ : Subt Δₜ Γₜ} → ((Δₚ ▹tp) [ lfₜσₜ σ ]c) ≡ ((Δₚ [ σ ]c) ▹tp)
@@ -200,7 +202,7 @@ module FFOLInitial where
 
 
 
-  -- With those contexts, we have everything to define proofs
+  --# With those contexts, we have everything to define proofs
   data PfVar : (Γₜ : Cont) → (Γₚ : Conp Γₜ) → For Γₜ → Prop₁ where
     pvzero : {A : For Γₜ} → PfVar Γₜ (Γₚ ▹p⁰ A) A
     pvnext : {A B : For Γₜ} → PfVar Γₜ Γₚ A → PfVar Γₜ (Γₚ ▹p⁰ B) A
@@ -213,7 +215,7 @@ module FFOLInitial where
     p∀∀i : {A : For (Γₜ ▹t⁰)} → Pf (Γₜ ▹t⁰) (Γₚ ▹tp) A → Pf Γₜ Γₚ (∀∀ A)
 
 
-  -- The action on Cont's morphisms of Pf functor
+  --# The action on Cont's morphisms of Pf functor
   _[_]pvₜ : {A : For Δₜ}→ PfVar Δₜ Δₚ A → (σ : Subt Γₜ Δₜ)→ PfVar Γₜ (Δₚ [ σ ]c) (A [ σ ]f)
   pvzero [ σ ]pvₜ = pvzero
   pvnext pv [ σ ]pvₜ = pvnext (pv [ σ ]pvₜ)
@@ -233,7 +235,7 @@ module FFOLInitial where
 
   
 
-  -- We now can create Renamings, a subcategory from (Conp,Subp) that
+  --# We now can create Renamings, a subcategory from (Conp,Subp) that
   -- A renaming from a context Γₚ to a context Δₚ means when they are seen
   -- as lists, that every element of Γₚ is an element of Δₚ
   -- In other words, we can prove Γₚ from Δₚ using only proof variables (var)
@@ -241,7 +243,7 @@ module FFOLInitial where
     zeroRen : Ren ◇p Γₚ
     leftRen : {A : For Δₜ} → PfVar Δₜ Δₚ A → Ren Δₚ' Δₚ → Ren (Δₚ' ▹p⁰ A) Δₚ
     
-  -- We now show how we can extend renamings
+  --# We now show how we can extend renamings
   rightRen :{A : For Δₜ} → Ren Γₚ Δₚ → Ren Γₚ (Δₚ ▹p⁰ A)
   rightRen zeroRen = zeroRen
   rightRen (leftRen x h) = leftRen (pvnext x) (rightRen h)
@@ -272,7 +274,7 @@ module FFOLInitial where
   wkᵣp s (p∀∀i pf) = p∀∀i (wkᵣp (Ren▹tp s) pf)
 
 
-  -- But we need something stronger than just renamings
+  --# But we need something stronger than just renamings
   -- introducing: Proof substitutions
   -- They are basicly a list of proofs for the formulæ contained in
   -- the goal context.
@@ -281,18 +283,18 @@ module FFOLInitial where
     εₚ : Subp Δₚ ◇p
     _,ₚ_ : {A : For Δₜ} → (σ : Subp Δₚ Δₚ') → Pf Δₜ Δₚ A → Subp Δₚ (Δₚ' ▹p⁰ A)
     
-  -- We write down the access functions from the algebra, in restricted versions
+  --# We write down the access functions from the algebra, in restricted versions
   πₚ¹ : ∀{Γₜ}{Γₚ Δₚ : Conp Γₜ} {A : For Γₜ} → Subp Δₚ (Γₚ ▹p⁰ A) → Subp Δₚ Γₚ
   πₚ¹ (σₚ ,ₚ pf) = σₚ
   πₚ² : ∀{Γₜ}{Γₚ Δₚ : Conp Γₜ} {A : For Γₜ} → Subp Δₚ (Γₚ ▹p⁰ A) → Pf Γₜ Δₚ A
   πₚ² (σₚ ,ₚ pf) = pf
 
-  -- The action of Cont's morphisms on Subp
+  --# The action of Cont's morphisms on Subp
   _[_]σₚ : Subp {Δₜ} Δₚ Δₚ' → (σ : Subt Γₜ Δₜ) → Subp {Γₜ} (Δₚ [ σ ]c) (Δₚ' [ σ ]c)
   εₚ [ σₜ ]σₚ = εₚ
   (σₚ ,ₚ pf) [ σₜ ]σₚ = (σₚ [ σₜ ]σₚ) ,ₚ (pf [ σₜ ]pₜ)
   
-  -- They are indeed stronger than renamings
+  --# They are indeed stronger than renamings
   Ren→Sub : Ren Δₚ Δₚ' → Subp {Δₜ} Δₚ' Δₚ
   Ren→Sub zeroRen = εₚ
   Ren→Sub (leftRen x s) = Ren→Sub s ,ₚ var x
@@ -321,6 +323,7 @@ module FFOLInitial where
   wkₜσₚ εₚ = εₚ
   wkₜσₚ {Δₜ = Δₜ} (_,ₚ_ {A = A} σₚ pf) = (wkₜσₚ σₚ) ,ₚ substP (λ Ξₚ → Pf (Δₜ ▹t⁰) Ξₚ (A [ wkₜσₜ idₜ ]f)) refl (_[_]pₜ {Γₜ = Δₜ ▹t⁰} pf (wkₜσₜ idₜ))
 
+  --#
   _[_]p : {A : For Δₜ} → Pf Δₜ Δₚ A → (σ : Subp {Δₜ} Δₚ' Δₚ) → Pf Δₜ Δₚ' A
   var pvzero [ σ ,ₚ pf ]p = pf
   var (pvnext pv) [ σ ,ₚ pf ]p = var pv [ σ ]p
@@ -335,7 +338,7 @@ module FFOLInitial where
 
 
 
-  -- We can now define identity and composition on proof substitutions
+  --# We can now define identity and composition on proof substitutions
   idₚ : Subp {Δₜ} Δₚ Δₚ
   idₚ {Δₚ = ◇p} = εₚ
   idₚ {Δₚ = Δₚ ▹p⁰ x} = lfₚσₚ (idₚ {Δₚ = Δₚ})
@@ -351,23 +354,25 @@ module FFOLInitial where
 
 
 
-  -- We can now merge the two notions of contexts, substitutions, and everything
+  --# We can now merge the two notions of contexts, substitutions, and everything
   record Con : Set₁ where
     constructor con
     field
       t : Cont
       p : Conp t
-      
+
+  --#
   variable
     Γ Δ Ξ : Con
-    
+
+  --#
   record Sub (Γ : Con) (Δ : Con) : Set₁ where
     constructor sub
     field
       t : Subt (Con.t Γ) (Con.t Δ)
       p : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ t ]c)
 
-  -- We need this to apply term-substitution theorems to global substitutions
+  --# We need this to apply term-substitution theorems to global substitutions
   sub= : {Γ Δ : Con}{σₜ σₜ' : Subt (Con.t Γ) (Con.t Δ)} →
     σₜ ≡ σₜ' →
     {σₚ : Subp {Con.t Γ} (Con.p Γ) ((Con.p Δ) [ σₜ ]c)}
@@ -375,20 +380,20 @@ module FFOLInitial where
     sub σₜ σₚ ≡ sub σₜ' σₚ'
   sub= refl = refl 
 
-  -- (Con,Sub) is a category with an initial object
+  --# (Con,Sub) is a category with an initial object
   id : Sub Γ Γ
   id {Γ} = sub idₜ (substP (Subp _) (≡sym []c-id) idₚ)
   _∘_ : Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
   sub αₜ αₚ ∘ sub βₜ βₚ = sub (αₜ ∘ₜ βₜ) (substP (Subp _) (≡sym []c-∘) (αₚ [ βₜ ]σₚ) ∘ₚ βₚ)
     
 
-  -- We have our two context extension operators
+  --# We have our two context extension operators
   _▹t : Con → Con
   Γ ▹t = con ((Con.t Γ) ▹t⁰) (Con.p Γ ▹tp)
   _▹p_ : (Γ : Con) → For (Con.t Γ) → Con
   Γ ▹p A = con (Con.t Γ) (Con.p Γ ▹p⁰ A)
 
-  -- We define the access function from the algebra, but defined for fully-featured substitutions
+  --# We define the access function from the algebra, but defined for fully-featured substitutions
   -- For term substitutions
   πₜ¹* : {Γ Δ : Con} → Sub Δ (Γ ▹t) → Sub Δ Γ
   πₜ¹* (sub (σₜ ,ₜ t) σₚ) = sub σₜ (substP (Subp _) ▹tp,ₜ σₚ)
@@ -578,7 +583,7 @@ module FFOLInitial where
     mForT∀∀ : {Γₜ : Cont}{A : For (Γₜ ▹t⁰)} → mForT {Γₜ} (∀∀ A) ≡ FFOL.∀∀ M (mForT {Γₜ ▹t⁰} A)
     mForT∀∀ = refl
     mForP∀∀ : {Γₜ : Cont}{Γₚ : Conp Γₜ}{A : For (Γₜ ▹t⁰)} → mForP {Γₜ} {Γₚ} (∀∀ A) ≡ FFOL.∀∀ M (subst (FFOL.For M) (e▹ₜP {Γₜ} {Γₚ}) (mForP {Γₜ ▹t⁰} {Γₚ ▹tp} A))
-    mForP∀∀ = ?
+    mForP∀∀ = {!!}
     -- mFor∀∀ : {Γ : Con}{A : For ((Con.t Γ) ▹t⁰)} → mFor {Γ} (∀∀ A) ≡ FFOL.∀∀ M (mFor {Γ ▹t} A)
 
     --mForL : {Γ : Con}{A : For (Con.t Γ ▹t⁰)}{t : Tm (Con.t Γ)} → FFOL._[_]f M (mFor {Γ = {!Γ ▹t!}} A) (FFOL._,ₜ_ M (FFOL.id M) (mTm {Γ = Γ} t)) ≡ mFor {Γ = Γ} (A [ idₜ ,ₜ t ]f)
