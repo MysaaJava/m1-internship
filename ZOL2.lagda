@@ -53,7 +53,7 @@ module ZOL2 where
       πₚ¹ : {Γ Δ : Con}{F : For Γ} → Sub Δ (Γ ▹ₚ F) → Sub Δ Γ
       πₚ² : {Γ Δ : Con}{F : For Γ} → (σ : Sub Δ (Γ ▹ₚ F)) → Pf Δ (F [ πₚ¹ σ ]f)
       _,ₚ_ : {Γ Δ : Con}{F : For Γ} → (σ : Sub Δ Γ) → Pf Δ (F [ σ ]f) → Sub Δ (Γ ▹ₚ F)
-      -- Equality below are useless because Pf and Sub are in Prop 
+      --# Equality below are useless because Pf and Sub are in Prop 
       --,ₚ∘πₚ : {Γ Δ : Con}{F : For Γ}{σ : Sub Δ (Γ ▹ₚ F)} → (πₚ¹ σ) ,ₚ (πₚ² σ) ≡ σ
       --πₚ¹∘,ₚ : {Γ Δ : Con}{σ : Sub Δ Γ}{F : For Γ}{prf : Pf Δ (F [ σ ]f)}
       --  → πₚ¹ (σ ,ₚ prf) ≡ σ
@@ -61,8 +61,10 @@ module ZOL2 where
       -- → πₚ² (σ ,ₚ prf) ≡ prf
       --,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For Ξ}{prf : Pf Γ (F [ σ ]f)}
       --  → (σ ,ₚ prf) ∘ δ ≡ (σ ∘ δ) ,ₚ (substP (Pf Δ) (≡sym []f-∘) (prf [ δ ]p))
-      
+
+      --#
       {-- FORMULAE CONSTRUCTORS --}
+
       --# i formula
       ι : {Γ : Con} → For Γ
       []f-ι : {Γ Δ : Con} {σ : Sub Δ Γ}→ ι [ σ ]f ≡ ι
@@ -84,28 +86,35 @@ module ZOL2 where
 
   record Mapping (S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) (D : ZOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'}) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
     field
-      
-      -- We first make the base category with its final object
-      mCon : (ZOL.Con S) → (ZOL.Con D)
-      mSub : {Δ : (ZOL.Con S)}{Γ : (ZOL.Con S)} → (ZOL.Sub S Δ Γ) → (ZOL.Sub D (mCon Δ) (mCon Γ))
-      mFor : {Γ : (ZOL.Con S)} → (ZOL.For S Γ) → (ZOL.For D (mCon Γ))
-      mPf : {Γ : (ZOL.Con S)} {A : ZOL.For S Γ} → ZOL.Pf S Γ A → ZOL.Pf D (mCon Γ) (mFor A)
 
+      --#
+      mCon : (ZOL.Con S) → (ZOL.Con D)
+      mSub : {Δ : (ZOL.Con S)}{Γ : (ZOL.Con S)} →
+        (ZOL.Sub S Δ Γ) → (ZOL.Sub D (mCon Δ) (mCon Γ))
+      mFor : {Γ : (ZOL.Con S)} → (ZOL.For S Γ) → (ZOL.For D (mCon Γ))
+      mPf : {Γ : (ZOL.Con S)} {A : ZOL.For S Γ}
+        → ZOL.Pf S Γ A → ZOL.Pf D (mCon Γ) (mFor A)
+      --#
 
   record Morphism (S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) (D : ZOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'}) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
     field m : Mapping S D
     mCon = Mapping.mCon m
     mSub = Mapping.mSub m
     mFor = Mapping.mFor m
-    mPf   = Mapping.mPf m
+    mPf  = Mapping.mPf m
     field
+      --#
       e◇ : mCon (ZOL.◇ S) ≡ ZOL.◇ D
-      e[]f : {Γ Δ : ZOL.Con S}{A : ZOL.For S Γ}{σ : ZOL.Sub S Δ Γ} → mFor (ZOL._[_]f S A σ) ≡ ZOL._[_]f D (mFor A) (mSub σ)
-      e▹ₚ : {Γ : ZOL.Con S}{A : ZOL.For S Γ} → mCon (ZOL._▹ₚ_ S Γ A) ≡ ZOL._▹ₚ_ D (mCon Γ) (mFor A)
+      e[]f : {Γ Δ : ZOL.Con S}{A : ZOL.For S Γ}{σ : ZOL.Sub S Δ Γ} →
+        mFor (ZOL._[_]f S A σ) ≡ ZOL._[_]f D (mFor A) (mSub σ)
+      e▹ₚ : {Γ : ZOL.Con S}{A : ZOL.For S Γ} →
+        mCon (ZOL._▹ₚ_ S Γ A) ≡ ZOL._▹ₚ_ D (mCon Γ) (mFor A)
       eι : {Γ : ZOL.Con S} → mFor (ZOL.ι S {Γ}) ≡ ZOL.ι D {mCon Γ}
-      e⇒ : {Γ : ZOL.Con S}{A B : ZOL.For S Γ} → mFor (ZOL._⇒_ S A B) ≡ ZOL._⇒_ D (mFor A) (mFor B)
+      e⇒ : {Γ : ZOL.Con S}{A B : ZOL.For S Γ} →
+        mFor (ZOL._⇒_ S A B) ≡ ZOL._⇒_ D (mFor A) (mFor B)
       -- No equation needed for lam, app, ∀i, ∀e as their output are in prop
-
+      --#
+      
   record TrNat {S : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}} {D : ZOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'}} (a : Mapping S D) (b : Mapping S D) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
     field
       f : (Γ : ZOL.Con S) → ZOL.Sub D (Mapping.mCon a Γ) (Mapping.mCon b Γ)

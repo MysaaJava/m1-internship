@@ -9,6 +9,7 @@ module ZOLInitial where
   open import Agda.Primitive
   open import ListUtil
 
+  --# 
   data For : Set where
     ι : For
     _⇒_ : For → For → For
@@ -17,10 +18,12 @@ module ZOLInitial where
     ◇ : Con
     _▹ₚ_ : Con → For → Con
 
+  --#
   variable
     Γ Δ Ξ : Con
     A B : For
 
+  --#
   data PfVar : Con → For → Prop where
     pvzero : PfVar (Γ ▹ₚ A) A
     pvnext : PfVar Γ A → PfVar (Γ ▹ₚ B) A
@@ -29,10 +32,12 @@ module ZOLInitial where
     lam : Pf (Γ ▹ₚ A) B → Pf Γ (A ⇒ B)
     app : Pf Γ (A ⇒ B) → Pf Γ A → Pf Γ B
 
+  --#
   data Ren : Con → Con → Prop where
     ε : Ren Γ ◇
     _,ₚR_ : Ren Δ Γ → PfVar Δ A → Ren Δ (Γ ▹ₚ A)
 
+  --#
   rightR : Ren Δ Γ → Ren (Δ ▹ₚ A) Γ
   rightR ε = ε
   rightR (σ ,ₚR pv) = (rightR σ) ,ₚR (pvnext pv)
@@ -40,16 +45,19 @@ module ZOLInitial where
   idR : Ren Γ Γ
   idR {◇} = ε
   idR {Γ ▹ₚ A} = (rightR (idR {Γ})) ,ₚR pvzero
-  
+
+  --#
   data Sub : Con → Con → Prop where
     ε : Sub Γ ◇
     _,ₚ_ : Sub Δ Γ → Pf Δ A → Sub Δ (Γ ▹ₚ A)
 
+  --#
   πₚ¹ : Sub Δ (Γ ▹ₚ A) → Sub Δ Γ
   πₚ² : Sub Δ (Γ ▹ₚ A) → Pf Δ A
   πₚ¹ (σ ,ₚ pf) = σ
   πₚ² (σ ,ₚ pf) = pf
 
+  --#
   SubR : Ren Γ Δ → Sub Γ Δ
   SubR ε = ε
   SubR (σ ,ₚR pv) = SubR σ ,ₚ var pv
@@ -57,6 +65,7 @@ module ZOLInitial where
   id : Sub Γ Γ
   id = SubR idR
 
+  --#
   _[_]pvr : PfVar Γ A → Ren Δ Γ → PfVar Δ A
   pvzero [ _ ,ₚR pv ]pvr = pv
   pvnext pv [ σ ,ₚR _ ]pvr = pv [ σ ]pvr
@@ -69,17 +78,19 @@ module ZOLInitial where
   wkSub ε = ε
   wkSub (σ ,ₚ pf) = (wkSub σ) ,ₚ (pf [ rightR idR ]pr)
 
+  --#
   _[_]p : Pf Γ A → Sub Δ Γ → Pf Δ A
   var pvzero [ _ ,ₚ pf ]p = pf
   var (pvnext pv) [ σ ,ₚ _ ]p = var pv [ σ ]p
   lam pf [ σ ]p = lam (pf [ wkSub σ ,ₚ var pvzero ]p)
   app pf pf' [ σ ]p = app (pf [ σ ]p) (pf' [ σ ]p)
 
+  --#
   _∘_ : {Γ Δ Ξ : Con} → Sub Δ Ξ → Sub Γ Δ → Sub Γ Ξ
   ε ∘ β = ε
   (α ,ₚ pf) ∘ β = (α ∘ β) ,ₚ (pf [ β ]p)
 
-
+  --#
 
 
 
@@ -110,7 +121,8 @@ module ZOLInitial where
           }
 
   module InitialMorphism (M : ZOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴}) where
-  
+
+      --#
       mCon : Con → (ZOL.Con M)
       mFor : {Γ : Con} → For → (ZOL.For M (mCon Γ))
 
@@ -119,6 +131,7 @@ module ZOLInitial where
       mFor {Γ} ι = ZOL.ι M
       mFor {Γ} (A ⇒ B) = ZOL._⇒_ M (mFor {Γ} A) (mFor {Γ} B)
 
+      --#
 
       mSub : {Δ : Con}{Γ : Con} → Sub Δ Γ → (ZOL.Sub M (mCon Δ) (mCon Γ))
       mPf : {Γ : Con} {A : For} → Pf Γ A → ZOL.Pf M (mCon Γ) (mFor {Γ} A)

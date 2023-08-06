@@ -9,11 +9,13 @@ module IFOLInitial (TM : Set) where
   open import Agda.Primitive
   open import ListUtil
 
+  --#
   data For : Set where
     R : TM → TM → For
     _⇒_ : For → For → For
     ∀∀ : (TM → For) → For
-
+  --#
+  
   data Con : Set where
     ◇ : Con
     _▹ₚ_ : Con → For → Con
@@ -25,12 +27,14 @@ module IFOLInitial (TM : Set) where
   data PfVar : Con → For → Prop where
     pvzero : PfVar (Γ ▹ₚ A) A
     pvnext : PfVar Γ A → PfVar (Γ ▹ₚ B) A
+  --#
   data Pf : Con → For → Prop where
     var : PfVar Γ A → Pf Γ A
     lam : Pf (Γ ▹ₚ A) B → Pf Γ (A ⇒ B)
     app : Pf Γ (A ⇒ B) → Pf Γ A → Pf Γ B
     ∀i : {A : TM → For} → ((t : TM) → Pf Γ (A t)) → Pf Γ (∀∀ A)
     ∀e : {A : TM → For} → Pf Γ (∀∀ A) → (t : TM) → Pf Γ (A t)
+  --#
 
 
   data Ren : Con → Con → Prop where

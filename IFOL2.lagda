@@ -62,11 +62,12 @@ module IFOL2 where
       []f-⇒ : {Γ Δ : Con} → {F G : For Γ} → {σ : Sub Δ Γ}
         → (F ⇒ G) [ σ ]f ≡ (F [ σ ]f) ⇒ (G [ σ ]f)
 
-      -- Forall
+      --# Forall
       ∀∀ : {Γ : Con} → (TM → For Γ) → For Γ
       []f-∀∀ : {Γ Δ : Con} → {F : TM → For Γ} → {σ : Sub Δ Γ}
         → (∀∀ F) [ σ ]f ≡ (∀∀ (λ t → (F t) [ σ ]f))
 
+      --#
       {-- PROOFS CONSTRUCTORS --}
       -- Again, we don't have to write the _[_]p equalities as Proofs are in Prop
       
@@ -74,9 +75,10 @@ module IFOL2 where
       lam : {Γ : Con}{F G : For Γ} → Pf (Γ ▹ₚ F) (G [ πₚ¹ id ]f) → Pf Γ (F ⇒ G)
       app : {Γ : Con}{F G : For Γ} → Pf Γ (F ⇒ G) → Pf Γ F → Pf Γ G
 
-      -- ∀i and ∀e
+      --# ∀i and ∀e
       ∀i : {Γ : Con}{A : TM → For Γ} → ((t : TM) → Pf Γ (A t)) → Pf Γ (∀∀ A)
       ∀e : {Γ : Con}{A : TM → For Γ} → Pf Γ (∀∀ A) → (t : TM) → Pf Γ (A t)
+      --#
 
   record Mapping (TM : Set) (S : IFOL {ℓ¹} {ℓ²} {ℓ³} {ℓ⁴} TM) (D : IFOL {ℓ¹'} {ℓ²'} {ℓ³'} {ℓ⁴'} TM) : Set (lsuc (ℓ¹ ⊔ ℓ² ⊔ ℓ³ ⊔ ℓ⁴ ⊔ ℓ¹' ⊔ ℓ²' ⊔ ℓ³' ⊔ ℓ⁴')) where
     field

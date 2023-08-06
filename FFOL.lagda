@@ -78,7 +78,8 @@ module FFOL where
       -- → πₚ² (σ ,ₚ prf) ≡ prf
       ,ₚ∘ : {Γ Δ Ξ : Con}{σ : Sub Γ Ξ}{δ : Sub Δ Γ}{F : For Ξ}{prf : Γ ⊢ (F [ σ ]f)}
         → (σ ,ₚ prf) ∘ δ ≡ (σ ∘ δ) ,ₚ (substP (λ F → Δ ⊢ F) (≡sym []f-∘) (prf [ δ ]p))
-
+      --#
+      
       
       {-- FORMULAE CONSTRUCTORS --}
       --# Formulas with relation on terms

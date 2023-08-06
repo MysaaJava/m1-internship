@@ -8,25 +8,23 @@ endef
 
 all: report/build/M1Report.pdf
 
-latex/FFOL.tex: FFOL.lagda
-	agda --latex $<
-	cp latex/agda.sty report/agda.sty
-latex/ZOL.tex: ZOL2.lagda
-	agda --latex $<
-	cp latex/agda.sty report/agda.sty
-	mv latex/ZOL2.tex latex/ZOL.tex
-latex/FFOLInitial.tex: FFOLInitial.lagda
+latex/%.tex: %.lagda
 	agda --latex --allow-unsolved-metas $<
 	cp latex/agda.sty report/agda.sty
 
 report/build/M1Report.pdf: agda-tex-FFOL agda-tex-FIni agda-tex-ZOL
 	$(cd report/; latexmk -pdf -xelatex -silent -shell-escape -outdir=build/ -synctex=1 "M1Report")
 
-agda-tex: latex/ZOL.tex latex/FFOLInitial.tex latex/FFOL.tex
+agda-tex: latex/ZOL2.tex latex/ZOLInitial.tex latex/ZOLCompleteness.tex latex/IFOL2.tex latex/IFOLInitial.tex latex/IFOLInitial.tex latex/FFOL.tex latex/FFOLInitial.tex
 	mkdir -p report/agda
-	$(call split,"latex/ZOL.tex","report/agda/ZOL-",".tex")
-	$(call split,"latex/FFOLInitial.tex","report/agda/FFOL-I-",".tex")
+	$(call split,"latex/ZOL2.tex","report/agda/ZOL-",".tex")
+	$(call split,"latex/ZOLInitial.tex","report/agda/ZOL-I-",".tex")
+	$(call split,"latex/ZOLCompleteness.tex","report/agda/ZOL-U-",".tex")
+	$(call split,"latex/IFOL2.tex","report/agda/IFOL-",".tex")
+	$(call split,"latex/IFOLInitial.tex","report/agda/IFOL-I-",".tex")
+	$(call split,"latex/IFOLCompleteness.tex","report/agda/IFOL-C-",".tex")
 	$(call split,"latex/FFOL.tex","report/agda/FFOL-",".tex")
+	$(call split,"latex/FFOLInitial.tex","report/agda/FFOL-I-",".tex")
 
 .PHONY: clean agda-tex agda-tex-FFOL agda-tex-ZOL agda-tex-FIni
 clean:
