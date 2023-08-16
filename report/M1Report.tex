@@ -573,6 +573,13 @@
 			This section is called \enquote{Transport Hell} because those transports between equal sets can get really annoying. In former version of the syntax, the \AgdaDatatype{Subp} were \AgdaPrimitive{Set}s instead of \AgdaPrimitive{Prop}s. And that created a lot of equalities related to polymorphic functions (quite all \AgdaDatatype{Subp}'s related functions were then polymorphic, as they would depend on proof contexts). And to solve those equalities, you have to extract what are precisely the polymorphic functions you are working with. You can see those proofs on \href{https://github.com/MysaaJava/m1-internship/commit/2728c60633a80631ed7b61bbfae5c81a1e0e193a#diff-99bc55bebd36ad0afbae3c6448793992086091c5b6b25973f73dd779690d7dd2}{former versions of the syntax}, they are really long and not very interesting (as it is basically trying to tweak our equation so that Agda understands that two types are equal).
 	
 	\section{Summary}
+		
+		During this internship, i have created a set of Agda definitions for different frameworks of logic. Even though this has already been done by other people, my definitions are directly derived from the SOGAT definitions. It makes the files and this report a good example of how to use SOGAT, and how to convert them into GAT.
+		
+		We also created a proof of completeness in this layout, which shows the usefullness in this theory. I did not make the completeness proof of predicate logic, but it is the next thing that will be added to the project.
+		
+		This project is also a great entry point to study the different ways a SOGAT can be turned into a GAT. We need further work to understand the specificities of the SOGATs used in this report that allowed us to turn them directly into strict syntaxes (it is not the case for any SOGAT, exspecially for those with equations). Making a formalization of this transformation for a specific class of SOGAT would be a great step forward.
+	
 	
 	
 	\section{Bibliography}
