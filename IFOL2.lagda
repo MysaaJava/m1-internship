@@ -46,9 +46,7 @@ module IFOL2 where
       πₚ¹ : {Γ Δ : Con}{F : For Γ} → Sub Δ (Γ ▹ₚ F) → Sub Δ Γ
       πₚ² : {Γ Δ : Con}{F : For Γ} → (σ : Sub Δ (Γ ▹ₚ F)) → Pf Δ (F [ πₚ¹ σ ]f)
       _,ₚ_ : {Γ Δ : Con}{F : For Γ} → (σ : Sub Δ Γ) → Pf Δ (F [ σ ]f) → Sub Δ (Γ ▹ₚ F)
-      -- Equality below is useless because Pf Γ F is in Prop
-      -- πₚ²∘,ₚ : {Γ Δ : Con}{σ : Sub Δ Γ}{F : For Γ}{prf : Pf Δ (F [ σ ]f)}
-      -- → πₚ² (σ ,ₚ prf) ≡ prf
+      -- All equalities are useless because Sub and Pf are in prop
 
       
       {-- FORMULAE CONSTRUCTORS --}

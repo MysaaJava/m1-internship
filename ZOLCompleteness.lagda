@@ -156,4 +156,7 @@ module ZOLCompleteness where
     eq : ηu ∘TrNat ηq ≡ idTrNat
     eq = refl
 
+    realCompleteness : {Γ Δ : I.Con} → ({Ξ : I.Con} → (proj×''₁ ⟦ Γ ⟧c) Ξ → (proj×''₁ ⟦ Δ ⟧c) Ξ )  → I.Sub Γ Δ
+    realCompleteness {Γ} {Δ} f = q Δ Γ (f {Γ} (u Γ Γ I.id))
+
 \end{code}

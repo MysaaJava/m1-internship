@@ -92,22 +92,30 @@
 
 
 % Macros caractères spécifiques au document
-\newcommand\Tm{\ensuremath{\operatorname{Tm}}}
+\newcommand\Tm{\AgdaDatatype{Tm}}
 \newcommand\Set{\AgdaPrimitive{Set}}
-\newcommand\For{\ensuremath{\operatorname{For}}}
+\newcommand\For{\AgdaDatatype{For}}
 \newcommand\Prop{\AgdaPrimitive{Prop}}
-\newcommand\R{\operatorname{R}}
-\newcommand\lam{\ensuremath{\operatorname{lam}}}
-\newcommand\app{\operatorname{app}}
-\newcommand\foralli{\operatorname{\operatorname{\forall i}}}
-\newcommand\foralle{\operatorname{\operatorname{\forall e}}}
-\newcommand\Pf{\ensuremath{\operatorname{Pf}\;}}
+\newcommand\R{\AgdaInductiveConstructor{R}}
+\newcommand\lam{\AgdaInductiveConstructor{lam}}
+\newcommand\app{\AgdaInductiveConstructor{app}}
+\newcommand\foralli{\AgdaInductiveConstructor{\ensuremath{\forall i}}}
+\newcommand\foralle{\AgdaInductiveConstructor{\ensuremath{\forall e}}}
+\newcommand\impliesAgda{\:\AgdaInductiveConstructor{\ensuremath{\implies}}\,}
+\newcommand\iotAgda{\AgdaInductiveConstructor{\ensuremath{\iota}}}
+\newcommand\forallAgda{\AgdaInductiveConstructor{\ensuremath{\forall}}}
+\newcommand\agdato{\;\AgdaSymbol{→}\;}
+\newcommand\Pf{\AgdaDatatype{Pf}}
 \newcommand\bCon{\textbf{Con}}
 \newcommand\bSet{\textbf{Set}}
 \newcommand\bProp{\textbf{Prop}}
+\newcommand\agdaSubst[1][]{\AgdaOperator{\AgdaFunction{\AgdaUnderscore{}[\AgdaUnderscore{}]#1}}}
 
 % Agda Config
 \usepackage{agda}
+\let\AgdaPrimitiveZ\AgdaPrimitive
+\renewcommand\AgdaPrimitive[1]{\AgdaPrimitiveZ{\textbf{#1}}}
+
 \AgdaNoSpaceAroundCode{}
 \def\agdasep{\begin{center}\vspace{-2.5ex}\rule{0.9\linewidth}{0.4pt}\vspace{-1ex}\end{center}}
 \usepackage{newunicodechar}
@@ -132,6 +140,9 @@
 \newunicodechar{⇒}{\ensuremath{\mathnormal{\Rightarrow}}}
 \newunicodechar{∀}{\ensuremath{\mathnormal{\forall}}}
 \newunicodechar{≈}{\ensuremath{\mathnormal{\approx}}}
+\newunicodechar{⁺}{\ensuremath{{}^+}}
+\newunicodechar{¹}{\ensuremath{{}^1}}
+\newunicodechar{²}{\ensuremath{{}^2}}
 \newunicodechar{ₜ}{\ensuremath{{}_\text{t}}}
 \newunicodechar{ₚ}{\ensuremath{{}_\text{p}}}
 \newunicodechar{⁰}{\ensuremath{{}^0}}
