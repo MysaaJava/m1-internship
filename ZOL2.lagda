@@ -42,7 +42,7 @@ module ZOL2 where
       Pf : (Γ : Con) → For Γ → Prop ℓ⁴
       -- Action on morphisms
       _[_]p : {Γ Δ : Con} → {F : For Γ} → Pf Γ F → (σ : Sub Δ Γ) → Pf Δ (F [ σ ]f)
-      -- Equalities below are useless because Pf Γ F is in prop
+      --# Equalities below are useless because Pf Γ F is in prop
       -- []p-id : {Γ : Con} → {F : For Γ} → {prf : Pf Γ F}
       --  → prf [ id {Γ} ]p ≡ prf
       -- []p-∘ : {Γ Δ Ξ : Con}{α : Sub Ξ Δ}{β : Sub Δ Γ}{F : For Γ}{prf : Pf Γ F}

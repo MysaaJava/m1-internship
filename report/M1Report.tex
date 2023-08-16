@@ -25,15 +25,13 @@
 	
 		In the first place, I was supposed to do this internship in Nottingham (UK) with Thorsten Altenkirsh. But, because of administrative issues, I was not able to go there, and Thorsten Altenkirsh contacted Ambrus Kaposi in Budapest, whose university agreed to accept me. Therefore, I went to Budapest and I did the internship under the physical supervision of Ambrus Kaposi, and the remote supervision of Thorsten Altenkirsch.
 		
-		The original subject of the internship was \enquote{Developing a simplified account of normalization by evaluation using the theory of categories with families}. But there was a lot to do, starting with learning how to use Agda.
-		
 		\subsection{Introduction to the problem}
-			What we call a \enquote{logic} is a set of definitions containing formulas and a notion of provability of those formulæ, plus a set of operators/equalities to construct or reduce these proofs. I have studied the most common logical frameworks, that is, Propositional Logic, First-Order Logic with an infinitary operator, and Predicate Logic. For each of those logics, one can define a notion of \emph{model}. A model of a certain kind of logic is something that implements all of the logic's definitions, operators, and equalities. From all of those models, one can extract the \emph{initial model}, also called \emph{syntax}. It is the smallest of all models, which means that for any model of that logic, we have a morphism from the syntax to this model.
+			What we call a \enquote{logic} or \enquote{logical framework} is a set of definitions containing formulas and a notion of provability of those formulæ, plus a set of operators/equalities to construct or reduce these proofs \cite{logicalFramework1993}. I have studied the most common logical frameworks, that is, Propositional Logic, First-Order Logic with an infinitary operator, and Predicate Logic. For each of those logics, one can define a notion of \emph{model}. A model of a certain kind of logic is something that implements all of the logic's definitions, operators, and equalities. From all of those models, one can extract the \emph{initial model}, also called \emph{syntax}. It is the smallest of all models, which means that for any model of that logic, we have a morphism from the syntax to this model.
 			
 			Then, our goal is for each logic to prove the completeness of a specific class of models. Completeness can be stated as such: \enquote{For any formula, if it is provable in all models of the specified class, then it has a proof in the syntax}.
 			
 		\subsection{Motivation}
-			Ambrus is currently studying Second-Order Generalized Algebraic Theories (or SOGAT) and he is trying to state a better definition than that first defined in Taichi Uemura's thesis \cite{UemuraThesis2021}. He also wants to write a paper with examples to show why they are useful, and adding some examples for different frameworks of logic can help with that.
+			Ambrus is currently studying Second-Order Generalized Algebraic Theories (or SOGAT) and he is trying to state a better definition than that first defined in Taichi Uemura's thesis \cite{UemuraThesis2021}. He also wants to write a paper with examples to show why they are useful, and adding some examples for different frameworks of logic can help with that. Having a completeness proof in this (categorical) higher order setting \cite{hoffmann1999} can help.
 			
 		\subsection{Structure of this report}
 		
@@ -98,7 +96,7 @@
 			With those context extensions, we also have to add a way to extend substitutions (which are the morphisms from the base category). We do that by adding a \emph{comma} operator that takes a substitution and a proof and which extends the goal of the substitution. (If we see a proof context as a list of formulæ and a proof substitution as a list of proofs, the action of the comma operator is simply to add one proof to the list). We also need to be able to extract the proof and the base substitution from a substitution into an extended context (called \emph{weakening} operation). Therefore, we add two $\pi$ projections that extract the data from the substitution. We also need some equalities, that are saying that $(\AgdaField{$\pi_p¹$} , \AgdaField{$\pi_p²$})$, and $\AgdaField{$,_p$}$ are reciprocal, plus one equality saying that the comma operator also transposes the substitution. But as both \AgdaField{Pf} and \AgdaField{Sub} are in \Prop{}, those equations are unneeded.
 			
 			\begin{tcolorbox}
-				\agda{agda/ZOL-5.tex}
+				\agda{agda/ZOL-6.tex}
 			\end{tcolorbox}
 			
 			The last step is to add the constructors of our objects into the algebra. We write them directly as they were presented in the SOGAT, except for the new \AgdaField{Con} parameter that we need to add to everything. We also need to add one equation for each constructor saying that the constructors do respect substitutions. And we don't add any for \AgdaField{Pf} constructors as they are unneeded as \AgdaField{Pf} are in \AgdaPrimitive{Prop}.
@@ -106,18 +104,18 @@
 			The only one we cannot translate directly is the $\rightarrow^+$ from the \lam{} constructor from the SOGAT. To translate this \emph{locally representable application}, we transform the parameter of the arrow into a context extension of the appropriate type. Therefore, a function $\Pf\; A \rightarrow^+ \Pf\; B$ becomes a proof $\Pf\; (\Gamma \:\AgdaField{$\triangleright_p$}\, A)\; B$ (except that we have to transform B that is a $\For\;\Gamma$ into a $\For\;(\Gamma \:\AgdaField{$\triangleright_p$}\, A)$, using the \emph{weakening} substitution $\AgdaField{$\pi_p¹$}\;\AgdaField{id}\;:\;\AgdaField{Sub}\;\Gamma\;(\Gamma \:\AgdaField{$\triangleright_p$}\, X)$ for any Γ-formula $X$)
 		
 			\begin{tcolorbox}
-				\agda{agda/ZOL-8.tex}
-				\agdasep
 				\agda{agda/ZOL-9.tex}
 				\agdasep
-				\agda{agda/ZOL-11.tex}
+				\agda{agda/ZOL-10.tex}
+				\agdasep
+				\agda{agda/ZOL-12.tex}
 			\end{tcolorbox}
 			
 			We now have completed our definition of a model for Propositional Logic, in the SOGAT setting. In the meantime, we will define (categorical) morphisms between models. They are composed of mappings for every sort of the GAT, plus equations for the categorical objects (terminal object, identity, and composition), for the action of the functors on morphisms ($[]f$ and $[]p$), and finally equations to say that the constructors are also transported by the morphism. A lot of those equations are not written because \AgdaField{Pf} and \AgdaField{Sub} are in \Prop{}.
 			\begin{tcolorbox}
-				\agda{agda/ZOL-13.tex}
+				\agda{agda/ZOL-14.tex}
 				\agdasep
-				\agda{agda/ZOL-15.tex}
+				\agda{agda/ZOL-16.tex}
 			\end{tcolorbox}
 		
 		\subsection{Finding a strict syntax}
@@ -197,7 +195,7 @@
 			This works because, in the universal model, a context is a map from contexts of the syntax to \AgdaPrimitive{Prop} (because the category is posetal).
 			
 			\begin{center}
-				\begin{tikzpicture}[thick, scale=5]
+				\begin{tikzpicture}[thick, scale=3]
 					\node at (-1,0) (nI) {$\mathcal{I}$};
 					\node at (1,0) (nU) {$\mathcal{U}$};
 					
@@ -264,6 +262,8 @@
 		This construction means \enquote{for any list of formulæ $\Delta$ which are proven in the universal model in the context $\Gamma$ (the data of these proofs is $f$), we have a list of proofs \emph{in the syntax} of the formulæ of $\Delta$ in the context $\Gamma$}. This is exactly completeness!
 		
 		You can notice that we have only worked with negative fragments of logic (i.e. without disjunction) because then, Kripke models would not have been sufficient to make the completeness proof. This is another way to extend the work done during this internship.
+		
+		During the internship, i also studied different forms of normalization proofs (i.e. saying that if we have a proof of $A$ in $\Gamma$ then we have a \emph{normal} proof of $A$ in $\Gamma$) using different wide subcategories of $\bCon$. One of those normalizations was exactly completeness. We will try to study a formalization for other logical frameworks of this \enquote{generalized normalization proof} \cite{RedFreeNorm1995}.
 		
 	\section{First-order logic (or Predicate Logic)}
 	
