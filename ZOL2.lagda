@@ -1,4 +1,4 @@
-\begin{code}[hide]
+\begin{code}
 {-# OPTIONS --prop --rewriting #-}
 
 open import PropUtil

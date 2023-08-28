@@ -11,9 +11,13 @@ all: report/build/M1Report.pdf
 latex/%.tex: %.lagda
 	agda --latex --allow-unsolved-metas $<
 	cp latex/agda.sty report/agda.sty
+html/%.html: %.lagda
+	agda --html --allow-unsolved-metas $<
+html/%.html: %.agda
+	agda --html --allow-unsolved-metas $<
 
-report/build/M1Report.pdf: agda-tex-FFOL agda-tex-FIni agda-tex-ZOL
-	$(cd report/; latexmk -pdf -xelatex -silent -shell-escape -outdir=build/ -synctex=1 "M1Report")
+report/build/M1Report.pdf: agda-tex agda-html report/M1Report.tex report/header.tex report/Bilibibio.bib
+	cd report/; latexmk -pdf -xelatex -silent -shell-escape -outdir=build/ -synctex=1 "M1Report"
 
 agda-tex: latex/ZOL2.tex latex/ZOLInitial.tex latex/ZOLCompleteness.tex latex/IFOL2.tex latex/IFOLInitial.tex latex/IFOLInitial.tex latex/FFOL.tex latex/FFOLInitial.tex
 	mkdir -p report/agda
@@ -26,6 +30,11 @@ agda-tex: latex/ZOL2.tex latex/ZOLInitial.tex latex/ZOLCompleteness.tex latex/IF
 	$(call split,"latex/FFOL.tex","report/agda/FFOL-",".tex")
 	$(call split,"latex/FFOLInitial.tex","report/agda/FFOL-I-",".tex")
 
+agda-html: report/CodeIndex.html html/PropUtil.html html/ListUtil.html html/ZOL2.html html/ZOLInitial.html html/ZOLCompleteness.html html/IFOL2.html html/IFOLInitial.html html/IFOLCompleteness.html html/FFOL.html html/FFOLInitial.html
+	mkdir -p html/
+	cp report/CodeIndex.html html/
+	cd html; ebook-convert CodeIndex.html Code.pdf --base-font-size=8 --margin-bottom=3 --margin-top=3 --paper-size=a4 --language=en --authors="Samy Avrillon" --toc-filter=".*"
+
 .PHONY: clean agda-tex agda-tex-FFOL agda-tex-ZOL agda-tex-FIni
 clean:
-	rm -fr *.agdai report/agda latex report/build
+	rm -fr *.agdai report/agda latex report/build html html2

@@ -122,7 +122,7 @@
 			
 			What will be the use of these morphisms? One thing we want to do is to find the \emph{initial} model, or \emph{syntax} for this class of models. It means that we want to find a model from which, for any model $M$, there exists one and only one morphism from this model to $M$. We can also call the syntax the \emph{minimal model}, as it is the model that contains just the objects something needs to be a model of Propositional Logic.
 			
-			Mathematically, this model is really easy to find. We only have to take all the sorts defined in the GAT and apply a quotient by every equation of the GAT. But this is not very interesting, as the defined model would not be \emph{strict}, i.e. all equations will not be definitional. Having only strict definitions for objects allows us to study completeness while removing a lot of transport issues that make the transport hell far bigger in the completeness proof. Transport Hell will be explained in \autoref{sec:transport-hell}.
+			Mathematically, this model is really easy to find. We only have to take all the sorts defined in the GAT and apply a quotient by every equation of the GAT. But this is not very interesting, as the defined model would not be \emph{strict}, i.e. all equations will not be definitional. Having only strict definitions for objects allows us to study completeness while removing a lot of transport issues that make the transport hell far bigger in the completeness proof. Transport hell will be explained in \autoref{sec:transport-hell}.
 			
 			So we have three things to do :
 			\begin{enumerate}
@@ -170,9 +170,9 @@
 			
 			And we now have a working model for Propositional Logic. We can implement our previously defined record and all the equations can be directly understood by Agda (\AgdaInductiveConstructor{refl} is enough proof).
 			
-			I won't dive into the construction of the initial morphism and the proof that it is unique, because it is a bit ugly because of some \emph{transport hell} (see \autoref{sec:transport-hell} for an explanation of the issue).
+			I won't dive into the construction of the initial morphism and the proof that it is unique, since it is a bit ugly because of some \emph{transport hell} (see \autoref{sec:transport-hell} for an explanation of the issue).
 			
-			Still, below is the construction of the \AgdaField{Con} and \AgdaField{For} mappings, as they show the basic idea of the construction. The idea is simple, we pattern-match against the datatype definition of our Sort in our syntax, and for each constructor, we call the corresponding one in the algebra.
+			Still, below is the construction of the \AgdaField{Con} and \AgdaField{For} mappings, as they show the basic idea of the construction. The idea is simple, we pattern-match against the datatype definition of our sort in our syntax, and for each constructor, we call the corresponding one in the algebra.
 			
 			And the uniqueness proof is pretty simple again because you only need to prove that the \AgdaDatatype{Con} and \AgdaDatatype{For} mappings are unique, because the other ones are in \AgdaPrimitive{Prop}, so they are automatically unique. And to prove the unicity, you split again on the sort's datatype, and for each constructor, you use the fact that a morphism preserves constructors, and you have a nice proof by recursion (except it's ugly because of transport hell).
 			
@@ -595,5 +595,6 @@
 	\appendixpage
 	
 	\section{Agda Code}
+	The Agda code has been written to A4 paper and is given in the next pages
 	
 \end{document} 
